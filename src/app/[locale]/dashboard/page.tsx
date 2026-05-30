@@ -22,6 +22,7 @@ interface DashboardData {
   activeLeases: number;
   totalIPs: number;
   poolCount: number;
+  activePoolCount: number;
   reservationCount: number;
   requests24h: number;
   poolUsage: Array<{ poolId: number; name: string; used: number; total: number; percentage: number }>;
@@ -87,6 +88,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
           activeLeases: json.activeLeases ?? 0,
           totalIPs: json.totalIPs ?? 0,
           poolCount: json.poolCount ?? 0,
+          activePoolCount: json.activePoolCount ?? 0,
           reservationCount: json.reservationCount ?? 0,
           requests24h: json.requests24h ?? 0,
           poolUsage: json.poolUsage ?? [],
@@ -122,7 +124,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
             </Col>
             <Col xs={12} sm={12} md={6}>
               <StatCard icon={<ClusterOutlined />} color="#8b5cf6" title={t('poolCount')}
-                value={data.poolCount} />
+                value={data.activePoolCount} suffix={`/ ${data.poolCount}`} />
             </Col>
             <Col xs={12} sm={12} md={6}>
               <StatCard icon={<EnvironmentOutlined />} color="#f59e0b" title={t('reservationCount')}

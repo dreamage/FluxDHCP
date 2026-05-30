@@ -16,6 +16,7 @@ export async function GET() {
 
     // 地址池数量
     const poolCount = db.prepare('SELECT COUNT(*) as count FROM pools').get() as { count: number };
+    const activePoolCount = db.prepare('SELECT COUNT(*) as count FROM pools WHERE enabled = 1').get() as { count: number };
 
     // 保留地址数量
     const reservationCount = db.prepare('SELECT COUNT(*) as count FROM reservations WHERE enabled = 1').get() as { count: number };
@@ -55,6 +56,7 @@ export async function GET() {
       activeLeases: activeLeases.count,
       totalIPs,
       poolCount: poolCount.count,
+      activePoolCount: activePoolCount.count,
       reservationCount: reservationCount.count,
       requests24h: requests24h.count,
       poolUsage,
