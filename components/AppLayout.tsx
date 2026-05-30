@@ -40,9 +40,9 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Remove splash screen after React renders
+  // Hide splash screen after React renders
   useEffect(() => {
-    (window as any).__splash_remove?.();
+    (window as any).__splash_hide?.();
   }, []);
 
   // Auto-collapse on mobile

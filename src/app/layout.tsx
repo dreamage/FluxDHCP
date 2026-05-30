@@ -32,7 +32,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <style dangerouslySetInnerHTML={{ __html: `
-          #splash{position:fixed;inset:0;z-index:99999;background:#f8fafc;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;transition:opacity 0.3s}
+          #splash{position:fixed;inset:0;z-index:99999;background:#f8fafc;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
           #splash .logo{font-size:28px;font-weight:700;color:#0ea5e9;letter-spacing:-0.02em}
           #splash .bar{width:120px;height:3px;background:#e2e8f0;border-radius:2px;overflow:hidden}
           #splash .bar::after{content:'';display:block;width:40%;height:100%;background:#0ea5e9;border-radius:2px;animation:slide 1.2s ease-in-out infinite}
@@ -45,8 +45,8 @@ export default function RootLayout({
           <div className="bar" />
         </div>
         <script dangerouslySetInnerHTML={{ __html: `
-          window.__splash_remove=function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove()},300)}};
-          setTimeout(window.__splash_remove,3000);
+          window.__splash_hide=function(){var s=document.getElementById('splash');if(s)s.style.display='none'};
+          setTimeout(window.__splash_hide,3000);
         `}} />
         {children}
       </body>
