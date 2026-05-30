@@ -51,6 +51,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'IP address already reserved' }, { status: 409 });
     }
 
+    // 校验 IP 是否被其他设备活跃占用
+    const activeLease = db.prepare(
+      "SELECT mac_address FROM leases WHERE ip_address = ? AND state IN ('BOUND', 'OFFERED')"
+    ).get(ip) as { mac_address: string } | undefined;
+    if (activeLease && activeLease.mac_address !== mac) {
+      return NextResponse.json({ error: 'IP address is currently leased to another device' }, { status: 409 });
+    }
+
     // 校验 IP 在子网范围内
     const finalPoolId = pool_id || existing.pool_id;
     if (ip_address || pool_id) {
