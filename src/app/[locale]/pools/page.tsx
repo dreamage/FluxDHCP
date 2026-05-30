@@ -3,7 +3,7 @@
 import React, { use, useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Select, message, Space, Row, Col, Spin } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ColumnHeightOutlined, ExpandOutlined, ShrinkOutlined } from '@ant-design/icons';
 import AppLayout from '@/components/AppLayout';
 import { translateError } from '@/lib/error-map';
 
@@ -39,7 +39,12 @@ export default function PoolsPage({ params }: { params: Promise<{ locale: string
     try {
       const res = await fetch('/api/pools');
       const result = await res.json();
-      setData(Array.isArray(result) ? result : []);
+      const pools = Array.isArray(result) ? result : [];
+      setData(pools);
+      // Auto-expand all pools
+      const allIds = pools.map((p: any) => p.id);
+      setExpandedRowKeys(allIds);
+      allIds.forEach((id: number) => fetchPoolIPs(id));
     } finally {
       setLoading(false);
     }
@@ -219,7 +224,17 @@ export default function PoolsPage({ params }: { params: Promise<{ locale: string
     <AppLayout locale={locale} onLocaleChange={() => {}}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>{t('addPool')}</Button>
+        <Space>
+          <Button icon={<ExpandOutlined />} size="small"
+            onClick={() => { setExpandedRowKeys(data.map((p: any) => p.id)); data.forEach((p: any) => fetchPoolIPs(p.id)); }}>
+            {t('expandAll')}
+          </Button>
+          <Button icon={<ShrinkOutlined />} size="small"
+            onClick={() => setExpandedRowKeys([])}>
+            {t('collapseAll')}
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>{t('addPool')}</Button>
+        </Space>
       </div>
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"
         scroll={{ x: 'max-content' }}

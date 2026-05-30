@@ -46,6 +46,8 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "addPool": "Add Pool",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All",
     "editPool": "Edit Pool",
     "deletePool": "Delete Pool",
     "deleteConfirm": "Are you sure you want to delete this pool?",

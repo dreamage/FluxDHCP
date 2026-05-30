@@ -46,6 +46,8 @@
     "enabled": "已启用",
     "disabled": "已禁用",
     "addPool": "新增地址池",
+    "expandAll": "全部展开",
+    "collapseAll": "全部收起",
     "editPool": "编辑地址池",
     "deletePool": "删除地址池",
     "deleteConfirm": "确定要删除此地址池吗？",
