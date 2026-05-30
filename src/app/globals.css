@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --color-primary: #0ea5e9;
+  --color-primary-light: #e0f2fe;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-sidebar-bg: #ffffff;
+  --color-sidebar-border: #f1f5f9;
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Menlo', monospace;
+  --radius: 10px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+body {
+  font-family: var(--font-sans) !important;
+  color: var(--color-text);
+  background: var(--color-bg) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Monospace for technical data (IPs, MACs, option codes) */
+code, pre, .mono {
+  font-family: var(--font-mono) !important;
+}
+
+/* Refine Ant Design Table */
+.ant-table {
+  border-radius: var(--radius) !important;
+}
+
+.ant-table-wrapper .ant-table-thead > tr > th {
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary) !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid var(--color-border) !important;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: #f8fafc !important;
+}
+
+/* Refine Cards */
+.ant-card {
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: box-shadow 0.2s ease;
+}
+
+.ant-card:hover {
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Refine Buttons */
+.ant-btn-primary {
+  box-shadow: 0 1px 3px rgba(14, 165, 233, 0.3) !important;
+}
+
+/* Refine Modal */
+.ant-modal-content {
+  border-radius: 14px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Refine Tags */
+.ant-tag {
+  border-radius: 6px !important;
+  font-weight: 500;
+}
+
+/* Sidebar active indicator */
+.ant-menu-item-selected {
+  position: relative;
+}
+
+.ant-menu-item-selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: var(--color-primary);
+  border-radius: 0 3px 3px 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .ant-table {
+    font-size: 13px;
+  }
+  .ant-modal {
+    max-width: 95vw !important;
+    margin: 8px auto;
+  }
+  .ant-modal-body {
+    padding: 12px;
+  }
+  .ant-card-body {
+    padding: 12px;
+  }
+  .ant-tabs-tab {
+    padding: 6px 8px !important;
+    font-size: 13px;
+  }
+  .ant-descriptions-item-label,
+  .ant-descriptions-item-content {
+    padding: 8px 12px !important;
+  }
+  h3.ant-typography {
+    font-size: 18px !important;
+    margin-top: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .ant-table {
+    font-size: 12px;
+  }
+  .ant-tabs-tab {
+    padding: 4px 6px !important;
+    font-size: 12px;
+  }
+}

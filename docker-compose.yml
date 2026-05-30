@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  fluxdhcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fluxdhcp
+    restart: unless-stopped
+    network_mode: host          # DHCP 广播需要 host 网络
+    cap_add:
+      - NET_ADMIN               # 绑定 UDP 67 权限
+    volumes:
+      - ./data:/data            # SQLite 数据库持久化
+    environment:
+      - DB_PATH=/data/fluxdhcp.db
+      - NEXT_TELEMETRY_DISABLED=1
