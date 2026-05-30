@@ -177,7 +177,7 @@ export default function PoolsPage({ params }: { params: Promise<{ locale: string
                   background: STATUS_COLORS[item.status] || STATUS_COLORS.free,
                   cursor: 'default',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 10, fontFamily: "var(--font-jetbrains-mono), monospace",
                   fontWeight: 500,
                   color: item.status === 'free' ? '#94a3b8' : '#fff',
                 }}>

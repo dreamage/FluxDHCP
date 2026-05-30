@@ -113,7 +113,7 @@ export default function MacNotesPage({ params }: { params: Promise<{ locale: str
   const columns = [
     {
       title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 220,
-      render: (mac: string) => <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>{mac}</span>,
+      render: (mac: string) => <span style={{ fontFamily: "var(--font-jetbrains-mono), monospace", fontSize: 13 }}>{mac}</span>,
       sorter: (a: MacNoteRow, b: MacNoteRow) => a.mac_address.localeCompare(b.mac_address),
     },
     {

@@ -198,7 +198,7 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
         padding: collapsed ? '0 8px' : '0 12px 0 20px',
         borderBottom: '1px solid #f1f5f9',
       }}>
-        <span style={{ fontSize: collapsed ? 20 : 17, fontWeight: 700, color: '#0ea5e9', letterSpacing: '-0.02em', fontFamily: "'DM Sans', sans-serif" }}>
+        <span style={{ fontSize: collapsed ? 20 : 17, fontWeight: 700, color: '#0ea5e9', letterSpacing: '-0.02em', fontFamily: "var(--font-dm-sans), sans-serif" }}>
           {collapsed ? 'F' : 'FluxDHCP'}
         </span>
         {!isMobile && (

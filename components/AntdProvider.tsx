@@ -24,7 +24,7 @@ export default function AntdProvider({ children, locale = 'en' }: AntdProviderPr
           colorError: '#ef4444',
           colorInfo: '#0ea5e9',
           borderRadius: 10,
-          fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+          fontFamily: "var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif",
           colorBgLayout: '#f8fafc',
           colorBgContainer: '#ffffff',
           colorBgElevated: '#ffffff',
