@@ -386,6 +386,11 @@
     "srOffer": "分配IP {ip}，来自地址池「{pool}」",
     "srAssign": "确认IP {ip}，来自地址池「{pool}」",
     "srInform": "INFORM 响应（配置选项）",
-    "srNak": "NAK: {reason}"
+    "srNak": "NAK: {reason}",
+    "srNakNoRequestedIp": "NAK: 未请求IP地址",
+    "srNakNotInPool": "NAK: IP {ip} 不在任何已启用的地址池中",
+    "srNakReservedMismatch": "NAK: 保留地址为 {reserved}，但客户端请求了 {requested}",
+    "srNakIpLeased": "NAK: IP {ip} 已分配给 {mac}",
+    "srNakPoolDisabled": "NAK: 保留地址 {ip} 所在地址池已禁用"
   }
 }

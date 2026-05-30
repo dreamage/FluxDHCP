@@ -248,7 +248,17 @@ class DhcpInstance extends EventEmitter {
   private handleDiscover(packet: DhcpPacket): void {
     const mac = packet.chaddr;
 
-    // 检查保留地址和现有租约
+    // 优先检查保留地址（优先级最高）
+    const reservation = this.poolManager.findReservation(mac);
+    if (reservation) {
+      const pool = this.poolManager.getPoolById(reservation.pool_id);
+      if (pool && pool.enabled) {
+        this.sendOffer(packet, reservation.ip_address, pool);
+        return;
+      }
+    }
+
+    // 检查现有租约
     const existingLease = this.leaseManager.findLeaseByMAC(mac);
     if (existingLease) {
       const pool = this.poolManager.getPoolById(existingLease.pool_id);
@@ -260,12 +270,11 @@ class DhcpInstance extends EventEmitter {
 
     // 分配新 IP
     const requestedIP = packet.options.get(50) as string | undefined;
-    // Determine client's network: relay GIADDR if present, otherwise server's own IP
     const clientNetwork = packet.giaddr !== '0.0.0.0' ? packet.giaddr : this.serverIP;
     const result = this.poolManager.allocateIP(mac, requestedIP, clientNetwork);
     if (!result) {
       console.log(`[DHCP] No available IP for DISCOVER from ${mac}`);
-      return; // 无可用 IP，不回复
+      return;
     }
 
     this.sendOffer(packet, result.ip, result.pool);
@@ -281,7 +290,6 @@ class DhcpInstance extends EventEmitter {
     const serverIdentifier = packet.options.get(54) as string | undefined;
 
     // 如果有 Server Identifier，说明客户端在选择服务器
-    // 只有 Server Identifier 匹配本服务器时才回复
     if (serverIdentifier && serverIdentifier !== this.serverIP && this.serverIP !== '0.0.0.0') {
       return; // 不是发给我们的，忽略
     }
@@ -295,28 +303,37 @@ class DhcpInstance extends EventEmitter {
     }
 
     if (!targetIP) {
-      this.sendNak(packet, 'No requested IP');
+      this.sendNak(packet, 'SR|NAK|NO_REQUESTED_IP');
       return;
+    }
+
+    // 优先检查保留地址（优先级最高）
+    const reservation = this.poolManager.findReservation(mac);
+    if (reservation) {
+      const reservedPool = this.poolManager.getPoolById(reservation.pool_id);
+      if (!reservedPool || !reservedPool.enabled) {
+        this.sendNak(packet, `SR|NAK|POOL_DISABLED|${reservation.ip_address}`);
+        return;
+      }
+      if (reservation.ip_address !== targetIP) {
+        // 客户端请求的不是保留 IP，强制 NAK 并在 ACK 中使用保留 IP
+        this.sendNak(packet, `SR|NAK|RESERVED_MISMATCH|${reservation.ip_address}|${targetIP}`);
+        return;
+      }
+      // 请求的就是保留 IP，继续后续校验
     }
 
     // 检查 IP 是否在已启用的地址池范围内
     const pool = this.poolManager.findPoolForIP(targetIP);
     if (!pool) {
-      this.sendNak(packet, `IP ${targetIP} not in any enabled pool`);
-      return;
-    }
-
-    // 检查保留地址：如果此 MAC 有保留地址，但请求的不是保留 IP
-    const reservation = this.poolManager.findReservation(mac);
-    if (reservation && reservation.ip_address !== targetIP) {
-      this.sendNak(packet, `Reserved IP mismatch for ${mac}`);
+      this.sendNak(packet, `SR|NAK|NOT_IN_POOL|${targetIP}`);
       return;
     }
 
     // 检查 IP 是否已被其他客户端占用
     const existingLease = this.leaseManager.findLeaseByIP(targetIP);
     if (existingLease && existingLease.mac_address !== mac.toUpperCase()) {
-      this.sendNak(packet, `IP ${targetIP} already leased to ${existingLease.mac_address}`);
+      this.sendNak(packet, `SR|NAK|IP_LEASED|${targetIP}|${existingLease.mac_address}`);
       return;
     }
 

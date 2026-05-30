@@ -386,6 +386,11 @@
     "srOffer": "Offered IP {ip} from pool '{pool}'",
     "srAssign": "Assigned IP {ip} from pool '{pool}'",
     "srInform": "INFORM response with configuration options",
-    "srNak": "NAK: {reason}"
+    "srNak": "NAK: {reason}",
+    "srNakNoRequestedIp": "NAK: No requested IP address",
+    "srNakNotInPool": "NAK: IP {ip} is not in any enabled pool",
+    "srNakReservedMismatch": "NAK: Reserved IP is {reserved}, but client requested {requested}",
+    "srNakIpLeased": "NAK: IP {ip} already leased to {mac}",
+    "srNakPoolDisabled": "NAK: Pool for reserved IP {ip} is disabled"
   }
 }
