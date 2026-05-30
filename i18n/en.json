@@ -24,7 +24,7 @@
     "totalIPs": "Total IPs",
     "poolCount": "Pools",
     "reservationCount": "Reservations",
-    "requests24h": "Requests (24h)",
+    "requests24h": "Events (24h)",
     "poolUsage": "Pool Usage",
     "overallUsage": "Overall IP Usage",
     "recentEvents": "Recent Events"

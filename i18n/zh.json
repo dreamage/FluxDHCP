@@ -24,7 +24,7 @@
     "totalIPs": "总可用IP",
     "poolCount": "地址池",
     "reservationCount": "保留地址",
-    "requests24h": "24小时请求",
+    "requests24h": "事件（24小时）",
     "poolUsage": "地址池使用率",
     "overallUsage": "总IP使用率",
     "recentEvents": "最近事件"
