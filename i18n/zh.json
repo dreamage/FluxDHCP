@@ -360,7 +360,7 @@
     "secret": "密钥",
     "secretPlaceholder": "用于签名验证（可选）",
     "headers": "自定义请求头",
-    "headersPlaceholder": "JSON格式，如：{\"Authorization\":\"Bearer xxx\"}",
+    "headersPlaceholder": "JSON格式，如：'{\"Authorization\":\"Bearer xxx\"}'",
     "bodyMode": "发送方式",
     "queryParams": "请求参数",
     "bodyFields": "请求数据",

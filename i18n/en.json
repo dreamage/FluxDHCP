@@ -360,7 +360,7 @@
     "secret": "Secret",
     "secretPlaceholder": "For signature verification (optional)",
     "headers": "Custom Headers",
-    "headersPlaceholder": "JSON format, e.g. {\"Authorization\":\"Bearer xxx\"}",
+    "headersPlaceholder": "JSON format, e.g. '{'\"Authorization\":\"Bearer xxx\"'}'",
     "bodyMode": "Body Mode",
     "queryParams": "Query Parameters",
     "bodyFields": "Body Fields",
@@ -383,8 +383,8 @@
   "serverResponse": {
     "srDecline": "Client declined IP {ip} (address conflict)",
     "srRelease": "Client released IP {ip}",
-    "srOffer": "Offered IP {ip} from pool \"{pool}\"",
-    "srAssign": "Assigned IP {ip} from pool \"{pool}\"",
+    "srOffer": "Offered IP {ip} from pool '{pool}'",
+    "srAssign": "Assigned IP {ip} from pool '{pool}'",
     "srInform": "INFORM response with configuration options",
     "srNak": "NAK: {reason}"
   }
