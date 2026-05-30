@@ -237,6 +237,7 @@
     "errNoActiveLease": "该IP没有活跃租约",
     "errMacAlreadyReserved": "MAC地址已被保留",
     "errIpAlreadyReserved": "IP地址已被保留",
+    "errIpLeasedToOther": "该IP当前已分配给其他设备。只能为空闲IP或已分配给同一MAC的IP创建保留地址。",
     "errOptionAlreadyExists": "该MAC地址已存在此选项",
     "errIpOutOfRange": "IP地址不在所属子网范围内",
     "errStartIpGreaterThanEnd": "起始IP必须小于等于结束IP",

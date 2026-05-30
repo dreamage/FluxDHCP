@@ -24,6 +24,7 @@ const ERROR_MAP: Record<string, string> = {
   'MAC address already reserved': 'errMacAlreadyReserved',
   'IP address already reserved': 'errIpAlreadyReserved',
   'Option already exists for this MAC address': 'errOptionAlreadyExists',
+  'IP address is currently leased to another device': 'errIpLeasedToOther',
 
   // Range / format
   'IP address is not within the selected pool range': 'errIpOutOfRange',

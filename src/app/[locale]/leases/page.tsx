@@ -3,7 +3,7 @@
 import React, { use, useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Tag, Select, Popconfirm, Button, message } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { DeleteOutlined, UndoOutlined } from '@ant-design/icons';
 import AppLayout from '@/components/AppLayout';
 import MacAddress from '@/components/MacAddress';
 import { formatLocalTime } from '@/lib/format-time';
@@ -96,7 +96,7 @@ export default function LeasesPage({ params }: { params: Promise<{ locale: strin
         if (r.state === 'BOUND' || r.state === 'OFFERED') {
           return (
             <Popconfirm title={t('releaseConfirm')} onConfirm={() => handleRelease(r.ip_address)}>
-              <Button icon={<DeleteOutlined />} size="small" danger>{t('release')}</Button>
+              <Button icon={<UndoOutlined />} size="small" type="default">{t('release')}</Button>
             </Popconfirm>
           );
         }
