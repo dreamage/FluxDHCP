@@ -177,19 +177,18 @@ export default function ReservationsPage({ params }: { params: Promise<{ locale:
             onClose={() => setSubmitError('')} style={{ marginBottom: 16 }} />
         )}
         <Form form={form} layout="vertical">
-          <Form.Item name="mac_address" label={t('macAddress')} rules={[{ required: true, message: tc('requiredField') }]}>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <MacInput placeholder={t('macPlaceholder')} knownMacs={data.map((r: any) => r.mac_address)}
-                  onSelect={handleMacSelect} />
-              </div>
-              <Button onClick={() => {
-                const hex = Array.from({ length: 3 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join(':').toUpperCase();
-                const mac = `FF:FF:FF:${hex}`;
-                form.setFieldsValue({ mac_address: mac, description: t('randomMacNote') });
-              }}>{t('randomMac')}</Button>
-            </div>
-          </Form.Item>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <Form.Item name="mac_address" label={t('macAddress')} rules={[{ required: true, message: tc('requiredField') }]}
+              style={{ flex: 1 }}>
+              <MacInput placeholder={t('macPlaceholder')} knownMacs={data.map((r: any) => r.mac_address)}
+                onSelect={handleMacSelect} />
+            </Form.Item>
+            <Button style={{ marginTop: 30 }} onClick={() => {
+              const hex = Array.from({ length: 3 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join(':').toUpperCase();
+              const mac = `FF:FF:FF:${hex}`;
+              form.setFieldsValue({ mac_address: mac, description: t('randomMacNote') });
+            }}>{t('randomMac')}</Button>
+          </div>
           <Form.Item name="ip_address" label={t('ipAddress')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
