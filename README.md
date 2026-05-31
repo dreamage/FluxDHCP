@@ -7,20 +7,23 @@
 ## Features
 
 - **Full DHCPv4 Protocol** - RFC 2131 compliant: DISCOVER/OFFER/REQUEST/ACK/NAK/RELEASE/DECLINE/INFORM
-- **IP Pool Management** - Define subnets with start/end IP ranges, gateway, DNS servers, netmask, and per-pool lease times with overlap detection
-- **Static Reservations** - Bind MAC addresses to specific IPs with random MAC generation and active lease conflict detection
+- **IP Pool Management** - Define subnets with start/end IP ranges, gateway, DNS servers, netmask, and per-pool lease times with overlap detection. Atomic IP allocation prevents race conditions.
+- **Static Reservations** - Bind MAC addresses to specific IPs with random MAC generation, active lease conflict detection, and IPv4 format validation
 - **Per-device DHCP Options** - Assign custom option codes/values per MAC address with 60+ translated option codes
 - **Lease Lifecycle Tracking** - Full state machine: OFFERED/BOUND/RELEASED/EXPIRED with automatic expiry cleanup
-- **DECLINE IP Blacklist** - Declined IPs are blocked from reassignment for a configurable duration (default 1 hour)
+- **DECLINE IP Blacklist** - Declined IPs are blocked from reassignment for a configurable duration (default 1 hour), scoped per-pool
 - **Packet Logger** - Logs all DHCP transactions with millisecond timestamps, direction (received/sent), raw options, yiaddr/siaddr/giaddr, vendor class, client ID, hostname, and fully localized server response messages
 - **MAC Notes** - Dedicated management page for adding custom notes/labels to MAC addresses
 - **Webhook Notifications** - Push DHCP events (ACK/RELEASE/etc.) to external services via HTTP POST/GET with template variables, SSRF-protected URLs
-- **Web Dashboard** - Icon stat cards, overall IP usage bar, color-coded pool progress bars, and a timeline of recent events with consistent row heights
-- **Config Import/Export** - Export all configuration to JSON with confirmation modal on import, optional lease/log clearing, and hot-reload
+- **Web Dashboard** - Icon stat cards, overall IP usage bar, color-coded pool progress bars, recent event timeline with consistent row heights
+- **Config Import/Export** - Export all configuration to JSON with confirmation modal on import, optional lease/log clearing, data structure validation, and hot-reload
 - **Log Retention** - Configurable automatic cleanup of old logs (default 90 days)
-- **Responsive UI** - Mobile-friendly layout with drawer sidebar, responsive cards, and compact tables with horizontal scroll
-- **Loading Splash Screen** - CSS-only splash screen eliminates flash of unstyled content during initial load
-- **i18n Support** - Full English and Chinese localization including DHCP option codes, server response messages, and NAK reason codes
+- **Dark Mode** - Follow System / Light / Dark theme with CSS variables, Ant Design dark algorithm, and persisted preference
+- **Responsive UI** - Mobile-friendly layout with drawer sidebar, responsive cards, compact tables with horizontal scroll, and page size selectors
+- **Loading Splash Screen** - Dark-mode-aware CSS splash screen eliminates flash of unstyled content during initial load
+- **i18n Support** - Full English and Chinese localization including DHCP option codes, server response messages, NAK reason codes, and browser locale detection
+- **Security** - Origin header validation on API mutations (CSRF protection), SSRF-protected webhook URLs, IP format validation
+- **Accessibility** - Focus-visible styles for keyboard navigation, error boundary for crash recovery
 - **Docker Ready** - One-command deployment with Docker Compose
 
 ## Tech Stack
@@ -77,14 +80,16 @@ npm run dev
 FluxDHCP
 ├── src/
 │   ├── server.ts            # Entry point (HTTP + UDP server)
+│   ├── middleware.ts         # i18n routing + API Origin validation
 │   ├── app/
-│   │   ├── layout.tsx       # Root layout with fonts and splash screen
-│   │   ├── globals.css      # Global styles and responsive media queries
+│   │   ├── layout.tsx       # Root layout with fonts, splash screen, dark mode detection
+│   │   ├── globals.css      # Design system: CSS variables, dark mode, responsive
+│   │   ├── error.tsx        # React error boundary
 │   │   └── api/
-│   │       ├── config/      # Config CRUD, import/export
+│   │       ├── config/      # Config CRUD, import/export with validation
 │   │       ├── dhcp/        # DHCP start/stop/status
 │   │       ├── pools/       # Pool management + IP grid
-│   │       ├── leases/      # Lease management + release/delete
+│   │       ├── leases/      # Lease management, server-side sorting
 │   │       ├── reservations/# Static MAC-IP bindings + conflict check
 │   │       ├── options/     # Per-device DHCP options
 │   │       ├── webhooks/    # Webhook CRUD + test (SSRF-protected)
@@ -93,18 +98,22 @@ FluxDHCP
 │   │       └── mac-info/    # MAC lookup across tables
 │   ├── dhcp/
 │   │   ├── protocol/        # Packet parser, serializer, constants
-│   │   ├── lease-manager.ts # Lease lifecycle + log cleanup
-│   │   ├── pool-manager.ts  # IP pool allocation + DECLINE blacklist
+│   │   ├── lease-manager.ts # Lease lifecycle + log cleanup + atomic allocation
+│   │   ├── pool-manager.ts  # IP pool allocation + DECLINE blacklist (pool-scoped)
 │   │   └── option-manager.ts# Per-device DHCP options
 │   ├── db/                  # SQLite schema, migrations, init
 │   └── lib/
+│       ├── ip-utils.ts      # Shared IP utilities (ipToNum, isValidIPv4, isIPInSubnet)
 │       ├── server-response.ts # Server response i18n (SR|TYPE|params format)
 │       ├── url-validate.ts    # SSRF protection for webhook URLs
 │       ├── mac-utils.ts       # MAC address normalization
 │       ├── error-map.ts       # API error to i18n key mapping
 │       └── format-time.ts     # Millisecond time formatting
 ├── components/
-│   ├── AppLayout.tsx        # Sidebar, tabs with context menu, responsive drawer
+│   ├── AppLayout.tsx        # Sidebar, grounded tab bar, theme toggle, responsive drawer
+│   ├── ThemeContext.tsx      # Dark mode state (system/light/dark) with persistence
+│   ├── Providers.tsx        # Combined ThemeProvider + AntdProvider
+│   ├── AntdProvider.tsx     # Ant Design theme with dark algorithm support
 │   ├── MacInput.tsx         # MAC address autocomplete with auto-uppercase
 │   └── MacAddress.tsx       # Inline MAC display with note popover
 ├── i18n/en.json, zh.json    # Full localization (60+ DHCP option codes)
@@ -116,18 +125,27 @@ FluxDHCP
 | Page | Description |
 |------|-------------|
 | **Dashboard** | Stat cards with icons, IP usage bar, pool progress bars (hidden for disabled pools), recent event timeline |
-| **Pools** | Address pool CRUD, IP grid visualization (auto-expanded, color-coded), expand/collapse all |
-| **Leases** | Lease list with state filtering (ALL/BOUND/OFFERED/EXPIRED/RELEASED), sortable columns, distinct release/delete icons |
-| **Reservations** | Static MAC-IP bindings, MAC autocomplete, random MAC, auto-fill from notes, active lease conflict detection |
-| **Options** | Per-device DHCP option overrides, common option code dropdown |
-| **MAC Notes** | MAC address labels and notes, sortable columns |
+| **Pools** | Address pool CRUD, IP grid visualization (auto-expanded, color-coded), expand/collapse all, IPv4 validation |
+| **Leases** | Lease list with state filtering (ALL/BOUND/OFFERED/EXPIRED/RELEASED), server-side sorting, page size selector, distinct release/delete icons |
+| **Reservations** | Static MAC-IP bindings, MAC autocomplete with auto-uppercase, random MAC, auto-fill from notes, active lease conflict detection, IPv4 validation |
+| **Options** | Per-device DHCP option overrides, common option code dropdown, page size selector |
+| **MAC Notes** | MAC address labels and notes, sortable columns, page size selector |
 | **Webhooks** | Webhook CRUD, event subscription, template variables, custom headers, SSRF-protected URLs, test button |
-| **Logs** | Millisecond timestamps, direction indicator, 60+ option code translations, column visibility selector, auto-refresh, MAC/IP autocomplete filters |
-| **Settings** | DHCP service control, server config, T1/T2 with tooltips, log retention days, DECLINE blacklist duration, config import/export, clear logs |
+| **Logs** | Millisecond timestamps, direction indicator, 60+ option code translations, column visibility selector, auto-refresh, MAC/IP autocomplete filters, page size selector |
+| **Settings** | DHCP service control, server config, T1/T2 with tooltips, log retention days, DECLINE blacklist duration, config import/export with validation, clear logs |
+
+## UI Features
+
+- **Dark Mode** - Toggle between System / Light / Dark in the header. Preference persists in localStorage. CSS variables drive all colors; Ant Design uses `darkAlgorithm` for proper dark component rendering.
+- **Grounded Tab Bar** - Tabs sit on a subtle background distinct from the content area. Active tab blends into content with rounded top corners and border treatment.
+- **Tab Context Menu** - Right-click any tab for: Refresh, Close, Close Others, Close Right, Close All.
+- **Design System** - Consistent tokens for radius, shadows, transitions, colors across light and dark themes.
+- **Page Size Selectors** - All paginated tables support 10/20/50/100 rows per page.
+- **Splash Screen** - Dark-mode-aware loading screen shown during initial page load.
 
 ## Config Import/Export
 
-Export all configuration to a JSON file (excludes logs and leases). On import, a confirmation modal shows what will be replaced, with optional checkboxes to also clear leases and/or logs. The JSON includes:
+Export all configuration to a JSON file (excludes logs and leases). On import, a confirmation modal shows what will be replaced with optional checkboxes to also clear leases and/or logs. The JSON includes:
 
 - `config` - Server settings
 - `pools` - Address pool definitions
