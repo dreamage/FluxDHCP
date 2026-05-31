@@ -257,9 +257,9 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
       )}
 
       <Layout style={{ marginLeft: isMobile ? 0 : sidebarWidth, transition: 'margin-left 0.2s' }}>
-        {/* Top bar: full-width border, tabs + selectors on same line */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 9, background: 'var(--color-header-bg)', borderBottom: '1px solid var(--color-header-border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', paddingLeft: isMobile ? 48 : 16, paddingRight: 16, height: 44 }}>
+        {/* Tab bar — grounded on tab-bar-bg, active tab blends into content */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 9, background: 'var(--color-tab-bar-bg)', borderBottom: '1px solid var(--color-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', paddingLeft: isMobile ? 48 : 16, paddingRight: 16, paddingTop: 6, height: 44 }}>
             <div style={{ flex: 1, overflow: 'hidden' }}>
               <Tabs type="editable-card" activeKey={pageKey} onChange={handleTabChange}
                 onEdit={handleTabEdit} hideAdd size="small"
@@ -268,7 +268,7 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
                 style={{ marginBottom: 0 }}
                 tabBarStyle={{ marginBottom: 0 }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8, background: 'var(--color-header-bg)', paddingLeft: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8, paddingBottom: 6 }}>
               <Select value={themeMode} onChange={setThemeMode}
                 style={{ width: 130 }} size="small" bordered={false}
                 options={themeOptions} popupMatchSelectWidth={false} />
