@@ -132,14 +132,11 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
   }, [pageKey, locale, router]);
 
   const closeAllTabs = useCallback(() => {
-    setTabs(prev => {
-      if (prev.length === 0) return prev;
-      const newTabs = [prev[0]];
-      try { localStorage.setItem(TABS_KEY, JSON.stringify(newTabs.map(t => t.key))); } catch {}
-      router.push(`/${locale}${newTabs[0].key}`);
-      return newTabs;
-    });
-  }, [locale, router]);
+    const newTabs = [{ key: '/dashboard', label: labelMap['/dashboard'] || '/dashboard' }];
+    setTabs(newTabs);
+    try { localStorage.setItem(TABS_KEY, JSON.stringify(['/dashboard'])); } catch {}
+    router.push(`/${locale}/dashboard`);
+  }, [locale, router, labelMap]);
 
   const closeRightTabs = useCallback((key: string) => {
     setTabs(prev => {
