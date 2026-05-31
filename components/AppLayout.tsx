@@ -178,7 +178,7 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
       {(node) => {
         const tabKey = (node as React.ReactElement).key as string;
         const items: MenuProps['items'] = [
-          { key: 'refresh', label: t('refreshTab'), icon: <ReloadOutlined />, onClick: () => { router.push(`/${locale}${tabKey}`); setTimeout(() => window.location.reload(), 50); } },
+          { key: 'refresh', label: t('refreshTab'), icon: <ReloadOutlined />, onClick: () => { router.replace(`/${locale}${tabKey}?_r=${Date.now()}`); } },
           { type: 'divider' as const },
           { key: 'close', label: t('closeTab'), icon: <CloseOutlined />, onClick: () => closeTab(tabKey) },
           { key: 'closeOthers', label: t('closeOtherTabs'), icon: <ColumnWidthOutlined />, onClick: () => closeOtherTabs(tabKey) },

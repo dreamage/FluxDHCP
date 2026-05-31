@@ -11,15 +11,11 @@ import { translateError } from '@/lib/error-map';
 
 const { Title } = Typography;
 
-const ipRule = {
-  pattern: /^(\d{1,3}\.){3}\d{1,3}$/,
-  message: 'Invalid IPv4 format',
-};
-
 export default function ReservationsPage({ params }: { params: Promise<{ locale: string }> }) {
   const t = useTranslations('reservations');
   const tc = useTranslations('common');
   const { locale } = use(params);
+  const ipRule = { pattern: /^(\d{1,3}\.){3}\d{1,3}$/, message: tc('invalidIpv4') };
   const [data, setData] = useState<any[]>([]);
   const [pools, setPools] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

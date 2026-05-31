@@ -247,7 +247,8 @@
     "errFailedFetch": "获取数据失败",
     "errFailedCreate": "创建失败",
     "errFailedUpdate": "更新失败",
-    "errFailedDelete": "删除失败"
+    "errFailedDelete": "删除失败",
+    "invalidIpv4": "无效的IPv4地址格式"
   },
   "messageTypes": {
     "1": "DISCOVER (发现)",

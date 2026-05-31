@@ -247,7 +247,8 @@
     "errFailedFetch": "Failed to fetch data",
     "errFailedCreate": "Failed to create",
     "errFailedUpdate": "Failed to update",
-    "errFailedDelete": "Failed to delete"
+    "errFailedDelete": "Failed to delete",
+    "invalidIpv4": "Invalid IPv4 address format"
   },
   "messageTypes": {
     "1": "DISCOVER",
