@@ -69,11 +69,14 @@ function validateOrigin(request: NextRequest): NextResponse | null {
 }
 
 export default function middleware(request: NextRequest) {
-  // 1. Security: validate Origin on API mutations
-  const securityResponse = validateOrigin(request);
-  if (securityResponse) return securityResponse;
+  const { pathname } = request.nextUrl;
 
-  // 2. i18n routing
+  // API routes: security check only, no i18n
+  if (pathname.startsWith('/api/')) {
+    return validateOrigin(request) || NextResponse.next();
+  }
+
+  // Page routes: i18n routing only
   return intlMiddleware(request);
 }
 
