@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, theme } from 'antd';
 import enUS from 'antd/locale/en_US';
 import zhCN from 'antd/locale/zh_CN';
+import { useTheme } from './ThemeContext';
 
 interface AntdProviderProps {
   children: React.ReactNode;
@@ -12,35 +13,38 @@ interface AntdProviderProps {
 
 export default function AntdProvider({ children, locale = 'en' }: AntdProviderProps) {
   const antdLocale = locale === 'zh' ? zhCN : enUS;
+  const { resolved } = useTheme();
+  const isDark = resolved === 'dark';
 
   return (
     <ConfigProvider
       locale={antdLocale}
       theme={{
+        algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: {
-          colorPrimary: '#0ea5e9',
+          colorPrimary: isDark ? '#38bdf8' : '#0ea5e9',
           colorSuccess: '#22c55e',
           colorWarning: '#f59e0b',
           colorError: '#ef4444',
-          colorInfo: '#0ea5e9',
+          colorInfo: isDark ? '#38bdf8' : '#0ea5e9',
           borderRadius: 10,
           fontFamily: "var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif",
-          colorBgLayout: '#f8fafc',
-          colorBgContainer: '#ffffff',
-          colorBgElevated: '#ffffff',
-          colorBorderSecondary: '#e2e8f0',
-          colorText: '#0f172a',
-          colorTextSecondary: '#64748b',
+          colorBgLayout: isDark ? '#0f172a' : '#f8fafc',
+          colorBgContainer: isDark ? '#1e293b' : '#ffffff',
+          colorBgElevated: isDark ? '#273449' : '#ffffff',
+          colorBorderSecondary: isDark ? '#334155' : '#e2e8f0',
+          colorText: isDark ? '#f1f5f9' : '#0f172a',
+          colorTextSecondary: isDark ? '#94a3b8' : '#64748b',
           controlHeight: 36,
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
-          boxShadowSecondary: '0 4px 12px rgba(0, 0, 0, 0.08)',
+          boxShadow: isDark ? '0 1px 3px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.06)',
+          boxShadowSecondary: isDark ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.08)',
         },
         components: {
           Table: {
-            headerBg: '#f8fafc',
-            headerColor: '#64748b',
-            rowHoverBg: '#f8fafc',
-            borderColor: '#f1f5f9',
+            headerBg: isDark ? '#1e293b' : '#f8fafc',
+            headerColor: isDark ? '#94a3b8' : '#64748b',
+            rowHoverBg: isDark ? '#1e293b' : '#f8fafc',
+            borderColor: isDark ? '#334155' : '#f1f5f9',
             cellPaddingBlock: 12,
           },
           Menu: {

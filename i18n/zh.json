@@ -16,7 +16,10 @@
     "refreshTab": "刷新",
     "closeOtherTabs": "关闭其它",
     "closeAllTabs": "关闭所有",
-    "closeRightTabs": "关闭右侧"
+    "closeRightTabs": "关闭右侧",
+    "themeSystem": "跟随系统",
+    "themeLight": "浅色",
+    "themeDark": "深色"
   },
   "dashboard": {
     "title": "仪表盘",

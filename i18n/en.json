@@ -16,7 +16,10 @@
     "refreshTab": "Refresh",
     "closeOtherTabs": "Close Others",
     "closeAllTabs": "Close All",
-    "closeRightTabs": "Close Right"
+    "closeRightTabs": "Close Right",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark"
   },
   "dashboard": {
     "title": "Dashboard",

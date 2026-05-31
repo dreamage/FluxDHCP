@@ -8,9 +8,11 @@ import {
   SettingOutlined, HistoryOutlined, ToolOutlined, ApiOutlined,
   MenuFoldOutlined, MenuUnfoldOutlined, MenuOutlined,
   CloseOutlined, ColumnWidthOutlined, ReloadOutlined, TagOutlined,
+  SunOutlined, MoonOutlined, DesktopOutlined,
 } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useTheme } from './ThemeContext';
 
 const { Header, Sider, Content } = Layout;
 
@@ -31,6 +33,7 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations('layout');
+  const { mode: themeMode, setMode: setThemeMode } = useTheme();
 
   // Detect mobile
   useEffect(() => {
@@ -40,15 +43,15 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Hide splash screen after React renders
-  useEffect(() => {
-    (window as any).__splash_hide?.();
-  }, []);
-
   // Auto-collapse on mobile
   useEffect(() => {
     if (isMobile) setCollapsed(true);
   }, [isMobile]);
+
+  // Hide splash screen after React renders
+  useEffect(() => {
+    (window as any).__splash_hide?.();
+  }, []);
 
   const pageKey = useMemo(() => {
     const match = pathname?.match(/\/(dashboard|pools|leases|reservations|options|mac-notes|webhooks|logs|settings)/);
@@ -163,7 +166,6 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
 
   const handleLocaleChange = (newLocale: string) => {
     onLocaleChange(newLocale);
-    // Persist locale preference
     document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000`;
     if (pathname) {
       const newPath = pathname.replace(`/${locale}`, `/${newLocale}`);
@@ -173,10 +175,17 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
 
   const sidebarWidth = collapsed ? 80 : 220;
 
+  const themeOptions = [
+    { value: 'system', label: <span><DesktopOutlined style={{ marginRight: 6 }} />{t('themeSystem')}</span> },
+    { value: 'light', label: <span><SunOutlined style={{ marginRight: 6 }} />{t('themeLight')}</span> },
+    { value: 'dark', label: <span><MoonOutlined style={{ marginRight: 6 }} />{t('themeDark')}</span> },
+  ];
+
   const renderTabBar: React.ComponentProps<typeof Tabs>['renderTabBar'] = (props, DefaultTabBar) => (
     <DefaultTabBar {...props}>
       {(node) => {
-        const tabKey = (node as React.ReactElement).key as string;
+        const tabKey = (node as React.ReactElement)?.key as string;
+        if (!tabKey) return node;
         const items: MenuProps['items'] = [
           { key: 'refresh', label: t('refreshTab'), icon: <ReloadOutlined />, onClick: () => { router.replace(`/${locale}${tabKey}?_r=${Date.now()}`); } },
           { type: 'divider' as const },
@@ -200,14 +209,14 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
       <div style={{
         height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: collapsed ? '0 8px' : '0 12px 0 20px',
-        borderBottom: '1px solid #f1f5f9',
+        borderBottom: '1px solid var(--color-sidebar-border)',
       }}>
-        <span style={{ fontSize: collapsed ? 20 : 17, fontWeight: 700, color: '#0ea5e9', letterSpacing: '-0.02em', fontFamily: "var(--font-dm-sans), sans-serif" }}>
+        <span style={{ fontSize: collapsed ? 20 : 17, fontWeight: 700, color: 'var(--color-primary)', letterSpacing: '-0.02em', fontFamily: "var(--font-dm-sans), sans-serif" }}>
           {collapsed ? 'F' : 'FluxDHCP'}
         </span>
         {!isMobile && (
           <div onClick={() => setCollapsed(!collapsed)}
-            style={{ cursor: 'pointer', padding: '6px', borderRadius: 6, color: '#64748b', display: 'flex', alignItems: 'center', fontSize: 16 }}>
+            style={{ cursor: 'pointer', padding: '6px', borderRadius: 6, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', fontSize: 16 }}>
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </div>
         )}
@@ -219,11 +228,11 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
   );
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f8fafc' }}>
+    <Layout style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
       {/* Desktop sidebar */}
       {!isMobile && (
         <Sider collapsed={collapsed} width={220} trigger={null}
-          style={{ background: '#ffffff', borderRight: '1px solid #f1f5f9', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}>
+          style={{ background: 'var(--color-sidebar-bg)', borderRight: '1px solid var(--color-sidebar-border)', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}>
           {sidebarContent}
         </Sider>
       )}
@@ -232,16 +241,16 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
       {isMobile && !mobileDrawer && (
         <div onClick={() => setMobileDrawer(true)}
           style={{ position: 'fixed', top: 12, left: 12, zIndex: 1100, cursor: 'pointer',
-            background: '#fff', borderRadius: 8, padding: '8px 10px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
-          <MenuOutlined style={{ fontSize: 18, color: '#64748b' }} />
+            background: 'var(--color-hamburger-bg)', borderRadius: 8, padding: '8px 10px', boxShadow: `0 2px 8px var(--color-hamburger-shadow)` }}>
+          <MenuOutlined style={{ fontSize: 18, color: 'var(--color-text-secondary)' }} />
         </div>
       )}
       {isMobile && mobileDrawer && (
         <>
           <div onClick={() => setMobileDrawer(false)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 1099 }} />
+            style={{ position: 'fixed', inset: 0, background: 'var(--color-mobile-overlay)', zIndex: 1099 }} />
           <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 220, zIndex: 1100,
-            background: '#fff', borderRight: '1px solid #f1f5f9', boxShadow: '4px 0 12px rgba(0,0,0,0.1)' }}>
+            background: 'var(--color-sidebar-bg)', borderRight: '1px solid var(--color-sidebar-border)', boxShadow: '4px 0 12px rgba(0,0,0,0.1)' }}>
             {sidebarContent}
           </div>
         </>
@@ -249,8 +258,8 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
 
       <Layout style={{ marginLeft: isMobile ? 0 : sidebarWidth, transition: 'margin-left 0.2s' }}>
         <Header style={{
-          background: '#ffffff', padding: '0 16px', display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', height: 56, borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 9,
+          background: 'var(--color-header-bg)', padding: '0 16px', display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center', height: 56, borderBottom: '1px solid var(--color-header-border)', position: 'sticky', top: 0, zIndex: 9,
           paddingLeft: isMobile ? 48 : 16,
         }}>
           <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -261,8 +270,13 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
               style={{ marginBottom: 0 }}
               tabBarStyle={{ marginBottom: 0 }} />
           </div>
-          <Select value={locale} onChange={handleLocaleChange} style={{ width: 110, flexShrink: 0 }} size="small" bordered={false}
-            options={[{ value: 'en', label: 'English' }, { value: 'zh', label: '中文' }]} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <Select value={themeMode} onChange={setThemeMode}
+              style={{ width: 130 }} size="small" bordered={false}
+              options={themeOptions} popupMatchSelectWidth={false} />
+            <Select value={locale} onChange={handleLocaleChange} style={{ width: 110 }} size="small" bordered={false}
+              options={[{ value: 'en', label: 'English' }, { value: 'zh', label: '中文' }]} />
+          </div>
         </Header>
         <Content style={{ padding: isMobile ? 12 : 24, minHeight: 'calc(100vh - 56px)' }}>
           {children}
