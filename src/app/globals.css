@@ -165,6 +165,14 @@ code, pre, .mono {
   position: relative;
 }
 
+/* Hide Tabs internal border - outer container provides the full-width border */
+.ant-tabs-nav {
+  margin-bottom: 0 !important;
+}
+.ant-tabs-nav::before {
+  display: none !important;
+}
+
 .ant-menu-item-selected::before {
   content: '';
   position: absolute;

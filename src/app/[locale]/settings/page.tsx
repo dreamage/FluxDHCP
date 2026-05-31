@@ -196,7 +196,7 @@ export default function SettingsPage({ params }: { params: Promise<{ locale: str
 
   return (
     <AppLayout locale={locale} onLocaleChange={() => {}}>
-      <Title level={3}>{t('title')}</Title>
+      <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
 
       {startError && (
         <Alert type="error" message={startError} closable

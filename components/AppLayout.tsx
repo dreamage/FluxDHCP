@@ -257,8 +257,8 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
       )}
 
       <Layout style={{ marginLeft: isMobile ? 0 : sidebarWidth, transition: 'margin-left 0.2s' }}>
-        {/* Top bar: tabs full width, selectors overlaid right */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 9, background: 'var(--color-header-bg)' }}>
+        {/* Top bar: full-width border, tabs + selectors on same line */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 9, background: 'var(--color-header-bg)', borderBottom: '1px solid var(--color-header-border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', paddingLeft: isMobile ? 48 : 16, paddingRight: 16, height: 44 }}>
             <div style={{ flex: 1, overflow: 'hidden' }}>
               <Tabs type="editable-card" activeKey={pageKey} onChange={handleTabChange}

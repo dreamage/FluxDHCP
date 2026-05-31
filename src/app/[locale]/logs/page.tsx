@@ -184,7 +184,7 @@ export default function LogsPage({ params }: { params: Promise<{ locale: string 
 
   return (
     <AppLayout locale={locale} onLocaleChange={() => {}}>
-      <Title level={3}>{t('title')}</Title>
+      <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
 
       <Space wrap style={{ marginBottom: 16 }} align="center">
         <Select value={messageType} onChange={v => { setMessageType(v); setPage(1); }}

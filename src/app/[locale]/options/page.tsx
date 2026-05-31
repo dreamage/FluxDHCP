@@ -126,7 +126,8 @@ export default function OptionsPage({ params }: { params: Promise<{ locale: stri
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>{t('addOption')}</Button>
       </div>
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"
-        scroll={{ x: 'max-content' }} />
+        scroll={{ x: 'max-content' }}
+        pagination={{ showSizeChanger: true, pageSizeOptions: [10, 20, 50, 100], defaultPageSize: 20 }} />
 
       <Modal title={editingRecord ? t('editOption') : t('addOption')} open={modalOpen}
         onOk={handleSubmit} onCancel={() => setModalOpen(false)}>
