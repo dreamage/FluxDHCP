@@ -141,10 +141,10 @@ export default function PoolsPage({ params }: { params: Promise<{ locale: string
   };
 
   const STATUS_COLORS: Record<string, string> = {
-    free: '#d9d9d9',
-    reserved: '#faad14',
-    bound: '#52c41a',
-    offered: '#1890ff',
+    free: 'var(--color-ip-free)',
+    reserved: 'var(--color-ip-reserved)',
+    bound: 'var(--color-ip-bound)',
+    offered: 'var(--color-ip-offered)',
   };
 
   const expandedRowRender = (record: any) => {
@@ -180,7 +180,7 @@ export default function PoolsPage({ params }: { params: Promise<{ locale: string
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 10, fontFamily: "var(--font-jetbrains-mono), monospace",
                   fontWeight: 500,
-                  color: item.status === 'free' ? '#94a3b8' : '#fff',
+                  color: item.status === 'free' ? 'var(--color-ip-free-text)' : '#fff',
                 }}>
                 {lastOctet}
               </div>

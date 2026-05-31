@@ -50,8 +50,8 @@ function StatCard({ icon, color, title, value, suffix, bgColor }: StatCardProps)
         </div>
         <div>
           <Text type="secondary" style={{ fontSize: 13 }}>{title}</Text>
-          <div style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, color: '#0f172a' }}>
-            {value}{suffix && <span style={{ fontSize: 14, fontWeight: 400, color: '#94a3b8', marginLeft: 4 }}>{suffix}</span>}
+          <div style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text)' }}>
+            {value}{suffix && <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--color-text-secondary)', marginLeft: 4 }}>{suffix}</span>}
           </div>
         </div>
       </div>

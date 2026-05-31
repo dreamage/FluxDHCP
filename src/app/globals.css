@@ -183,6 +183,22 @@ code, pre, .mono {
   border: 1px solid var(--color-border) !important;
 }
 
+/* ========== IP Grid Status Colors ========== */
+:root {
+  --color-ip-free: #d9d9d9;
+  --color-ip-free-text: #94a3b8;
+  --color-ip-reserved: #f59e0b;
+  --color-ip-bound: #22c55e;
+  --color-ip-offered: #3b82f6;
+}
+:root[data-theme="dark"] {
+  --color-ip-free: #334155;
+  --color-ip-free-text: #64748b;
+  --color-ip-reserved: #b45309;
+  --color-ip-bound: #15803d;
+  --color-ip-offered: #1d4ed8;
+}
+
 /* ========== Mobile Responsive ========== */
 @media (max-width: 768px) {
   .ant-table {
