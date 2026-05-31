@@ -101,6 +101,14 @@ export default function SettingsPage({ params }: { params: Promise<{ locale: str
         message.error(t('importInvalidFormat'));
         return;
       }
+      // Validate structure (#3)
+      const arrayFields = ['pools', 'reservations', 'device_options', 'webhooks', 'mac_notes'] as const;
+      for (const field of arrayFields) {
+        if (data[field] && !Array.isArray(data[field])) {
+          message.error(t('importInvalidFormat'));
+          return;
+        }
+      }
       setPendingImportData(data);
       setClearLeases(false);
       setClearLogs(false);
@@ -224,8 +232,8 @@ export default function SettingsPage({ params }: { params: Promise<{ locale: str
       </Card>
 
       {/* Server & DHCP Config */}
-      <Card title={t('serverConfig') || 'Server Configuration'} style={{ marginBottom: 16 }}>
-        <Form form={form} layout="vertical" onFinish={handleSave}>
+      <Form form={form} layout="vertical" onFinish={handleSave}>
+      <Card title={t('serverConfig')} style={{ marginBottom: 16 }}>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item name="server_ip" label={t('serverIp')}>
@@ -248,12 +256,10 @@ export default function SettingsPage({ params }: { params: Promise<{ locale: str
               </Form.Item>
             </Col>
           </Row>
-        </Form>
       </Card>
 
       {/* DHCP Parameters */}
-      <Card title={t('dhcpParams') || 'DHCP Parameters'} style={{ marginBottom: 16 }}>
-        <Form form={form} layout="vertical">
+      <Card title={t('dhcpParams')} style={{ marginBottom: 16 }}>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item name="t1_ratio" label={t('t1Ratio')} tooltip={t('t1RatioHelp')}>
@@ -276,8 +282,8 @@ export default function SettingsPage({ params }: { params: Promise<{ locale: str
               </Form.Item>
             </Col>
           </Row>
-        </Form>
       </Card>
+      </Form>
 
       {/* Import / Export */}
       <Card title={t('importExport') || 'Import / Export'} style={{ marginBottom: 16 }}>

@@ -9,6 +9,11 @@ import { translateError } from '@/lib/error-map';
 
 const { Title } = Typography;
 
+const ipRule = {
+  pattern: /^(\d{1,3}\.){3}\d{1,3}$/,
+  message: 'Invalid IPv4 format',
+};
+
 function formatLeaseTime(seconds: number, t: (key: string) => string): string {
   if (seconds < 60) return `${seconds}${t('seconds')}`;
   const d = Math.floor(seconds / 86400);
@@ -252,14 +257,14 @@ export default function PoolsPage({ params }: { params: Promise<{ locale: string
             <Input placeholder={t('namePlaceholder')} />
           </Form.Item>
           <Row gutter={16}>
-            <Col span={12}><Form.Item name="subnet" label={t('subnet')} rules={[{ required: true }]}><Input placeholder={t('subnetPlaceholder')} /></Form.Item></Col>
-            <Col span={12}><Form.Item name="netmask" label={t('netmask')} rules={[{ required: true }]}><Input placeholder={t('netmaskPlaceholder')} /></Form.Item></Col>
+            <Col span={12}><Form.Item name="subnet" label={t('subnet')} rules={[{ required: true }, ipRule]}><Input placeholder={t('subnetPlaceholder')} /></Form.Item></Col>
+            <Col span={12}><Form.Item name="netmask" label={t('netmask')} rules={[{ required: true }, ipRule]}><Input placeholder={t('netmaskPlaceholder')} /></Form.Item></Col>
           </Row>
           <Row gutter={16}>
-            <Col span={12}><Form.Item name="start_ip" label={t('startIp')} rules={[{ required: true }]}><Input placeholder={t('startIpPlaceholder')} /></Form.Item></Col>
-            <Col span={12}><Form.Item name="end_ip" label={t('endIp')} rules={[{ required: true }]}><Input placeholder={t('endIpPlaceholder')} /></Form.Item></Col>
+            <Col span={12}><Form.Item name="start_ip" label={t('startIp')} rules={[{ required: true }, ipRule]}><Input placeholder={t('startIpPlaceholder')} /></Form.Item></Col>
+            <Col span={12}><Form.Item name="end_ip" label={t('endIp')} rules={[{ required: true }, ipRule]}><Input placeholder={t('endIpPlaceholder')} /></Form.Item></Col>
           </Row>
-          <Form.Item name="gateway" label={t('gateway')}><Input placeholder={t('gatewayPlaceholder')} /></Form.Item>
+          <Form.Item name="gateway" label={t('gateway')} rules={[ipRule]}><Input placeholder={t('gatewayPlaceholder')} /></Form.Item>
           <Form.Item name="dns_servers" label={t('dns')}>
             <Select mode="tags" placeholder={t('dnsPlaceholder')} />
           </Form.Item>

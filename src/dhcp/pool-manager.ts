@@ -206,11 +206,21 @@ export class PoolManager {
     ).all(poolId) as Array<{ ip_address: string }>;
     reservations.forEach(r => ips.add(r.ip_address));
 
-    // DECLINE 黑名单
-    const declined = this.db.prepare(
-      "SELECT ip_address FROM declined_ips WHERE expires_at > datetime('now')"
-    ).all() as Array<{ ip_address: string }>;
-    declined.forEach(d => ips.add(d.ip_address));
+    // DECLINE 黑名单 — 只过滤在该地址池 IP 范围内的记录 (#13)
+    const pool = this.getPoolById(poolId);
+    if (pool) {
+      const poolStart = this.ipToNum(pool.start_ip);
+      const poolEnd = this.ipToNum(pool.end_ip);
+      const declined = this.db.prepare(
+        "SELECT ip_address FROM declined_ips WHERE expires_at > datetime('now')"
+      ).all() as Array<{ ip_address: string }>;
+      for (const d of declined) {
+        const dNum = this.ipToNum(d.ip_address);
+        if (dNum >= poolStart && dNum <= poolEnd) {
+          ips.add(d.ip_address);
+        }
+      }
+    }
 
     return ips;
   }

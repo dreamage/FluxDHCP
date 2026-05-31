@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { normalizeMac } from '@/lib/mac-utils';
+import { isIPInSubnet } from '@/lib/ip-utils';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -90,18 +91,12 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   try {
     const { id } = await params;
     const db = getDb();
-    db.prepare('DELETE FROM reservations WHERE id = ?').run(id);
+    const result = db.prepare('DELETE FROM reservations WHERE id = ?').run(id);
+    if (result.changes === 0) {
+      return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
+    }
     return NextResponse.json({ message: 'Reservation deleted' });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete reservation' }, { status: 500 });
   }
-}
-
-function isIPInSubnet(ip: string, subnet: string, netmask: string): boolean {
-  return (ipToNum(ip) & ipToNum(netmask)) === (ipToNum(subnet) & ipToNum(netmask));
-}
-
-function ipToNum(ip: string): number {
-  const parts = ip.split('.').map(Number);
-  return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
 }

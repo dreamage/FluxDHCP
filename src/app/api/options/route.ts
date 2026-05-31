@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
     let options;
     if (mac) {
-      options = db.prepare('SELECT * FROM device_options WHERE mac_address = ? ORDER BY option_code').get(mac.toUpperCase());
+      options = db.prepare('SELECT * FROM device_options WHERE mac_address = ? ORDER BY option_code').all(mac.toUpperCase());
     } else {
       options = db.prepare('SELECT * FROM device_options ORDER BY mac_address, option_code').all();
     }

@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
+import { normalizeMac } from '@/lib/mac-utils';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ mac: string }> }) {
   try {
-    const { mac } = await params;
+    const { mac: rawMac } = await params;
+    const mac = normalizeMac(rawMac);
+    if (!mac) {
+      return NextResponse.json({ error: 'Invalid MAC address format' }, { status: 400 });
+    }
     const db = getDb();
     const row = db.prepare('SELECT * FROM mac_notes WHERE mac_address = ?').get(mac);
     return NextResponse.json(row || null);
@@ -14,7 +19,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ mac
 
 export async function PUT(request: Request, { params }: { params: Promise<{ mac: string }> }) {
   try {
-    const { mac } = await params;
+    const { mac: rawMac } = await params;
+    const mac = normalizeMac(rawMac);
+    if (!mac) {
+      return NextResponse.json({ error: 'Invalid MAC address format' }, { status: 400 });
+    }
     const db = getDb();
     const body = await request.json();
     const { note } = body;
@@ -39,7 +48,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ mac:
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ mac: string }> }) {
   try {
-    const { mac } = await params;
+    const { mac: rawMac } = await params;
+    const mac = normalizeMac(rawMac);
+    if (!mac) {
+      return NextResponse.json({ error: 'Invalid MAC address format' }, { status: 400 });
+    }
     const db = getDb();
     db.prepare('DELETE FROM mac_notes WHERE mac_address = ?').run(mac);
     return NextResponse.json({ message: 'Note deleted' });

@@ -27,7 +27,10 @@
     "requests24h": "Events (24h)",
     "poolUsage": "Pool Usage",
     "overallUsage": "Overall IP Usage",
-    "recentEvents": "Recent Events"
+    "recentEvents": "Recent Events",
+    "noPools": "No pools configured",
+    "noEvents": "No recent events",
+    "fetchError": "Failed to load dashboard data"
   },
   "pools": {
     "title": "Address Pools",

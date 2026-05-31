@@ -29,6 +29,8 @@ export default function LeasesPage({ params }: { params: Promise<{ locale: strin
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [macNotes, setMacNotes] = useState<Record<string, string>>({});
+  const [sortField, setSortField] = useState('lease_end');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const fetchMacNotes = useCallback(async () => {
     try {
@@ -40,16 +42,16 @@ export default function LeasesPage({ params }: { params: Promise<{ locale: strin
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-      if (state !== 'ALL') params.set('state', state);
-      const res = await fetch(`/api/leases?${params}`);
+      const searchParams = new URLSearchParams({ page: String(page), pageSize: String(pageSize), sort: sortField, order: sortOrder });
+      if (state !== 'ALL') searchParams.set('state', state);
+      const res = await fetch(`/api/leases?${searchParams}`);
       const json = await res.json();
       setData(json.data || []);
       setTotal(json.total || 0);
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, state]);
+  }, [page, pageSize, state, sortField, sortOrder]);
 
   useEffect(() => { fetchData(); fetchMacNotes(); }, [fetchData, fetchMacNotes]);
 
@@ -70,26 +72,19 @@ export default function LeasesPage({ params }: { params: Promise<{ locale: strin
   };
 
   const columns = [
-    { title: t('ipAddress'), dataIndex: 'ip_address', key: 'ip_address', width: 130,
-      sorter: (a: any, b: any) => a.ip_address?.localeCompare(b.ip_address) },
-    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200,
-      sorter: (a: any, b: any) => a.mac_address?.localeCompare(b.mac_address),
+    { title: t('ipAddress'), dataIndex: 'ip_address', key: 'ip_address', width: 130, sorter: true },
+    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200, sorter: true,
       render: (mac: string) => <MacAddress mac={mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} /> },
-    { title: t('hostname'), dataIndex: 'hostname', key: 'hostname', width: 120,
-      sorter: (a: any, b: any) => (a.hostname || '').localeCompare(b.hostname || '') },
+    { title: t('hostname'), dataIndex: 'hostname', key: 'hostname', width: 120, sorter: true },
     {
-      title: t('state'), dataIndex: 'state', key: 'state', width: 100,
-      sorter: (a: any, b: any) => a.state?.localeCompare(b.state),
+      title: t('state'), dataIndex: 'state', key: 'state', width: 100, sorter: true,
       render: (state: string) => <Tag color={STATE_COLORS[state] || 'default'}>{t(state.toLowerCase())}</Tag>,
     },
-    { title: t('startTime'), dataIndex: 'lease_start', key: 'lease_start', width: 170,
-      sorter: (a: any, b: any) => (a.lease_start || '').localeCompare(b.lease_start || ''),
+    { title: t('startTime'), dataIndex: 'lease_start', key: 'lease_start', width: 170, sorter: true,
       render: (v: string) => formatLocalTime(v) },
-    { title: t('endTime'), dataIndex: 'lease_end', key: 'lease_end', width: 170,
-      sorter: (a: any, b: any) => (a.lease_end || '').localeCompare(b.lease_end || ''),
+    { title: t('endTime'), dataIndex: 'lease_end', key: 'lease_end', width: 170, sorter: true,
       render: (v: string) => formatLocalTime(v) },
-    { title: t('pool'), dataIndex: 'pool_name', key: 'pool_name', width: 100,
-      sorter: (a: any, b: any) => (a.pool_name || '').localeCompare(b.pool_name || '') },
+    { title: t('pool'), dataIndex: 'pool_name', key: 'pool_name', width: 100, sorter: true },
     {
       title: tc('actions'), key: 'actions', width: 120, fixed: 'right' as const,
       render: (_: any, r: any) => {
@@ -126,6 +121,12 @@ export default function LeasesPage({ params }: { params: Promise<{ locale: strin
       </div>
       <Table columns={columns} dataSource={data} rowKey="ip_address" loading={loading} size="small"
         scroll={{ x: 'max-content' }}
+        onChange={(_pagination, _filters, sorter: any) => {
+          if (sorter.field) {
+            setSortField(sorter.field);
+            setSortOrder(sorter.order === 'ascend' ? 'asc' : 'desc');
+          }
+        }}
         pagination={{ current: page, pageSize, total, onChange: (p, ps) => { setPage(p); setPageSize(ps); } }} />
     </AppLayout>
   );

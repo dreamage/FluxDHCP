@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
+import { ipToNum } from '@/lib/ip-utils';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -69,6 +70,18 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     db.prepare('DELETE FROM reservations WHERE pool_id = ?').run(id);
     // 删除关联的租约
     db.prepare('DELETE FROM leases WHERE pool_id = ?').run(id);
+    // 删除该 IP 范围内的 DECLINE 黑名单 (#5)
+    const pool = db.prepare('SELECT start_ip, end_ip FROM pools WHERE id = ?').get(id) as any;
+    if (pool) {
+      const startNum = ipToNum(pool.start_ip);
+      const endNum = ipToNum(pool.end_ip);
+      db.prepare(
+        "DELETE FROM declined_ips WHERE ip_address BETWEEN ? AND ?"
+      ).run(
+        `${(startNum >>> 24) & 0xFF}.${(startNum >>> 16) & 0xFF}.${(startNum >>> 8) & 0xFF}.${startNum & 0xFF}`,
+        `${(endNum >>> 24) & 0xFF}.${(endNum >>> 16) & 0xFF}.${(endNum >>> 8) & 0xFF}.${endNum & 0xFF}`
+      );
+    }
     // 删除地址池
     db.prepare('DELETE FROM pools WHERE id = ?').run(id);
 

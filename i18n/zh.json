@@ -27,7 +27,10 @@
     "requests24h": "事件（24小时）",
     "poolUsage": "地址池使用率",
     "overallUsage": "总IP使用率",
-    "recentEvents": "最近事件"
+    "recentEvents": "最近事件",
+    "noPools": "暂无地址池",
+    "noEvents": "暂无事件",
+    "fetchError": "加载仪表盘数据失败"
   },
   "pools": {
     "title": "地址池管理",

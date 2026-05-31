@@ -163,6 +163,8 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
 
   const handleLocaleChange = (newLocale: string) => {
     onLocaleChange(newLocale);
+    // Persist locale preference
+    document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000`;
     if (pathname) {
       const newPath = pathname.replace(`/${locale}`, `/${newLocale}`);
       router.push(newPath);

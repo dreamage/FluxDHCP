@@ -11,6 +11,11 @@ import { translateError } from '@/lib/error-map';
 
 const { Title } = Typography;
 
+const ipRule = {
+  pattern: /^(\d{1,3}\.){3}\d{1,3}$/,
+  message: 'Invalid IPv4 format',
+};
+
 export default function ReservationsPage({ params }: { params: Promise<{ locale: string }> }) {
   const t = useTranslations('reservations');
   const tc = useTranslations('common');
@@ -189,7 +194,7 @@ export default function ReservationsPage({ params }: { params: Promise<{ locale:
               form.setFieldsValue({ mac_address: mac, description: t('randomMacNote') });
             }}>{t('randomMac')}</Button>
           </div>
-          <Form.Item name="ip_address" label={t('ipAddress')} rules={[{ required: true }]}>
+          <Form.Item name="ip_address" label={t('ipAddress')} rules={[{ required: true }, ipRule]}>
             <Input />
           </Form.Item>
           <Form.Item name="pool_id" label={t('pool')} rules={[{ required: true }]}>

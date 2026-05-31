@@ -2,7 +2,7 @@
 
 import React, { use, useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Card, Row, Col, Typography, Progress, Tag, Space, Tooltip } from 'antd';
+import { Card, Row, Col, Typography, Progress, Tag, Space, Tooltip, Spin, Alert } from 'antd';
 import {
   TeamOutlined, ClusterOutlined, EnvironmentOutlined, LineChartOutlined,
   ClockCircleOutlined, DashboardOutlined,
@@ -66,6 +66,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
   const { locale } = use(params);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [macNotes, setMacNotes] = useState<Record<string, string>>({});
 
   const fetchMacNotes = useCallback(async () => {
@@ -80,9 +81,10 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError('');
       try {
         const res = await fetch('/api/dashboard');
-        if (!res.ok) return;
+        if (!res.ok) { setError(t('fetchError') || 'Failed to load'); return; }
         const json = await res.json();
         setData({
           activeLeases: json.activeLeases ?? 0,
@@ -114,6 +116,8 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
         <DashboardOutlined style={{ fontSize: 22, color: '#0ea5e9' }} />
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
       </div>
+      {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} />}
+      {loading && !data && <Spin style={{ display: 'block', marginTop: 48, textAlign: 'center' }} />}
       {data && (
         <>
           {/* Stat Cards */}
@@ -165,7 +169,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
               );
             })}
             {data.poolUsage.length === 0 && (
-              <Col span={24}><Text type="secondary">No pools configured</Text></Col>
+              <Col span={24}><Text type="secondary">{t('noPools')}</Text></Col>
             )}
           </Row>
 
@@ -176,7 +180,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
           </div>
           <Card bordered={false} style={{ borderRadius: 12 }}>
             {data.recentEvents.length === 0 ? (
-              <Text type="secondary">No recent events</Text>
+              <Text type="secondary">{t('noEvents')}</Text>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {data.recentEvents.map((event, idx) => {

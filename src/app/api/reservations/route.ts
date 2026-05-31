@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { normalizeMac } from '@/lib/mac-utils';
+import { isValidIPv4, isIPInSubnet } from '@/lib/ip-utils';
 
 export async function GET() {
   try {
@@ -31,6 +32,11 @@ export async function POST(request: Request) {
     const mac = normalizeMac(mac_address);
     if (!mac) {
       return NextResponse.json({ error: 'Invalid MAC address format. Use AA:BB:CC:DD:EE:FF' }, { status: 400 });
+    }
+
+    // 校验 IP 格式
+    if (!isValidIPv4(ip_address)) {
+      return NextResponse.json({ error: 'Invalid IP address format' }, { status: 400 });
     }
 
     // 校验 IP 在子网范围内
@@ -71,13 +77,4 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create reservation' }, { status: 500 });
   }
-}
-
-function isIPInSubnet(ip: string, subnet: string, netmask: string): boolean {
-  return (ipToNum(ip) & ipToNum(netmask)) === (ipToNum(subnet) & ipToNum(netmask));
-}
-
-function ipToNum(ip: string): number {
-  const parts = ip.split('.').map(Number);
-  return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
 }

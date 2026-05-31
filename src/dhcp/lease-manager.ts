@@ -98,6 +98,75 @@ export class LeaseManager {
   }
 
   /**
+   * 原子操作：查找可用 IP 并创建 OFFERED 租约（防竞态）
+   */
+  atomicAllocateAndOffer(
+    poolId: number,
+    mac: string,
+    leaseTime: number,
+    xid: string,
+    startIp: string,
+    endIp: string,
+    hostname?: string,
+    clientId?: string,
+    vendorClass?: string,
+    requestedIp?: string,
+  ): string | null {
+    const tx = this.db.transaction(() => {
+      // 在事务内查找可用 IP（此时持有写锁，其他并发分配被阻塞）
+      const occupied = new Set<string>();
+      const leases = this.db.prepare(
+        "SELECT ip_address FROM leases WHERE pool_id = ? AND state IN ('OFFERED', 'BOUND')"
+      ).all(poolId) as Array<{ ip_address: string }>;
+      leases.forEach(l => occupied.add(l.ip_address));
+      const reservations = this.db.prepare(
+        'SELECT ip_address FROM reservations WHERE pool_id = ? AND enabled = 1'
+      ).all(poolId) as Array<{ ip_address: string }>;
+      reservations.forEach(r => occupied.add(r.ip_address));
+
+      // Convert IPs to numbers
+      const ipToNumLocal = (ip: string) => {
+        const parts = ip.split('.').map(Number);
+        return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
+      };
+      const numToIpLocal = (num: number) =>
+        `${(num >>> 24) & 0xFF}.${(num >>> 16) & 0xFF}.${(num >>> 8) & 0xFF}.${num & 0xFF}`;
+
+      let ip: string | null = null;
+      const startNum = ipToNumLocal(startIp);
+      const endNum = ipToNumLocal(endIp);
+      for (let num = startNum; num <= endNum; num++) {
+        const candidate = numToIpLocal(num);
+        if (!occupied.has(candidate)) {
+          ip = candidate;
+          break;
+        }
+      }
+
+      if (!ip) return null;
+
+      // 事务内直接创建租约
+      const now = new Date();
+      const leaseEnd = new Date(now.getTime() + leaseTime * 1000);
+      this.db.prepare('DELETE FROM leases WHERE ip_address = ?').run(ip);
+      this.db.prepare(`
+        INSERT INTO leases (ip_address, mac_address, hostname, state, pool_id, lease_start, lease_end, client_id, vendor_class, requested_ip, xid)
+        VALUES (?, ?, ?, 'OFFERED', ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        ip, mac.toUpperCase(), hostname || null,
+        poolId,
+        now.toISOString(), leaseEnd.toISOString(),
+        clientId || null, vendorClass || null, requestedIp || null,
+        xid,
+      );
+
+      return ip;
+    });
+
+    return tx();
+  }
+
+  /**
    * 创建 OFFERED 租约（DHCPOFFER 时使用）
    */
   createOfferedLease(

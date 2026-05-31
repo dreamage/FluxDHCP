@@ -116,6 +116,7 @@ export default function LogsPage({ params }: { params: Promise<{ locale: string 
   }, []);
 
   const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (messageType) params.set('messageType', messageType);

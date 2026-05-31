@@ -42,6 +42,17 @@ body {
   font-family: var(--font-sans) !important;
   color: var(--color-text);
   background: var(--color-bg) !important;
+
+/* Focus-visible for keyboard navigation accessibility (#19) */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

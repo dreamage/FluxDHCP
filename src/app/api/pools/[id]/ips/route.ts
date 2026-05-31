@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
+import { ipToNum, numToIp } from '@/lib/ip-utils';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -54,13 +55,4 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch pool IPs' }, { status: 500 });
   }
-}
-
-function ipToNum(ip: string): number {
-  const parts = ip.split('.').map(Number);
-  return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
-}
-
-function numToIp(num: number): string {
-  return `${(num >>> 24) & 0xFF}.${(num >>> 16) & 0xFF}.${(num >>> 8) & 0xFF}.${num & 0xFF}`;
 }

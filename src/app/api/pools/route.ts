@@ -1,28 +1,25 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
+import { ipToNum, isValidIPv4 } from '@/lib/ip-utils';
 
 export async function GET() {
   try {
     const db = getDb();
     const pools = db.prepare('SELECT * FROM pools ORDER BY id').all();
 
-    // 为每个地址池计算使用率
+    // Single aggregated query for all pool usage counts
+    const usageMap = new Map<number, number>();
+    const leaseCounts = db.prepare(
+      "SELECT pool_id, COUNT(DISTINCT ip_address) as count FROM leases WHERE state IN ('OFFERED', 'BOUND') GROUP BY pool_id"
+    ).all() as Array<{ pool_id: number; count: number }>;
+    leaseCounts.forEach(r => usageMap.set(r.pool_id, r.count));
+
     const result = pools.map((pool: any) => {
       const startNum = ipToNum(pool.start_ip);
       const endNum = ipToNum(pool.end_ip);
       const total = endNum - startNum + 1;
-
-      const leaseCount = db.prepare(
-        "SELECT COUNT(*) as count FROM leases WHERE pool_id = ? AND state IN ('OFFERED', 'BOUND')"
-      ).get(pool.id) as { count: number };
-
-      const reservationCount = db.prepare(
-        'SELECT COUNT(*) as count FROM reservations WHERE pool_id = ? AND enabled = 1'
-      ).get(pool.id) as { count: number };
-
-      const used = leaseCount.count + reservationCount.count;
+      const used = usageMap.get(pool.id) || 0;
       const percentage = total > 0 ? Math.round((used / total) * 100) : 0;
-
       return { ...pool, dns_servers: pool.dns_servers ? JSON.parse(pool.dns_servers) : [], used, total, percentage };
     });
 
@@ -41,6 +38,15 @@ export async function POST(request: Request) {
     // 校验必填字段
     if (!name || !subnet || !netmask || !start_ip || !end_ip) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // 校验 IP 格式 (#6)
+    const ipsToCheck = [subnet, netmask, start_ip, end_ip];
+    if (gateway) ipsToCheck.push(gateway);
+    for (const ip of ipsToCheck) {
+      if (!isValidIPv4(ip)) {
+        return NextResponse.json({ error: `Invalid IP address: ${ip}` }, { status: 400 });
+      }
     }
 
     // 校验 IP 范围重叠
@@ -72,9 +78,4 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create pool' }, { status: 500 });
   }
-}
-
-function ipToNum(ip: string): number {
-  const parts = ip.split('.').map(Number);
-  return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
 }

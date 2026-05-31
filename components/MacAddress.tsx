@@ -24,22 +24,28 @@ export default function MacAddress({ mac, macNotes, onNoteUpdate }: MacAddressPr
     if (!editingNote.trim()) return;
     setSaving(true);
     try {
-      await fetch('/api/mac-notes', {
+      const res = await fetch('/api/mac-notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mac_address: mac, note: editingNote.trim() }),
       });
-      setOpen(false);
-      onNoteUpdate();
+      if (res.ok) {
+        setOpen(false);
+        onNoteUpdate();
+      }
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    await fetch(`/api/mac-notes/${encodeURIComponent(mac)}`, { method: 'DELETE' });
-    setOpen(false);
-    onNoteUpdate();
+    try {
+      const res = await fetch(`/api/mac-notes/${encodeURIComponent(mac)}`, { method: 'DELETE' });
+      if (res.ok) {
+        setOpen(false);
+        onNoteUpdate();
+      }
+    } catch { /* ignore */ }
   };
 
   const handleOpenChange = (visible: boolean) => {

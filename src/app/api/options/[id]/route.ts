@@ -43,7 +43,10 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   try {
     const { id } = await params;
     const db = getDb();
-    db.prepare('DELETE FROM device_options WHERE id = ?').run(id);
+    const result = db.prepare('DELETE FROM device_options WHERE id = ?').run(id);
+    if (result.changes === 0) {
+      return NextResponse.json({ error: 'Option not found' }, { status: 404 });
+    }
     return NextResponse.json({ message: 'Option deleted' });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete option' }, { status: 500 });

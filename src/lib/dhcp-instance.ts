@@ -268,16 +268,34 @@ class DhcpInstance extends EventEmitter {
       }
     }
 
-    // 分配新 IP
+    // 分配新 IP — 使用原子操作防竞态 (#1)
     const requestedIP = packet.options.get(50) as string | undefined;
     const clientNetwork = packet.giaddr !== '0.0.0.0' ? packet.giaddr : this.serverIP;
-    const result = this.poolManager.allocateIP(mac, requestedIP, clientNetwork);
-    if (!result) {
+
+    // 先用 allocateIP 找到合适的地址池（保留地址检查等已排除）
+    const allocResult = this.poolManager.allocateIP(mac, requestedIP, clientNetwork);
+    if (!allocResult) {
       console.log(`[DHCP] No available IP for DISCOVER from ${mac}`);
       return;
     }
 
-    this.sendOffer(packet, result.ip, result.pool);
+    // 原子操作：在事务内查找可用 IP + 创建租约，防止并发分配同一 IP
+    const hostname = packet.options.get(12) as string | undefined;
+    const clientId = this.serializeClientId(packet.options.get(61));
+    const vendorClass = packet.options.get(60) as string | undefined;
+
+    const assignedIP = this.leaseManager.atomicAllocateAndOffer(
+      allocResult.pool.id, mac, allocResult.pool.lease_time || this.defaultLeaseTime,
+      packet.xid.toString(16), allocResult.pool.start_ip, allocResult.pool.end_ip,
+      hostname, clientId, vendorClass, requestedIP,
+    );
+
+    if (!assignedIP) {
+      console.log(`[DHCP] No available IP for DISCOVER from ${mac}`);
+      return;
+    }
+
+    this.sendOffer(packet, assignedIP, allocResult.pool);
   }
 
   /**
