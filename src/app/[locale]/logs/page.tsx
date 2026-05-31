@@ -233,7 +233,7 @@ export default function LogsPage({ params }: { params: Promise<{ locale: string 
 
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"
         scroll={{ x: 'max-content' }}
-        pagination={{ current: page, pageSize, total, onChange: (p, ps) => { setPage(p); setPageSize(ps); } }}
+        pagination={{ current: page, pageSize, total, showSizeChanger: true, pageSizeOptions: [10, 20, 50, 100], onChange: (p, ps) => { setPage(p); setPageSize(ps); } }}
         expandable={{
           rowExpandable: () => true,
           expandedRowRender: (record: any) => (

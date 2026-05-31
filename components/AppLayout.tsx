@@ -14,7 +14,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useTheme } from './ThemeContext';
 
-const { Header, Sider, Content } = Layout;
+const { Sider, Content } = Layout;
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -257,28 +257,27 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
       )}
 
       <Layout style={{ marginLeft: isMobile ? 0 : sidebarWidth, transition: 'margin-left 0.2s' }}>
-        <Header style={{
-          background: 'var(--color-header-bg)', padding: '0 16px', display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', height: 56, borderBottom: '1px solid var(--color-header-border)', position: 'sticky', top: 0, zIndex: 9,
-          paddingLeft: isMobile ? 48 : 16,
-        }}>
-          <div style={{ flex: 1, overflow: 'hidden' }}>
-            <Tabs type="editable-card" activeKey={pageKey} onChange={handleTabChange}
-              onEdit={handleTabEdit} hideAdd size="small"
-              items={tabs.map(tab => ({ key: tab.key, label: tab.label, closable: tabs.length > 1 }))}
-              renderTabBar={renderTabBar}
-              style={{ marginBottom: 0 }}
-              tabBarStyle={{ marginBottom: 0 }} />
+        {/* Top bar: tabs full width, selectors overlaid right */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 9, background: 'var(--color-header-bg)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', paddingLeft: isMobile ? 48 : 16, paddingRight: 16, height: 44 }}>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <Tabs type="editable-card" activeKey={pageKey} onChange={handleTabChange}
+                onEdit={handleTabEdit} hideAdd size="small"
+                items={tabs.map(tab => ({ key: tab.key, label: tab.label, closable: tabs.length > 1 }))}
+                renderTabBar={renderTabBar}
+                style={{ marginBottom: 0 }}
+                tabBarStyle={{ marginBottom: 0 }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8, background: 'var(--color-header-bg)', paddingLeft: 8 }}>
+              <Select value={themeMode} onChange={setThemeMode}
+                style={{ width: 130 }} size="small" bordered={false}
+                options={themeOptions} popupMatchSelectWidth={false} />
+              <Select value={locale} onChange={handleLocaleChange} style={{ width: 110 }} size="small" bordered={false}
+                options={[{ value: 'en', label: 'English' }, { value: 'zh', label: '中文' }]} />
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            <Select value={themeMode} onChange={setThemeMode}
-              style={{ width: 130 }} size="small" bordered={false}
-              options={themeOptions} popupMatchSelectWidth={false} />
-            <Select value={locale} onChange={handleLocaleChange} style={{ width: 110 }} size="small" bordered={false}
-              options={[{ value: 'en', label: 'English' }, { value: 'zh', label: '中文' }]} />
-          </div>
-        </Header>
-        <Content style={{ padding: isMobile ? 12 : 24, minHeight: 'calc(100vh - 56px)' }}>
+        </div>
+        <Content style={{ padding: isMobile ? 12 : 24, minHeight: 'calc(100vh - 44px)' }}>
           {children}
         </Content>
       </Layout>
