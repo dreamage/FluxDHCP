@@ -185,6 +185,8 @@
     "logRetentionHelp": "超过此天数的日志将自动删除",
     "declineBlacklistDuration": "DECLINE 黑名单时长（秒）",
     "declineBlacklistHelp": "客户端 DECLINE 的 IP 在此时间内不会被重新分配",
+    "webhookTimeout": "Webhook 超时时间（毫秒）",
+    "webhookTimeoutHelp": "Webhook 投递的 HTTP 请求超时时间",
     "logManagement": "日志管理",
     "clearLogs": "清空所有日志",
     "clearConfirm": "确定要清空所有日志吗？此操作不可撤销。",

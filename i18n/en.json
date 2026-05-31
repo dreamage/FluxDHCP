@@ -185,6 +185,8 @@
     "logRetentionHelp": "Logs older than this will be automatically deleted",
     "declineBlacklistDuration": "DECLINE Blacklist Duration (s)",
     "declineBlacklistHelp": "IPs declined by clients will not be reassigned for this duration",
+    "webhookTimeout": "Webhook Timeout (ms)",
+    "webhookTimeoutHelp": "HTTP request timeout for webhook delivery",
     "logManagement": "Log Management",
     "clearLogs": "Clear All Logs",
     "clearConfirm": "Are you sure you want to clear all logs? This cannot be undone.",

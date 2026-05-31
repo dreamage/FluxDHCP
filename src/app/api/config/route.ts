@@ -15,6 +15,7 @@ const ALLOWED_KEYS = new Set([
   'server_ip', 'listen_interface', 'default_lease_time',
   't1_ratio', 't2_ratio', 'dhcp_enabled', 'web_port',
   'language', 'log_retention_days', 'decline_blacklist_duration',
+  'webhook_timeout',
 ]);
 
 export async function PUT(request: Request) {

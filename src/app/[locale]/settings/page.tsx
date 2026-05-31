@@ -41,6 +41,7 @@ export default function SettingsPage({ params }: { params: Promise<{ locale: str
           web_port: parseInt(config.web_port, 10),
           log_retention_days: parseInt(config.log_retention_days, 10) || 90,
           decline_blacklist_duration: parseInt(config.decline_blacklist_duration, 10) || 3600,
+          webhook_timeout: parseInt(config.webhook_timeout, 10) || 10000,
         });
 
         setDhcpStatus(status.status);
@@ -143,6 +144,7 @@ export default function SettingsPage({ params }: { params: Promise<{ locale: str
           web_port: parseInt(config.web_port, 10),
           log_retention_days: parseInt(config.log_retention_days, 10) || 90,
           decline_blacklist_duration: parseInt(config.decline_blacklist_duration, 10) || 3600,
+          webhook_timeout: parseInt(config.webhook_timeout, 10) || 10000,
         });
       } else {
         message.error(result.error || tc('error'));
@@ -279,6 +281,11 @@ export default function SettingsPage({ params }: { params: Promise<{ locale: str
             <Col xs={24} sm={12}>
               <Form.Item name="log_retention_days" label={t('logRetentionDays')} tooltip={t('logRetentionHelp')}>
                 <InputNumber style={{ width: '100%' }} min={1} placeholder="90" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item name="webhook_timeout" label={t('webhookTimeout')} tooltip={t('webhookTimeoutHelp')}>
+                <InputNumber style={{ width: '100%' }} min={1000} placeholder="10000" />
               </Form.Item>
             </Col>
           </Row>

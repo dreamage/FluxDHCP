@@ -18,6 +18,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: urlValidation.error }, { status: 400 });
     }
 
+    // Read configurable timeout
+    const timeoutRow = db.prepare("SELECT value FROM config WHERE key = 'webhook_timeout'").get() as { value: string } | undefined;
+    const timeout = timeoutRow ? parseInt(timeoutRow.value, 10) : 10000;
+
     const fields: Array<{ name: string; value: string }> = JSON.parse(webhook.fields || '[]');
     let customHeaders: Record<string, string> = {};
     try { customHeaders = JSON.parse(webhook.headers || '{}'); } catch { /* ignore */ }
@@ -49,7 +53,7 @@ export async function POST(request: Request) {
     const fetchOptions: RequestInit = {
       method: webhook.method,
       headers,
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(timeout),
     };
 
     let targetUrl = webhook.url;

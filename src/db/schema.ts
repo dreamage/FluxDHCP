@@ -122,6 +122,24 @@ CREATE TABLE IF NOT EXISTS declined_ips (
   expires_at  TEXT NOT NULL
 )`;
 
+export const CREATE_TABLE_WEBHOOK_DELIVERIES = `
+CREATE TABLE IF NOT EXISTS webhook_deliveries (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  webhook_id  INTEGER NOT NULL,
+  webhook_name TEXT NOT NULL,
+  event_type  TEXT NOT NULL,
+  url         TEXT NOT NULL,
+  method      TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'pending',
+  http_status INTEGER,
+  response    TEXT,
+  error       TEXT,
+  attempt     INTEGER DEFAULT 1,
+  max_attempts INTEGER DEFAULT 3,
+  created_at  TEXT DEFAULT (datetime('now')),
+  completed_at TEXT
+)`;
+
 // ===== 索引语句 =====
 
 export const CREATE_INDEXES: string[] = [
@@ -137,6 +155,9 @@ export const CREATE_INDEXES: string[] = [
   'CREATE INDEX IF NOT EXISTS idx_logs_mac ON logs(client_mac)',
   'CREATE INDEX IF NOT EXISTS idx_logs_type ON logs(message_type)',
   'CREATE INDEX IF NOT EXISTS idx_declined_expires ON declined_ips(expires_at)',
+  'CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook ON webhook_deliveries(webhook_id)',
+  'CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_status ON webhook_deliveries(status)',
+  'CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_created ON webhook_deliveries(created_at)',
 ];
 
 // ===== 初始配置数据 =====
@@ -152,5 +173,6 @@ INSERT OR IGNORE INTO config (key, value) VALUES
   ('web_port', '3000'),
   ('language', 'en'),
   ('log_retention_days', '90'),
-  ('decline_blacklist_duration', '3600')
+  ('decline_blacklist_duration', '3600'),
+  ('webhook_timeout', '10000')
 `;

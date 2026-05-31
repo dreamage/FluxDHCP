@@ -12,6 +12,7 @@ import {
   CREATE_TABLE_WEBHOOKS,
   CREATE_TABLE_MAC_NOTES,
   CREATE_TABLE_DECLINED_IPS,
+  CREATE_TABLE_WEBHOOK_DELIVERIES,
   CREATE_INDEXES,
   SEED_CONFIG,
 } from './schema';
@@ -50,6 +51,7 @@ export function getDatabase(dbPath?: string): Database.Database {
   db.exec(CREATE_TABLE_WEBHOOKS);
   db.exec(CREATE_TABLE_MAC_NOTES);
   db.exec(CREATE_TABLE_DECLINED_IPS);
+  db.exec(CREATE_TABLE_WEBHOOK_DELIVERIES);
 
   // Migration: add body_mode column to webhooks if missing
   try {
