@@ -1,0 +1,357 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ========== Light Theme ========== */
+:root {
+  --color-primary: #0ea5e9;
+  --color-primary-hover: #0284c7;
+  --color-primary-light: #e0f2fe;
+  --color-primary-subtle: #f0f9ff;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-border: #e2e8f0;
+  --color-border-subtle: #f1f5f9;
+  --color-text: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-sidebar-bg: #ffffff;
+  --color-sidebar-border: #f1f5f9;
+  --color-tab-bar-bg: #f8fafc;
+  --color-tab-active-bg: #ffffff;
+  --color-tab-hover-bg: #f1f5f9;
+  --color-hover: #f8fafc;
+  --color-scrollbar: #cbd5e1;
+  --color-scrollbar-hover: #94a3b8;
+  --color-modal-overlay: rgba(0, 0, 0, 0.45);
+  --color-hamburger-bg: #ffffff;
+  --color-hamburger-shadow: rgba(0, 0, 0, 0.15);
+  --color-mobile-overlay: rgba(0, 0, 0, 0.3);
+  --color-button-glow: rgba(14, 165, 233, 0.3);
+  --font-sans: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'Menlo', monospace;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+}
+
+/* ========== Dark Theme ========== */
+:root[data-theme="dark"] {
+  --color-primary: #38bdf8;
+  --color-primary-hover: #7dd3fc;
+  --color-primary-light: #0c4a6e;
+  --color-primary-subtle: #082f49;
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-elevated: #273449;
+  --color-border: #334155;
+  --color-border-subtle: #1e293b;
+  --color-text: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-sidebar-bg: #0f172a;
+  --color-sidebar-border: #1e293b;
+  --color-tab-bar-bg: #1e293b;
+  --color-tab-active-bg: #0f172a;
+  --color-tab-hover-bg: #273449;
+  --color-hover: #1e293b;
+  --color-scrollbar: #475569;
+  --color-scrollbar-hover: #64748b;
+  --color-modal-overlay: rgba(0, 0, 0, 0.7);
+  --color-hamburger-bg: #1e293b;
+  --color-hamburger-shadow: rgba(0, 0, 0, 0.4);
+  --color-mobile-overlay: rgba(0, 0, 0, 0.6);
+  --color-button-glow: rgba(56, 189, 248, 0.25);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ========== Base ========== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scrollbar) transparent;
+}
+
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--color-scrollbar); border-radius: 3px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--color-scrollbar-hover); }
+
+body {
+  font-family: var(--font-sans) !important;
+  color: var(--color-text);
+  background: var(--color-bg) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+code, pre, .mono {
+  font-family: var(--font-mono) !important;
+}
+
+/* ========== Tabs — Grounded Tab Bar ========== */
+.ant-tabs-nav {
+  margin-bottom: 0 !important;
+}
+/* Remove Ant Design's internal tab border — our outer container handles it */
+.ant-tabs-nav::before {
+  display: none !important;
+}
+
+.ant-tabs-tab {
+  border-radius: 8px 8px 0 0 !important;
+  border: 1px solid transparent !important;
+  border-bottom: none !important;
+  padding: 6px 14px !important;
+  margin: 0 2px -1px 0 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--color-text-secondary) !important;
+  background: transparent !important;
+  transition: all var(--transition-fast) !important;
+  position: relative;
+  min-height: 34px;
+}
+
+.ant-tabs-tab:hover {
+  color: var(--color-text) !important;
+  background: var(--color-tab-hover-bg) !important;
+}
+
+.ant-tabs-tab-active {
+  background: var(--color-tab-active-bg) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+  font-weight: 600 !important;
+  /* The active tab's bottom border blends with the container below */
+  border-bottom-color: var(--color-tab-active-bg) !important;
+}
+
+.ant-tabs-tab-btn {
+  font-size: 13px !important;
+}
+
+.ant-tabs-ink-bar {
+  display: none !important;
+}
+
+/* ========== Table ========== */
+.ant-table {
+  border-radius: var(--radius) !important;
+  overflow: hidden;
+}
+
+.ant-table-wrapper .ant-table-thead > tr > th {
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted) !important;
+  background: var(--color-tab-bar-bg) !important;
+  border-bottom: 2px solid var(--color-border) !important;
+  padding: 10px 12px !important;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--color-border-subtle) !important;
+  padding: 10px 12px !important;
+  transition: background var(--transition-fast);
+}
+
+.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: var(--color-hover) !important;
+}
+
+/* Sortable column header cursor */
+.ant-table-wrapper .ant-table-thead > tr > th[class*="column-sort"] {
+  cursor: pointer;
+}
+
+/* ========== Sidebar Menu ========== */
+.ant-menu-item {
+  transition: all var(--transition-fast) !important;
+  border-radius: 8px !important;
+  margin: 2px 8px !important;
+  font-weight: 500 !important;
+}
+
+.ant-menu-item:hover {
+  background: var(--color-hover) !important;
+}
+
+.ant-menu-item-selected {
+  background: var(--color-primary-subtle) !important;
+  color: var(--color-primary) !important;
+  position: relative;
+}
+
+.ant-menu-item-selected .anticon {
+  color: var(--color-primary) !important;
+}
+
+.ant-menu-item-selected::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: var(--color-primary);
+  border-radius: 0 3px 3px 0;
+}
+
+/* ========== Card ========== */
+.ant-card {
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: var(--shadow-xs) !important;
+  transition: box-shadow var(--transition-normal), border-color var(--transition-normal) !important;
+}
+
+.ant-card:hover {
+  box-shadow: var(--shadow-sm) !important;
+  border-color: var(--color-border) !important;
+}
+
+.ant-card-head {
+  border-bottom: 1px solid var(--color-border-subtle) !important;
+  font-weight: 600 !important;
+}
+
+/* ========== Button ========== */
+.ant-btn {
+  transition: all var(--transition-fast) !important;
+  font-weight: 500 !important;
+}
+
+.ant-btn-primary {
+  box-shadow: var(--color-button-glow) 0px 1px 3px 0px !important;
+}
+
+.ant-btn-primary:hover {
+  box-shadow: var(--color-button-glow) 0px 2px 6px 0px !important;
+  transform: translateY(-1px);
+}
+
+.ant-btn-default:hover {
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+}
+
+/* ========== Modal ========== */
+.ant-modal-content {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+.ant-modal-header {
+  border-bottom: 1px solid var(--color-border-subtle) !important;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+}
+
+/* ========== Tag ========== */
+.ant-tag {
+  border-radius: var(--radius-sm) !important;
+  font-weight: 500;
+  font-size: 12px !important;
+}
+
+/* ========== Switch ========== */
+.ant-switch {
+  transition: all var(--transition-fast) !important;
+}
+
+/* ========== Input / Select ========== */
+.ant-input:focus, .ant-input-focused,
+.ant-select-focused .ant-select-selector {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px var(--color-primary-light) !important;
+}
+
+/* ========== Pagination ========== */
+.ant-pagination-item {
+  border-radius: var(--radius-sm) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.ant-pagination-item-active {
+  border-color: var(--color-primary) !important;
+}
+
+/* ========== Dropdown ========== */
+.ant-dropdown-menu {
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-md) !important;
+  border: 1px solid var(--color-border) !important;
+  padding: 4px !important;
+}
+
+.ant-dropdown-menu-item {
+  border-radius: var(--radius-sm) !important;
+  transition: background var(--transition-fast) !important;
+}
+
+/* ========== IP Grid Status Colors ========== */
+:root {
+  --color-ip-free: #d9d9d9;
+  --color-ip-free-text: #94a3b8;
+  --color-ip-reserved: #f59e0b;
+  --color-ip-bound: #22c55e;
+  --color-ip-offered: #3b82f6;
+}
+:root[data-theme="dark"] {
+  --color-ip-free: #334155;
+  --color-ip-free-text: #64748b;
+  --color-ip-reserved: #b45309;
+  --color-ip-bound: #15803d;
+  --color-ip-offered: #1d4ed8;
+}
+
+/* ========== Pre/code blocks in dark mode ========== */
+:root[data-theme="dark"] pre {
+  background: var(--color-surface-elevated) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+/* ========== Page Transition ========== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== Mobile Responsive ========== */
+@media (max-width: 768px) {
+  .ant-table { font-size: 13px; }
+  .ant-modal { max-width: 95vw !important; margin: 8px auto; }
+  .ant-modal-body { padding: 12px; }
+  .ant-card-body { padding: 12px; }
+  .ant-tabs-tab { padding: 5px 8px !important; font-size: 12px !important; min-height: 30px; }
+  .ant-descriptions-item-label,
+  .ant-descriptions-item-content { padding: 8px 12px !important; }
+  h3.ant-typography { font-size: 18px !important; margin-top: 0 !important; }
+}
+
+@media (max-width: 480px) {
+  .ant-table { font-size: 12px; }
+  .ant-tabs-tab { padding: 4px 6px !important; font-size: 11px !important; }
+}
