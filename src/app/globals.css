@@ -453,6 +453,7 @@ code, pre, .mono {
   font-weight: 800 !important;
   text-align: left !important;
   margin: 0 !important;
+  flex: 1;
 }
 
 /* ========== Pre/code blocks in dark mode ========== */
