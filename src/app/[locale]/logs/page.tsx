@@ -187,7 +187,9 @@ export default function LogsPage() {
 
   return (
     <>
-      <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
+      <div className="page-title-bar">
+        <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
+      </div>
 
       <Space wrap style={{ marginBottom: 16 }} align="center">
         <Select value={messageType} onChange={v => { setMessageType(v); setPage(1); }}

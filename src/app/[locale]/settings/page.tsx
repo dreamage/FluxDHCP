@@ -210,7 +210,9 @@ export default function SettingsPage() {
 
   return (
     <>
-      <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
+      <div className="page-title-bar">
+        <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
+      </div>
 
       {startError && (
         <Alert type="error" message={startError} closable

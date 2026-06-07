@@ -101,7 +101,7 @@ export default function LeasesPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="page-title-bar" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Select value={state} onChange={v => { setState(v); setPage(1); }} style={{ width: 150 }}>
           <Select.Option value="ALL">{t('all')}</Select.Option>

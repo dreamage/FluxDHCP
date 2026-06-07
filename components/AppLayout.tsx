@@ -211,10 +211,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   const sidebarContent = (
     <>
-      <div style={{
+      <div className="sidebar-logo-glow" style={{
         height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: collapsed ? '0 8px' : '0 12px 0 20px',
         borderBottom: '1px solid var(--color-sidebar-border)',
+        position: 'relative',
       }}>
         <span style={{ fontSize: collapsed ? 20 : 17, fontWeight: 700, color: 'var(--color-primary)', letterSpacing: '-0.02em', fontFamily: "var(--font-dm-sans), sans-serif" }}>
           {collapsed ? 'F' : 'FluxDHCP'}
@@ -248,6 +249,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Desktop sidebar */}
       {!isMobile && (
         <Sider collapsed={collapsed} width={220} trigger={null}
+          className="sidebar-glass"
           style={{ background: 'var(--color-sidebar-bg)', borderRight: '1px solid var(--color-sidebar-border)', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}>
           {sidebarContent}
         </Sider>
@@ -266,7 +268,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <div onClick={() => setMobileDrawer(false)}
             style={{ position: 'fixed', inset: 0, background: 'var(--color-mobile-overlay)', zIndex: 1099 }} />
           <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 220, zIndex: 1100,
-            background: 'var(--color-sidebar-bg)', borderRight: '1px solid var(--color-sidebar-border)', boxShadow: '4px 0 12px rgba(0,0,0,0.1)' }}>
+            background: 'var(--color-sidebar-bg)', borderRight: '1px solid var(--color-sidebar-border)', boxShadow: '4px 0 12px rgba(0,0,0,0.1)' }}
+            className="sidebar-glass">
             {sidebarContent}
           </div>
         </>
@@ -293,7 +296,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </div>
           </div>
         </div>
-        <Content id="main-content" style={{ padding: isMobile ? 12 : 24, minHeight: 'calc(100vh - 44px)' }}>
+        <Content id="main-content" className="page-enter" style={{ padding: isMobile ? 12 : 24, minHeight: 'calc(100vh - 44px)' }}>
           {children}
         </Content>
       </Layout>

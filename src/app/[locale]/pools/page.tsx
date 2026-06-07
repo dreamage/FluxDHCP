@@ -160,10 +160,10 @@ export default function PoolsPage() {
           <Tag color="success">{t('statsBound')}: {stats.bound}</Tag>
           <Tag color="processing">{t('statsOffered')}: {stats.offered}</Tag>
           <span style={{ marginLeft: 8 }}>
-            <span style={{ display: 'inline-block', width: 12, height: 12, background: STATUS_COLORS.free, marginRight: 4, borderRadius: 2 }} />
-            <span style={{ display: 'inline-block', width: 12, height: 12, background: STATUS_COLORS.reserved, marginRight: 4, borderRadius: 2 }} />
-            <span style={{ display: 'inline-block', width: 12, height: 12, background: STATUS_COLORS.bound, marginRight: 4, borderRadius: 2 }} />
-            <span style={{ display: 'inline-block', width: 12, height: 12, background: STATUS_COLORS.offered, marginRight: 4, borderRadius: 2 }} />
+            <span style={{ display: 'inline-block', width: 12, height: 12, background: STATUS_COLORS.free, marginRight: 4, borderRadius: 3 }} />
+            <span style={{ display: 'inline-block', width: 12, height: 12, background: STATUS_COLORS.reserved, marginRight: 4, borderRadius: 3 }} />
+            <span style={{ display: 'inline-block', width: 12, height: 12, background: STATUS_COLORS.bound, marginRight: 4, borderRadius: 3 }} />
+            <span style={{ display: 'inline-block', width: 12, height: 12, background: STATUS_COLORS.offered, marginRight: 4, borderRadius: 3 }} />
           </span>
         </Space>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
@@ -175,10 +175,10 @@ export default function PoolsPage() {
                     ? `${item.ip} - ${t(item.status)} (${item.mac}${item.note ? ` - ${item.note}` : ''}${item.reservationNote ? ` - ${item.reservationNote}` : ''})`
                     : `${item.ip} - ${t(item.status)}${item.mac ? ` (${item.mac}${item.note ? ` - ${item.note}` : ''})` : ''}`
                 }
+                className="ip-grid-cell"
                 style={{
-                  width: 34, height: 24, borderRadius: 4,
+                  width: 34, height: 24, borderRadius: 3,
                   background: STATUS_COLORS[item.status] || STATUS_COLORS.free,
-                  cursor: 'default',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 10, fontFamily: "var(--font-jetbrains-mono), monospace",
                   fontWeight: 500,
@@ -225,7 +225,7 @@ export default function PoolsPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="page-title-bar" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
           <Button icon={<ExpandOutlined />} size="small"

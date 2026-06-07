@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Card, Row, Col, Typography, Progress, Tag, Space, Tooltip, Spin, Alert } from 'antd';
 import {
   TeamOutlined, ClusterOutlined, EnvironmentOutlined, LineChartOutlined,
-  ClockCircleOutlined, DashboardOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
@@ -40,17 +40,18 @@ interface StatCardProps {
 
 function StatCard({ icon, color, title, value, suffix, bgColor }: StatCardProps) {
   return (
-    <Card bordered={false} style={{ borderRadius: 12, height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <Card bordered={false} className="stat-card" style={{ borderRadius: 12, height: '100%', padding: 0, overflow: 'hidden' }}>
+      <div className="stat-card-top-bar" style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0 0' }}>
         <div style={{
-          width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: bgColor || `${color}14`, color, fontSize: 20, flexShrink: 0,
+          width: 46, height: 46, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: bgColor || `linear-gradient(135deg, ${color}, ${color}bb)`, color: '#fff', fontSize: 20, flexShrink: 0,
         }}>
           {icon}
         </div>
         <div style={{ minWidth: 0, overflow: 'hidden' }}>
           <Text type="secondary" style={{ fontSize: 12, lineHeight: 1.3, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</Text>
-          <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.3, color: 'var(--color-text)', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.2, color: 'var(--color-text)', whiteSpace: 'nowrap' }}>
             {value}{suffix && <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--color-text-secondary)', marginLeft: 4 }}>{suffix}</span>}
           </div>
         </div>
@@ -104,8 +105,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-        <DashboardOutlined style={{ fontSize: 22, color: '#0ea5e9' }} />
+      <div className="page-title-bar" style={{ marginBottom: 20 }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
       </div>
       {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} />}
@@ -139,15 +139,15 @@ export default function DashboardPage() {
                 <Text strong>{t('overallUsage') || 'IP Usage'}</Text>
                 <Text type="secondary">{data.activeLeases} / {data.totalIPs}</Text>
               </div>
-              <Progress percent={usagePercent} strokeColor="#0ea5e9" showInfo={false} />
+              <Progress percent={usagePercent} strokeColor="#4a90d9" showInfo={false} />
             </Card>
           )}
 
           {/* Pool Usage */}
-          <Title level={5} style={{ marginTop: 24, marginBottom: 12, color: '#64748b' }}>{t('poolUsage')}</Title>
+          <Title level={5} style={{ marginTop: 24, marginBottom: 12, color: 'var(--color-text-secondary)', fontWeight: 700 }}>{t('poolUsage')}</Title>
           <Row gutter={[16, 12]}>
             {data.poolUsage.map(pool => {
-              const barColor = pool.percentage > 90 ? '#ef4444' : pool.percentage > 70 ? '#f59e0b' : '#0ea5e9';
+              const barColor = pool.percentage > 90 ? '#ef4444' : pool.percentage > 70 ? '#f59e0b' : '#4a90d9';
               return (
                 <Col xs={24} sm={12} key={pool.poolId}>
                   <Card bordered={false} size="small" style={{ borderRadius: 10 }}>
@@ -166,9 +166,8 @@ export default function DashboardPage() {
           </Row>
 
           {/* Recent Events */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 24, marginBottom: 12 }}>
-            <ClockCircleOutlined style={{ color: '#64748b' }} />
-            <Title level={5} style={{ margin: 0, color: '#64748b' }}>{t('recentEvents')}</Title>
+          <div className="page-title-bar" style={{ marginTop: 24, marginBottom: 12 }}>
+            <Title level={5} style={{ margin: 0, color: 'var(--color-text-secondary)' }}>{t('recentEvents')}</Title>
           </div>
           <Card bordered={false} style={{ borderRadius: 12 }}>
             {data.recentEvents.length === 0 ? (
@@ -181,12 +180,12 @@ export default function DashboardPage() {
                     <div key={idx} style={{ display: 'flex', gap: 12, position: 'relative' }}>
                       {/* Timeline dot and line */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 16, flexShrink: 0 }}>
-                        <div style={{
-                          width: 10, height: 10, borderRadius: '50%', background: MSG_TYPE_COLORS[event.message_type] || '#cbd5e1',
-                          border: '2px solid #fff', boxShadow: '0 0 0 2px ' + (MSG_TYPE_COLORS[event.message_type] || '#cbd5e1') + '33',
-                          marginTop: 6, flexShrink: 0,
+                        <div className={idx === 0 ? 'timeline-dot-pulse' : undefined} style={{
+                          width: 12, height: 12, borderRadius: '50%', background: MSG_TYPE_COLORS[event.message_type] || '#cbd5e1',
+                          border: '2px solid var(--color-surface)', boxShadow: '0 0 0 2px ' + (MSG_TYPE_COLORS[event.message_type] || '#cbd5e1') + '33',
+                          marginTop: 5, flexShrink: 0,
                         }} />
-                        {!isLast && <div style={{ width: 2, flex: 1, background: '#e2e8f0', marginTop: 4 }} />}
+                        {!isLast && <div style={{ width: 2, flex: 1, background: 'var(--color-border)', marginTop: 4, borderStyle: 'dashed', backgroundClip: 'content-box', backgroundImage: 'repeating-linear-gradient(to bottom, var(--color-border) 0, var(--color-border) 3px, transparent 3px, transparent 6px)' }} />}
                       </div>
                       {/* Content */}
                       <div style={{ flex: 1, paddingBottom: isLast ? 0 : 12 }}>

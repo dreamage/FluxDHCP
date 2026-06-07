@@ -1,11 +1,11 @@
 /* Fonts are loaded via next/font/google in layout.tsx — no @import needed */
 
 /* ========== Light Theme ========== */
-:root {
-  --color-primary: #0ea5e9;
-  --color-primary-hover: #0284c7;
-  --color-primary-light: #e0f2fe;
-  --color-primary-subtle: #f0f9ff;
+::root {
+  --color-primary: #4a90d9;
+  --color-primary-hover: #3a7bc8;
+  --color-primary-light: #dbeafe;
+  --color-primary-subtle: #eff6ff;
   --color-bg: #f8fafc;
   --color-surface: #ffffff;
   --color-surface-elevated: #ffffff;
@@ -14,8 +14,8 @@
   --color-text: #0f172a;
   --color-text-secondary: #64748b;
   --color-text-muted: #94a3b8;
-  --color-sidebar-bg: #ffffff;
-  --color-sidebar-border: #f1f5f9;
+  --color-sidebar-bg: rgba(255, 255, 255, 0.72);
+  --color-sidebar-border: rgba(226, 232, 240, 0.6);
   --color-tab-bar-bg: #f8fafc;
   --color-tab-active-bg: #ffffff;
   --color-tab-hover-bg: #f1f5f9;
@@ -26,7 +26,7 @@
   --color-hamburger-bg: #ffffff;
   --color-hamburger-shadow: rgba(0, 0, 0, 0.15);
   --color-mobile-overlay: rgba(0, 0, 0, 0.3);
-  --color-button-glow: rgba(14, 165, 233, 0.3);
+  --color-button-glow: rgba(74, 144, 217, 0.35);
   --font-sans: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: var(--font-jetbrains-mono), 'Menlo', monospace;
   --radius: 10px;
@@ -41,32 +41,32 @@
 }
 
 /* ========== Dark Theme ========== */
-:root[data-theme="dark"] {
-  --color-primary: #38bdf8;
-  --color-primary-hover: #7dd3fc;
+::root[data-theme="dark"] {
+  --color-primary: #6aace8;
+  --color-primary-hover: #8ec4f0;
   --color-primary-light: #0c4a6e;
   --color-primary-subtle: #082f49;
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-surface-elevated: #273449;
-  --color-border: #334155;
-  --color-border-subtle: #1e293b;
+  --color-bg: #111827;
+  --color-surface: #1f2937;
+  --color-surface-elevated: #283342;
+  --color-border: #374151;
+  --color-border-subtle: #1f2937;
   --color-text: #f1f5f9;
   --color-text-secondary: #94a3b8;
   --color-text-muted: #64748b;
-  --color-sidebar-bg: #0f172a;
-  --color-sidebar-border: #1e293b;
-  --color-tab-bar-bg: #1e293b;
-  --color-tab-active-bg: #0f172a;
-  --color-tab-hover-bg: #273449;
-  --color-hover: #1e293b;
+  --color-sidebar-bg: rgba(13, 17, 23, 0.85);
+  --color-sidebar-border: rgba(55, 65, 81, 0.5);
+  --color-tab-bar-bg: #1f2937;
+  --color-tab-active-bg: #111827;
+  --color-tab-hover-bg: #283342;
+  --color-hover: #1f2937;
   --color-scrollbar: #475569;
   --color-scrollbar-hover: #64748b;
   --color-modal-overlay: rgba(0, 0, 0, 0.7);
-  --color-hamburger-bg: #1e293b;
+  --color-hamburger-bg: #1f2937;
   --color-hamburger-shadow: rgba(0, 0, 0, 0.4);
   --color-mobile-overlay: rgba(0, 0, 0, 0.6);
-  --color-button-glow: rgba(56, 189, 248, 0.25);
+  --color-button-glow: rgba(106, 172, 232, 0.3);
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.15);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
@@ -105,6 +105,35 @@ button:focus-visible, a:focus-visible {
 
 code, pre, .mono {
   font-family: var(--font-mono) !important;
+}
+
+/* ========== Page Transition ========== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: fadeIn 0.3s ease-out both;
+}
+
+/* ========== Timeline Pulse ========== */
+@keyframes timeline-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--color-primary); }
+  50% { box-shadow: 0 0 0 4px rgba(74, 144, 217, 0.25); }
+}
+
+.timeline-dot-pulse {
+  animation: timeline-pulse 2s ease-in-out infinite;
+}
+
+::root[data-theme="dark"] .timeline-dot-pulse {
+  animation-name: timeline-pulse-dark;
+}
+
+@keyframes timeline-pulse-dark {
+  0%, 100% { box-shadow: 0 0 0 0 #6aace8; }
+  50% { box-shadow: 0 0 0 4px rgba(106, 172, 232, 0.3); }
 }
 
 /* ========== Tabs — Grounded Tab Bar ========== */
@@ -174,10 +203,12 @@ code, pre, .mono {
   border-bottom: 1px solid var(--color-border-subtle) !important;
   padding: 10px 12px !important;
   transition: background var(--transition-fast);
+  position: relative;
 }
 
 .ant-table-wrapper .ant-table-tbody > tr:hover > td {
   background: var(--color-hover) !important;
+  box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
 /* Sortable column header cursor */
@@ -224,7 +255,7 @@ code, pre, .mono {
   border-radius: var(--radius) !important;
   border: 1px solid var(--color-border) !important;
   box-shadow: var(--shadow-xs) !important;
-  transition: box-shadow var(--transition-normal), border-color var(--transition-normal) !important;
+  transition: box-shadow var(--transition-normal), border-color var(--transition-normal), transform var(--transition-normal) !important;
 }
 
 .ant-card:hover {
@@ -237,19 +268,52 @@ code, pre, .mono {
   font-weight: 600 !important;
 }
 
+/* ========== Stat Card ========== */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md) !important;
+}
+
+.stat-card-top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
 /* ========== Button ========== */
 .ant-btn {
   transition: all var(--transition-fast) !important;
   font-weight: 500 !important;
+  letter-spacing: 0.02em;
 }
 
 .ant-btn-primary {
+  background: linear-gradient(135deg, #4a90d9, #3a7bc8) !important;
+  border: none !important;
   box-shadow: var(--color-button-glow) 0px 1px 3px 0px !important;
 }
 
 .ant-btn-primary:hover {
-  box-shadow: var(--color-button-glow) 0px 2px 6px 0px !important;
+  background: linear-gradient(135deg, #5a9fe6, #4a8bd4) !important;
+  box-shadow: var(--color-button-glow) 0px 3px 8px 0px !important;
   transform: translateY(-1px);
+}
+
+::root[data-theme="dark"] .ant-btn-primary {
+  background: linear-gradient(135deg, #6aace8, #5a9cd8) !important;
+}
+
+::root[data-theme="dark"] .ant-btn-primary:hover {
+  background: linear-gradient(135deg, #7ebcf0, #6aace8) !important;
 }
 
 .ant-btn-default:hover {
@@ -312,23 +376,56 @@ code, pre, .mono {
 }
 
 /* ========== IP Grid Status Colors ========== */
-:root {
+::root {
   --color-ip-free: #d9d9d9;
   --color-ip-free-text: #94a3b8;
   --color-ip-reserved: #f59e0b;
-  --color-ip-bound: #22c55e;
+  --color-ip-bound: #16a34a;
   --color-ip-offered: #3b82f6;
 }
-:root[data-theme="dark"] {
-  --color-ip-free: #334155;
+::root[data-theme="dark"] {
+  --color-ip-free: #374151;
   --color-ip-free-text: #64748b;
-  --color-ip-reserved: #b45309;
-  --color-ip-bound: #15803d;
-  --color-ip-offered: #1d4ed8;
+  --color-ip-reserved: #d97706;
+  --color-ip-bound: #22c55e;
+  --color-ip-offered: #60a5fa;
+}
+
+/* IP Grid cell hover */
+.ip-grid-cell {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: default;
+}
+.ip-grid-cell:hover {
+  transform: scale(1.35);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ========== Page Title Bar ========== */
+.page-title-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 20px;
+}
+
+.page-title-bar::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: var(--color-primary);
+  border-radius: 2px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.page-title-bar h3 {
+  font-weight: 800 !important;
 }
 
 /* ========== Pre/code blocks in dark mode ========== */
-:root[data-theme="dark"] pre {
+::root[data-theme="dark"] pre {
   background: var(--color-surface-elevated) !important;
   border: 1px solid var(--color-border) !important;
 }
@@ -340,10 +437,21 @@ code, pre, .mono {
 .ant-table-tbody > tr.log-row-even:hover > td,
 .ant-table-tbody > tr.log-row-odd:hover > td { background: inherit; }
 
-/* ========== Page Transition ========== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ========== Sidebar Glass Effect ========== */
+.sidebar-glass {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.sidebar-logo-glow::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  opacity: 0.4;
 }
 
 /* ========== Mobile Responsive ========== */
