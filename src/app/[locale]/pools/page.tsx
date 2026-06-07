@@ -209,7 +209,7 @@ export default function PoolsPage() {
     {
       title: t('status'), key: 'status', width: 100,
       render: (_: any, r: any) => (
-        <Switch checked={!!r.enabled} onChange={(v) => handleToggleEnabled(r.id, v)}
+        <Switch checked={!!r.enabled} onChange={(v) => handleToggleEnabled(r.id, v)} size="small"
           checkedChildren={t('enabled')} unCheckedChildren={t('disabled')} />
       ),
     },
@@ -232,14 +232,14 @@ export default function PoolsPage() {
 
   return (
     <>
-      <div className="page-title-bar" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
-          <Button icon={<ExpandOutlined />} size="small"
+          <Button icon={<ExpandOutlined />}
             onClick={() => { setExpandedRowKeys(data.map((p: any) => p.id)); data.forEach((p: any) => fetchPoolIPs(p.id)); }}>
             {t('expandAll')}
           </Button>
-          <Button icon={<ShrinkOutlined />} size="small"
+          <Button icon={<ShrinkOutlined />}
             onClick={() => setExpandedRowKeys([])}>
             {t('collapseAll')}
           </Button>

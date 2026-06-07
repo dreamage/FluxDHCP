@@ -342,7 +342,7 @@ export default function SettingsPage() {
               {t('dbPath')}: {process.env.DB_PATH || './data/fluxdhcp.db'}
             </Text>
             <Popconfirm title={t('clearConfirm')} onConfirm={handleClearLogs} okText={tc('confirm')} cancelText={tc('cancel')}>
-              <Button icon={<DeleteOutlined />} danger size="small">{t('clearLogs')}</Button>
+              <Button icon={<DeleteOutlined />} danger>{t('clearLogs')}</Button>
             </Popconfirm>
           </Space>
         </div>

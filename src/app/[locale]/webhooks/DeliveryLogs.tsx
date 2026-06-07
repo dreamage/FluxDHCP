@@ -26,6 +26,17 @@ const DELIVERY_STATUS_COLORS: Record<string, string> = {
   pending: 'blue',
 };
 
+const EVENT_COLORS: Record<string, string> = {
+  dhcp_discover: 'blue',
+  dhcp_offer: 'cyan',
+  dhcp_request: 'orange',
+  dhcp_ack: 'green',
+  dhcp_nak: 'volcano',
+  dhcp_release: 'default',
+  dhcp_inform: 'purple',
+  dhcp_decline: 'red',
+};
+
 function formatTimeShort(v: string | null | undefined): string {
   if (!v) return '-';
   let d: Date;
@@ -98,7 +109,7 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
       render: (e: string) => {
         const opt = EVENT_OPTIONS.find(o => o.value === e);
         const label = opt ? t(opt.labelKey) : (e || '').replace('dhcp_', '').toUpperCase();
-        return <Tag color="blue">{label}</Tag>;
+        return <Tag color={EVENT_COLORS[e] || 'blue'}>{label}</Tag>;
       },
     },
     {
@@ -110,8 +121,11 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
       render: (code: number | null) => code ? <Text code style={{ fontSize: 12 }}>{code}</Text> : <Text type="secondary">-</Text>,
     },
     {
-      title: tLogs('attempt'), key: 'attempt', width: 50,
-      render: (_: any, r: any) => <Text type="secondary" style={{ fontSize: 12 }}>{r.attempt}/{r.max_attempts}</Text>,
+      title: tLogs('attempt'), key: 'attempt', width: 60,
+      render: (_: any, r: any) => {
+        if (r.status === 'success' && r.attempt === 1) return <Tag color="green" style={{ fontSize: 11 }}>1st</Tag>;
+        return <Text type="secondary" style={{ fontSize: 12 }}>{r.attempt}/{r.max_attempts}</Text>;
+      },
     },
     {
       title: tLogs('method'), dataIndex: 'method', key: 'method', width: 55,

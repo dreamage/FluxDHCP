@@ -9,6 +9,17 @@ import DeliveryLogs from './DeliveryLogs';
 
 const { Title } = Typography;
 
+const EVENT_COLORS: Record<string, string> = {
+  dhcp_discover: 'blue',
+  dhcp_offer: 'cyan',
+  dhcp_request: 'orange',
+  dhcp_ack: 'green',
+  dhcp_nak: 'volcano',
+  dhcp_release: 'default',
+  dhcp_inform: 'purple',
+  dhcp_decline: 'red',
+};
+
 const EVENT_OPTIONS = [
   { value: 'dhcp_discover', labelKey: 'dhcpDiscover' },
   { value: 'dhcp_offer', labelKey: 'dhcpOffer' },
@@ -136,7 +147,7 @@ export default function WebhooksPage() {
         return <Space wrap size={4}>{events.map((e: string) => {
           const opt = EVENT_OPTIONS.find(o => o.value === e);
           const label = opt ? t(opt.labelKey) : e.replace('dhcp_', '').toUpperCase();
-          return <Tag key={e} color="blue" style={{ fontSize: 11 }}>{label}</Tag>;
+          return <Tag key={e} color={EVENT_COLORS[e] || 'blue'} style={{ fontSize: 11 }}>{label}</Tag>;
         })}</Space>;
       },
     },
@@ -159,7 +170,7 @@ export default function WebhooksPage() {
   return (
     <>
       {/* Webhook Management */}
-      <div className="page-title-bar" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>{t('addWebhook')}</Button>
       </div>

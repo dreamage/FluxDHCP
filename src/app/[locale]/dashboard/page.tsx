@@ -15,7 +15,7 @@ import { useMacNotes } from '@/hooks/useMacNotes';
 const { Title, Text } = Typography;
 
 const MSG_TYPE_COLORS: Record<number, string> = {
-  1: 'blue', 2: 'cyan', 3: 'orange', 4: 'red', 5: 'green', 6: 'volcano', 7: 'default', 8: 'purple',
+  1: '#60a5fa', 2: '#22d3ee', 3: '#fbbf24', 4: '#f87171', 5: '#4ade80', 6: '#fb923c', 7: '#94a3b8', 8: '#a78bfa',
 };
 
 interface DashboardData {
@@ -105,7 +105,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="page-title-bar" style={{ marginBottom: 20 }}>
+      <div className="page-title-bar">
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
       </div>
       {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} />}
@@ -185,7 +185,7 @@ export default function DashboardPage() {
                           border: '2px solid var(--color-surface)', boxShadow: '0 0 0 2px ' + (MSG_TYPE_COLORS[event.message_type] || '#cbd5e1') + '33',
                           marginTop: 5, flexShrink: 0,
                         }} />
-                        {!isLast && <div style={{ width: 2, flex: 1, background: 'var(--color-border)', marginTop: 4, borderStyle: 'dashed', backgroundClip: 'content-box', backgroundImage: 'repeating-linear-gradient(to bottom, var(--color-border) 0, var(--color-border) 3px, transparent 3px, transparent 6px)' }} />}
+                        {!isLast && <div style={{ width: 1, flex: 1, background: 'var(--color-border)', marginTop: 4, opacity: 0.5 }} />}
                       </div>
                       {/* Content */}
                       <div style={{ flex: 1, paddingBottom: isLast ? 0 : 12 }}>

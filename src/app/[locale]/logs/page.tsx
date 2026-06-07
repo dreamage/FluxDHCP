@@ -191,9 +191,9 @@ export default function LogsPage() {
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
       </div>
 
-      <Space wrap style={{ marginBottom: 16 }} align="center">
+      <Space wrap size="small" style={{ marginBottom: 16 }} align="center">
         <Select value={messageType} onChange={v => { setMessageType(v); setPage(1); }}
-          allowClear placeholder={t('allTypes')} style={{ width: 150 }}>
+          allowClear placeholder={t('allTypes')} style={{ width: 150 }} size="small">
           {[1,2,3,4,5,6,7,8].map(type => (
             <Select.Option key={type} value={String(type)}>{tMsg(String(type))}</Select.Option>
           ))}
@@ -201,7 +201,7 @@ export default function LogsPage() {
         <AutoComplete
           value={mac} onChange={v => setMac(v || '')}
           placeholder={t('clientMac')} allowClear
-          style={{ width: 280 }}
+          style={{ width: 280 }} size="small"
           options={knownMacs.map(m => ({
             value: m,
             label: <span style={{ fontFamily: 'monospace' }}>{m}{macNotes[m] ? <span style={{ color: '#1890ff', marginLeft: 8, fontSize: 12 }}>({macNotes[m]})</span> : ''}</span>,
@@ -212,19 +212,19 @@ export default function LogsPage() {
         <AutoComplete
           value={ip} onChange={v => setIp(v || '')}
           placeholder={t('clientIp')} allowClear
-          style={{ width: 150 }}
+          style={{ width: 150 }} size="small"
           options={knownIps.map(addr => ({ value: addr }))}
           filterOption={(input, option) => (option?.value as string)?.includes(input)}
           onKeyDown={e => { if (e.key === 'Enter') { setPage(1); fetchData(); } }}
         />
-        <Button icon={<SearchOutlined />} onClick={() => { setPage(1); fetchData(); }} />
-        <Button icon={<ReloadOutlined />} onClick={fetchData} />
+        <Button icon={<SearchOutlined />} size="small" onClick={() => { setPage(1); fetchData(); }} />
+        <Button icon={<ReloadOutlined />} size="small" onClick={fetchData} />
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <Switch size="small" checked={autoRefresh} onChange={setAutoRefresh} />
           <span style={{ fontSize: 13, whiteSpace: 'nowrap' }}>{t('autoRefresh')}</span>
         </span>
         {autoRefresh && (
-          <Select value={refreshInterval} onChange={setRefreshInterval} style={{ width: 90 }}>
+          <Select value={refreshInterval} onChange={setRefreshInterval} style={{ width: 90 }} size="small">
             <Select.Option value={3000}>3s</Select.Option>
             <Select.Option value={5000}>5s</Select.Option>
             <Select.Option value={10000}>10s</Select.Option>
@@ -232,7 +232,7 @@ export default function LogsPage() {
           </Select>
         )}
         <Dropdown menu={{ items: columnMenuItems }} trigger={['click']} placement="bottomRight">
-          <Button icon={<SettingOutlined />} />
+          <Button icon={<SettingOutlined />} size="small" />
         </Dropdown>
       </Space>
 

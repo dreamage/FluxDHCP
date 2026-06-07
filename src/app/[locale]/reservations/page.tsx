@@ -137,7 +137,7 @@ export default function ReservationsPage() {
     {
       title: t('status'), key: 'status', width: 90,
       render: (_: any, r: any) => (
-        <Switch checked={!!r.enabled} onChange={(v) => handleToggleEnabled(r.id, v)}
+        <Switch checked={!!r.enabled} onChange={(v) => handleToggleEnabled(r.id, v)} size="small"
           checkedChildren={t('enabled')} unCheckedChildren={t('disabled')} />
       ),
     },
@@ -156,7 +156,7 @@ export default function ReservationsPage() {
 
   return (
     <>
-      <div className="page-title-bar" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>{t('addReservation')}</Button>
       </div>

@@ -170,6 +170,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
     if (isMobile) setMobileDrawer(false);
   };
 
+  // Prefetch all menu routes on mount so navigation is instant
+  useEffect(() => {
+    menuItems.forEach(item => {
+      router.prefetch(`/${locale}${item.key}`);
+    });
+  }, [locale, router]);
+
   const handleLocaleChange = (newLocale: string) => {
     document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000`;
     if (pathname) {
