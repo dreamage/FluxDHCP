@@ -172,7 +172,11 @@ export default function PoolsPage({ params }: { params: Promise<{ locale: string
           {ips.map((item: any) => {
             const lastOctet = item.ip.split('.').pop();
             return (
-              <div key={item.ip} title={`${item.ip} - ${t(item.status)}${item.mac ? ` (${item.mac}${item.note ? ` - ${item.note}` : ''})` : ''}`}
+              <div key={item.ip} title={
+                  item.status === 'reserved' && item.mac
+                    ? `${item.ip} - ${t(item.status)} (${item.mac}${item.note ? ` - ${item.note}` : ''}${item.reservationNote ? ` - ${item.reservationNote}` : ''})`
+                    : `${item.ip} - ${t(item.status)}${item.mac ? ` (${item.mac}${item.note ? ` - ${item.note}` : ''})` : ''}`
+                }
                 style={{
                   width: 34, height: 24, borderRadius: 4,
                   background: STATUS_COLORS[item.status] || STATUS_COLORS.free,

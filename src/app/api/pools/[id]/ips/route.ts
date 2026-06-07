@@ -16,9 +16,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
     // Get all reservations for this pool
     const reservations = db.prepare(
-      'SELECT ip_address FROM reservations WHERE pool_id = ? AND enabled = 1'
-    ).all(pool.id) as { ip_address: string }[];
-    const reservedIPs = new Set(reservations.map(r => r.ip_address));
+      'SELECT ip_address, mac_address, description FROM reservations WHERE pool_id = ? AND enabled = 1'
+    ).all(pool.id) as { ip_address: string; mac_address: string; description: string | null }[];
+    const reservedIPs = new Map(reservations.map(r => [r.ip_address, { mac: r.mac_address, description: r.description }]));
 
     // Get all active leases for this pool
     const leases = db.prepare(
@@ -31,7 +31,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const macNotes = new Map(macNoteRows.map(r => [r.mac_address, r.note]));
 
     // Build IP list with status
-    const ips: Array<{ ip: string; status: string; mac?: string; note?: string }> = [];
+    const ips: Array<{ ip: string; status: string; mac?: string; note?: string; reservationNote?: string | null }> = [];
     const stats = { free: 0, reserved: 0, bound: 0, offered: 0 };
 
     for (let num = startNum; num <= endNum; num++) {
@@ -45,10 +45,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         mac = lease.mac_address;
       } else if (reservedIPs.has(ip)) {
         status = 'reserved';
+        const reservation = reservedIPs.get(ip)!;
+        mac = reservation.mac;
       }
 
       stats[status as keyof typeof stats]++;
-      ips.push({ ip, status, mac, note: mac ? macNotes.get(mac) : undefined });
+      const macNote = mac ? macNotes.get(mac) : undefined;
+      const reservationNote = status === 'reserved' ? reservedIPs.get(ip)?.description : undefined;
+      ips.push({ ip, status, mac, note: macNote, reservationNote });
     }
 
     return NextResponse.json({ ips, stats });
