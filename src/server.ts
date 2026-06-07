@@ -1,11 +1,18 @@
 import { createServer } from 'http';
 import { parse } from 'url';
+import fs from 'fs';
+import path from 'path';
 import { dhcpInstance } from './lib/dhcp-instance';
 import { initDb, closeDb, getDb } from './lib/db-instance';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = dev ? 'localhost' : '0.0.0.0';
 const port = parseInt(process.env.WEB_PORT || '3000', 10);
+
+// 确保 cwd 为项目根目录（dist/server.js 的上一级）
+if (!dev) {
+  process.chdir(path.resolve(__dirname, '..'));
+}
 
 // 全局未捕获异常处理
 process.on('uncaughtException', (err) => {
@@ -31,60 +38,61 @@ async function main() {
   dhcpInstance.init(db);
   dhcpInstance.startLogCleanup();
 
-  // 3. 创建 Next.js 请求处理器
-  let handle: any;
+  // 3. 启动 Next.js 服务器
+  let server: any;
 
   if (dev) {
     // 开发模式：使用 next() 完整功能（含 HMR、webpack）
     const next = (await import('next')).default;
     const app = next({ dev, hostname, port });
-    handle = app.getRequestHandler();
+    const handle = app.getRequestHandler();
     await app.prepare();
+
+    server = createServer(async (req: any, res: any) => {
+      try {
+        const parsedUrl = parse(req.url!, true);
+        await handle(req, res, parsedUrl);
+      } catch (err) {
+        console.error('[FluxDHCP] Error handling request:', err);
+        if (!res.headersSent) {
+          res.statusCode = 500;
+          res.end('Internal Server Error');
+        }
+      }
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      server.listen(port, hostname, () => {
+        console.log(`[FluxDHCP] Web server running at http://${hostname}:${port}`);
+        resolve();
+      });
+      server.on('error', reject);
+    });
   } else {
-    // 生产模式：使用 NextServer 直接启动（standalone 兼容，无需 webpack）
-    const { default: NextServer } = await import('next/dist/server/next-server');
-    const nextServer = new NextServer({
+    // 生产模式：使用 startServer（与 standalone server.js 完全一致的方式）
+    // 读取 required-server-files.json 获取 Next.js 配置
+    const configPath = path.join(process.cwd(), '.next', 'required-server-files.json');
+    let nextConfig: any;
+    if (fs.existsSync(configPath)) {
+      const { config } = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      nextConfig = config;
+      process.env.__NEXT_PRIVATE_STANDALONE_CONFIG = JSON.stringify(config);
+    }
+
+    const { startServer } = await import('next/dist/server/lib/start-server') as any;
+    server = await startServer({
       dir: process.cwd(),
-      dev: false,
+      isDev: false,
+      config: nextConfig,
       hostname,
       port,
-      conf: process.env.__NEXT_PRIVATE_STANDALONE_CONFIG
-        ? JSON.parse(process.env.__NEXT_PRIVATE_STANDALONE_CONFIG)
-        : undefined,
+      allowRetry: false,
     });
-    handle = nextServer.getRequestHandler();
+
+    console.log(`[FluxDHCP] Web server running at http://${hostname}:${port}`);
   }
 
-  console.log('[FluxDHCP] Next.js prepared');
-
-  // 4. 创建 HTTP Server
-  const server = createServer(async (req, res) => {
-    try {
-      const parsedUrl = parse(req.url!, true);
-      await handle(req, res, parsedUrl);
-    } catch (err) {
-      console.error('[FluxDHCP] Error handling request:', err);
-      if (!res.headersSent) {
-        res.statusCode = 500;
-        res.end('Internal Server Error');
-      }
-    }
-  });
-
-  server.on('error', (err) => {
-    console.error('[FluxDHCP] HTTP server error:', err);
-  });
-
-  // 5. 启动 HTTP Server
-  await new Promise<void>((resolve, reject) => {
-    server.listen(port, hostname, () => {
-      console.log(`[FluxDHCP] Web server running at http://${hostname}:${port}`);
-      resolve();
-    });
-    server.on('error', reject);
-  });
-
-  // 6. 启动 DHCP 服务（如果配置启用）
+  // 4. 启动 DHCP 服务（如果配置启用）
   const row = db.prepare("SELECT value FROM config WHERE key = 'dhcp_enabled'").get() as { value: string } | undefined;
   if (row?.value === '1') {
     try {
@@ -102,7 +110,7 @@ async function main() {
     console.log('[FluxDHCP] DHCP server is disabled in config');
   }
 
-  // 7. 优雅关闭
+  // 5. 优雅关闭
   let shuttingDown = false;
   const shutdown = async () => {
     if (shuttingDown) return;
