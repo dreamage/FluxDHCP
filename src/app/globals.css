@@ -226,8 +226,8 @@ code, pre, .mono {
 }
 
 .ant-table-wrapper .ant-table-tbody > tr:hover > td {
-  background: var(--color-hover) !important;
-  box-shadow: inset 3px 0 0 var(--color-primary);
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 /* Sortable column header cursor */
