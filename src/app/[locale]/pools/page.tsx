@@ -235,15 +235,15 @@ export default function PoolsPage() {
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
-          <Button icon={<ExpandOutlined />}
+          <Button icon={<ExpandOutlined />} size="small"
             onClick={() => { setExpandedRowKeys(data.map((p: any) => p.id)); data.forEach((p: any) => fetchPoolIPs(p.id)); }}>
             {t('expandAll')}
           </Button>
-          <Button icon={<ShrinkOutlined />}
+          <Button icon={<ShrinkOutlined />} size="small"
             onClick={() => setExpandedRowKeys([])}>
             {t('collapseAll')}
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>{t('addPool')}</Button>
+          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addPool')}</Button>
         </Space>
       </div>
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"

@@ -136,7 +136,7 @@ export default function MacNotesPage() {
     <>
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>{t('addNote')}</Button>
+        <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addNote')}</Button>
       </div>
 
       <Table columns={columns} dataSource={data} rowKey="mac_address" loading={loading}

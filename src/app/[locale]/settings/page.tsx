@@ -239,10 +239,10 @@ export default function SettingsPage() {
           </div>
           {dhcpStatus === null ? null : isRunning ? (
             <Popconfirm title={t('confirmStop')} onConfirm={handleStopDhcp}>
-              <Button icon={<PauseCircleOutlined />} danger>{t('stop')}</Button>
+              <Button icon={<PauseCircleOutlined />} danger size="small">{t('stop')}</Button>
             </Popconfirm>
           ) : (
-            <Button type="primary" icon={<PlayCircleOutlined />} onClick={handleStartDhcp}>{t('start')}</Button>
+            <Button type="primary" icon={<PlayCircleOutlined />} size="small" onClick={handleStartDhcp}>{t('start')}</Button>
           )}
         </div>
       </Card>
@@ -322,10 +322,10 @@ export default function SettingsPage() {
       {/* Import / Export */}
       <Card title={t('importExport') || 'Import / Export'} style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Button icon={<ExportOutlined />} onClick={handleExport}>{t('exportConfig')}</Button>
+          <Button icon={<ExportOutlined />} size="small" onClick={handleExport}>{t('exportConfig')}</Button>
           <Upload accept=".json" showUploadList={false}
             beforeUpload={(file) => { handleImport(file); return false; }}>
-            <Button icon={<ImportOutlined />}>{t('importConfig')}</Button>
+            <Button icon={<ImportOutlined />} size="small">{t('importConfig')}</Button>
           </Upload>
           <Text type="secondary" style={{ fontSize: 13 }}>{t('importExportHelp')}</Text>
         </div>
@@ -334,7 +334,7 @@ export default function SettingsPage() {
       {/* Actions */}
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <Button type="primary" icon={<SaveOutlined />} onClick={handleSave} loading={saving}>
+          <Button type="primary" icon={<SaveOutlined />} size="small" onClick={handleSave} loading={saving}>
             {tc('save')}
           </Button>
           <Space split={<Divider type="vertical" />}>
@@ -342,7 +342,7 @@ export default function SettingsPage() {
               {t('dbPath')}: {process.env.DB_PATH || './data/fluxdhcp.db'}
             </Text>
             <Popconfirm title={t('clearConfirm')} onConfirm={handleClearLogs} okText={tc('confirm')} cancelText={tc('cancel')}>
-              <Button icon={<DeleteOutlined />} danger>{t('clearLogs')}</Button>
+              <Button icon={<DeleteOutlined />} danger size="small">{t('clearLogs')}</Button>
             </Popconfirm>
           </Space>
         </div>

@@ -1,3 +1,5 @@
+'use client';
+
 import { Skeleton, Space } from 'antd';
 
 export default function Loading() {

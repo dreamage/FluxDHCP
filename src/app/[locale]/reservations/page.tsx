@@ -158,7 +158,7 @@ export default function ReservationsPage() {
     <>
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>{t('addReservation')}</Button>
+        <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addReservation')}</Button>
       </div>
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"
         scroll={{ x: 'max-content' }}

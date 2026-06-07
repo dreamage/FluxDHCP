@@ -1,7 +1,7 @@
 /* Fonts are loaded via next/font/google in layout.tsx — no @import needed */
 
 /* ========== Light Theme ========== */
-::root {
+:root {
   --color-primary: #4a90d9;
   --color-primary-hover: #3a7bc8;
   --color-primary-light: #dbeafe;
@@ -41,7 +41,7 @@
 }
 
 /* ========== Dark Theme ========== */
-::root[data-theme="dark"] {
+:root[data-theme="dark"] {
   --color-primary: #6aace8;
   --color-primary-hover: #8ec4f0;
   --color-primary-light: #0c4a6e;
@@ -127,7 +127,7 @@ code, pre, .mono {
   animation: timeline-pulse 2s ease-in-out infinite;
 }
 
-::root[data-theme="dark"] .timeline-dot-pulse {
+:root[data-theme="dark"] .timeline-dot-pulse {
   animation-name: timeline-pulse-dark;
 }
 
@@ -327,11 +327,11 @@ code, pre, .mono {
   transform: translateY(-1px);
 }
 
-::root[data-theme="dark"] .ant-btn-primary {
+:root[data-theme="dark"] .ant-btn-primary {
   background: linear-gradient(135deg, #6aace8, #5a9cd8) !important;
 }
 
-::root[data-theme="dark"] .ant-btn-primary:hover {
+:root[data-theme="dark"] .ant-btn-primary:hover {
   background: linear-gradient(135deg, #7ebcf0, #6aace8) !important;
 }
 
@@ -395,7 +395,7 @@ code, pre, .mono {
 }
 
 /* ========== IP Grid Status Colors — Fixed for both themes ========== */
-::root {
+:root {
   --color-ip-free: #cbd5e1;
   --color-ip-free-text: #475569;
   --color-ip-reserved: #f59e0b;
@@ -405,7 +405,7 @@ code, pre, .mono {
   --color-ip-offered: #3b82f6;
   --color-ip-offered-text: #fff;
 }
-::root[data-theme="dark"] {
+:root[data-theme="dark"] {
   --color-ip-free: #475569;
   --color-ip-free-text: #cbd5e1;
   --color-ip-reserved: #f59e0b;
@@ -422,7 +422,7 @@ code, pre, .mono {
   cursor: default;
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
-::root[data-theme="dark"] .ip-grid-cell {
+:root[data-theme="dark"] .ip-grid-cell {
   border-color: rgba(255, 255, 255, 0.08);
 }
 .ip-grid-cell:hover {
@@ -451,10 +451,12 @@ code, pre, .mono {
 
 .page-title-bar h3 {
   font-weight: 800 !important;
+  text-align: left !important;
+  margin: 0 !important;
 }
 
 /* ========== Pre/code blocks in dark mode ========== */
-::root[data-theme="dark"] pre {
+:root[data-theme="dark"] pre {
   background: var(--color-surface-elevated) !important;
   border: 1px solid var(--color-border) !important;
 }

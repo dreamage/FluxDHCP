@@ -14,8 +14,14 @@ import { useMacNotes } from '@/hooks/useMacNotes';
 
 const { Title, Text } = Typography;
 
-const MSG_TYPE_COLORS: Record<number, string> = {
-  1: '#60a5fa', 2: '#22d3ee', 3: '#fbbf24', 4: '#f87171', 5: '#4ade80', 6: '#fb923c', 7: '#94a3b8', 8: '#a78bfa',
+// Tag colors (Ant Design preset names — auto-adapt to light/dark mode)
+const MSG_TYPE_TAG_COLORS: Record<number, string> = {
+  1: 'blue', 2: 'cyan', 3: 'orange', 4: 'red', 5: 'green', 6: 'volcano', 7: 'default', 8: 'purple',
+};
+
+// Dot colors (muted hex — not too bright in either theme)
+const MSG_TYPE_DOT_COLORS: Record<number, string> = {
+  1: '#6b9dc2', 2: '#5ba8b5', 3: '#c49558', 4: '#c27070', 5: '#5da878', 6: '#c2885e', 7: '#8a929a', 8: '#8070a8',
 };
 
 interface DashboardData {
@@ -181,8 +187,8 @@ export default function DashboardPage() {
                       {/* Timeline dot and line */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 16, flexShrink: 0 }}>
                         <div className={idx === 0 ? 'timeline-dot-pulse' : undefined} style={{
-                          width: 12, height: 12, borderRadius: '50%', background: MSG_TYPE_COLORS[event.message_type] || '#cbd5e1',
-                          border: '2px solid var(--color-surface)', boxShadow: '0 0 0 2px ' + (MSG_TYPE_COLORS[event.message_type] || '#cbd5e1') + '33',
+                          width: 10, height: 10, borderRadius: '50%', background: MSG_TYPE_DOT_COLORS[event.message_type] || '#94a3b8',
+                          border: '2px solid var(--color-surface)', boxShadow: '0 0 0 1px ' + (MSG_TYPE_DOT_COLORS[event.message_type] || '#94a3b8') + '44',
                           marginTop: 5, flexShrink: 0,
                         }} />
                         {!isLast && <div style={{ width: 1, flex: 1, background: 'var(--color-border)', marginTop: 4, opacity: 0.5 }} />}
@@ -191,7 +197,7 @@ export default function DashboardPage() {
                       <div style={{ flex: 1, paddingBottom: isLast ? 0 : 12 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4 }}>
                           <Space size={4}>
-                            <Tag color={MSG_TYPE_COLORS[event.message_type] || 'default'} style={{ margin: 0, fontSize: 11 }}>
+                            <Tag color={MSG_TYPE_TAG_COLORS[event.message_type] || 'default'} style={{ margin: 0, fontSize: 11 }}>
                               {tMsg(String(event.message_type))}
                             </Tag>
                             <MacAddress mac={event.client_mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} />

@@ -10,5 +10,9 @@ data
 .env*
 docs
 README.md
+README_CN.md
 docker-compose.yml
+Dockerfile
 .claude
+.codebuddy
+LICENSE
