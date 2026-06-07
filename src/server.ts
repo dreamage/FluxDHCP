@@ -1,6 +1,5 @@
 import { createServer } from 'http';
 import { parse } from 'url';
-import next from 'next';
 import { dhcpInstance } from './lib/dhcp-instance';
 import { initDb, closeDb, getDb } from './lib/db-instance';
 
@@ -32,11 +31,30 @@ async function main() {
   dhcpInstance.init(db);
   dhcpInstance.startLogCleanup();
 
-  // 3. 创建 Next.js 应用
-  const app = next({ dev, hostname, port });
-  const handle = app.getRequestHandler();
+  // 3. 创建 Next.js 请求处理器
+  let handle: any;
 
-  await app.prepare();
+  if (dev) {
+    // 开发模式：使用 next() 完整功能（含 HMR、webpack）
+    const next = (await import('next')).default;
+    const app = next({ dev, hostname, port });
+    handle = app.getRequestHandler();
+    await app.prepare();
+  } else {
+    // 生产模式：使用 NextServer 直接启动（standalone 兼容，无需 webpack）
+    const { default: NextServer } = await import('next/dist/server/next-server');
+    const nextServer = new NextServer({
+      dir: process.cwd(),
+      dev: false,
+      hostname,
+      port,
+      conf: process.env.__NEXT_PRIVATE_STANDALONE_CONFIG
+        ? JSON.parse(process.env.__NEXT_PRIVATE_STANDALONE_CONFIG)
+        : undefined,
+    });
+    handle = nextServer.getRequestHandler();
+  }
+
   console.log('[FluxDHCP] Next.js prepared');
 
   // 4. 创建 HTTP Server
