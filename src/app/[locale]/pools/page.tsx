@@ -145,6 +145,13 @@ export default function PoolsPage() {
     offered: 'var(--color-ip-offered)',
   };
 
+  const STATUS_TEXT_COLORS: Record<string, string> = {
+    free: 'var(--color-ip-free-text)',
+    reserved: 'var(--color-ip-reserved-text)',
+    bound: 'var(--color-ip-bound-text)',
+    offered: 'var(--color-ip-offered-text)',
+  };
+
   const expandedRowRender = (record: any) => {
     const gridData = ipGridData[record.id];
     if (ipLoading[record.id]) return <Spin style={{ padding: 16 }} />;
@@ -182,7 +189,7 @@ export default function PoolsPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 10, fontFamily: "var(--font-jetbrains-mono), monospace",
                   fontWeight: 500,
-                  color: item.status === 'free' ? 'var(--color-ip-free-text)' : '#fff',
+                  color: STATUS_TEXT_COLORS[item.status] || STATUS_TEXT_COLORS.free,
                 }}>
                 {lastOctet}
               </div>

@@ -250,7 +250,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {!isMobile && (
         <Sider collapsed={collapsed} width={220} trigger={null}
           className="sidebar-glass"
-          style={{ background: 'var(--color-sidebar-bg)', borderRight: '1px solid var(--color-sidebar-border)', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}>
+          style={{ borderRight: '1px solid var(--color-sidebar-border)', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}>
           {sidebarContent}
         </Sider>
       )}
@@ -268,7 +268,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <div onClick={() => setMobileDrawer(false)}
             style={{ position: 'fixed', inset: 0, background: 'var(--color-mobile-overlay)', zIndex: 1099 }} />
           <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 220, zIndex: 1100,
-            background: 'var(--color-sidebar-bg)', borderRight: '1px solid var(--color-sidebar-border)', boxShadow: '4px 0 12px rgba(0,0,0,0.1)' }}
+            borderRight: '1px solid var(--color-sidebar-border)', boxShadow: '4px 0 12px rgba(0,0,0,0.1)' }}
             className="sidebar-glass">
             {sidebarContent}
           </div>
@@ -276,9 +276,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
       )}
 
       <Layout style={{ marginLeft: isMobile ? 0 : sidebarWidth, transition: 'margin-left 0.2s' }}>
-        {/* Tab bar — grounded on tab-bar-bg, active tab blends into content */}
+        {/* Tab bar */}
         <div style={{ position: 'sticky', top: 0, zIndex: 9, background: 'var(--color-tab-bar-bg)', borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', paddingLeft: isMobile ? 48 : 16, paddingRight: 16, paddingTop: 6, height: 44 }}>
+          <div style={{ display: 'flex', alignItems: 'center', height: 40, paddingLeft: isMobile ? 48 : 12, paddingRight: 12 }}>
             <div style={{ flex: 1, overflow: 'hidden' }}>
               <Tabs type="editable-card" activeKey={pageKey} onChange={handleTabChange}
                 onEdit={handleTabEdit} hideAdd size="small"
@@ -287,7 +287,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 style={{ marginBottom: 0 }}
                 tabBarStyle={{ marginBottom: 0 }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8, paddingBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
               <Select value={themeMode} onChange={setThemeMode}
                 style={{ width: 130 }} size="small" bordered={false}
                 options={themeOptions} popupMatchSelectWidth={false} />

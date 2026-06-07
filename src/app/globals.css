@@ -136,7 +136,7 @@ code, pre, .mono {
   50% { box-shadow: 0 0 0 4px rgba(106, 172, 232, 0.3); }
 }
 
-/* ========== Tabs — Grounded Tab Bar ========== */
+/* ========== Tabs — Chrome-style Tab Bar ========== */
 .ant-tabs-nav {
   margin-bottom: 0 !important;
 }
@@ -147,17 +147,17 @@ code, pre, .mono {
 
 .ant-tabs-tab {
   border-radius: 8px 8px 0 0 !important;
-  border: 1px solid transparent !important;
-  border-bottom: none !important;
-  padding: 6px 14px !important;
-  margin: 0 2px -1px 0 !important;
+  border: none !important;
+  padding: 5px 8px 5px 12px !important;
+  margin: 0 1px 0 0 !important;
   font-size: 13px !important;
   font-weight: 500 !important;
   color: var(--color-text-secondary) !important;
   background: transparent !important;
   transition: all var(--transition-fast) !important;
   position: relative;
-  min-height: 34px;
+  min-height: 32px;
+  line-height: 22px !important;
 }
 
 .ant-tabs-tab:hover {
@@ -167,11 +167,9 @@ code, pre, .mono {
 
 .ant-tabs-tab-active {
   background: var(--color-tab-active-bg) !important;
-  border-color: var(--color-border) !important;
   color: var(--color-text) !important;
   font-weight: 600 !important;
-  /* The active tab's bottom border blends with the container below */
-  border-bottom-color: var(--color-tab-active-bg) !important;
+  box-shadow: 0 -1px 0 var(--color-border), 1px 0 0 var(--color-border), -1px 0 0 var(--color-border);
 }
 
 .ant-tabs-tab-btn {
@@ -180,6 +178,27 @@ code, pre, .mono {
 
 .ant-tabs-ink-bar {
   display: none !important;
+}
+
+/* Editable-card tab close button */
+.ant-tabs-tab .ant-tabs-tab-remove {
+  margin-inline-start: 4px !important;
+  margin-inline-end: 0 !important;
+  font-size: 11px !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 4px !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.ant-tabs-tab .ant-tabs-tab-remove:hover {
+  background: var(--color-hover) !important;
+}
+
+/* Tab bar extra content alignment */
+.ant-tabs-extra-content {
+  display: flex;
+  align-items: center;
 }
 
 /* ========== Table ========== */
@@ -375,26 +394,36 @@ code, pre, .mono {
   transition: background var(--transition-fast) !important;
 }
 
-/* ========== IP Grid Status Colors ========== */
+/* ========== IP Grid Status Colors — Fixed for both themes ========== */
 ::root {
-  --color-ip-free: #d9d9d9;
-  --color-ip-free-text: #94a3b8;
+  --color-ip-free: #cbd5e1;
+  --color-ip-free-text: #475569;
   --color-ip-reserved: #f59e0b;
-  --color-ip-bound: #16a34a;
+  --color-ip-reserved-text: #78350f;
+  --color-ip-bound: #22c55e;
+  --color-ip-bound-text: #fff;
   --color-ip-offered: #3b82f6;
+  --color-ip-offered-text: #fff;
 }
 ::root[data-theme="dark"] {
-  --color-ip-free: #374151;
-  --color-ip-free-text: #64748b;
-  --color-ip-reserved: #d97706;
+  --color-ip-free: #475569;
+  --color-ip-free-text: #cbd5e1;
+  --color-ip-reserved: #f59e0b;
+  --color-ip-reserved-text: #78350f;
   --color-ip-bound: #22c55e;
-  --color-ip-offered: #60a5fa;
+  --color-ip-bound-text: #052e16;
+  --color-ip-offered: #3b82f6;
+  --color-ip-offered-text: #dbeafe;
 }
 
 /* IP Grid cell hover */
 .ip-grid-cell {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   cursor: default;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+::root[data-theme="dark"] .ip-grid-cell {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 .ip-grid-cell:hover {
   transform: scale(1.35);
@@ -441,6 +470,7 @@ code, pre, .mono {
 .sidebar-glass {
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: var(--color-sidebar-bg) !important;
 }
 
 .sidebar-logo-glow::after {
@@ -460,7 +490,8 @@ code, pre, .mono {
   .ant-modal { max-width: 95vw !important; margin: 8px auto; }
   .ant-modal-body { padding: 12px; }
   .ant-card-body { padding: 12px; }
-  .ant-tabs-tab { padding: 5px 8px !important; font-size: 12px !important; min-height: 30px; }
+  .ant-tabs-tab { padding: 4px 6px 4px 10px !important; font-size: 12px !important; min-height: 28px; }
+  .ant-tabs-tab .ant-tabs-tab-remove { width: 16px !important; height: 16px !important; font-size: 10px !important; }
   .ant-descriptions-item-label,
   .ant-descriptions-item-content { padding: 8px 12px !important; }
   h3.ant-typography { font-size: 18px !important; margin-top: 0 !important; }
