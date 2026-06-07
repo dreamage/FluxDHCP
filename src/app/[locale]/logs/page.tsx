@@ -1,13 +1,13 @@
 'use client';
 
-import React, { use, useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Tag, Select, AutoComplete, Switch, Space, Button, Dropdown, Checkbox } from 'antd';
 import { SearchOutlined, ReloadOutlined, SettingOutlined } from '@ant-design/icons';
-import AppLayout from '@/components/AppLayout';
 import MacAddress from '@/components/MacAddress';
 import { formatLocalTime } from '@/lib/format-time';
 import { translateServerResponse } from '@/lib/server-response';
+import { useMacNotes } from '@/hooks/useMacNotes';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title } = Typography;
@@ -60,12 +60,11 @@ function renderRawOptions(rawOptions: any, tOpt: (key: string) => string): strin
   }
 }
 
-export default function LogsPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function LogsPage() {
   const t = useTranslations('logs');
   const tMsg = useTranslations('messageTypes');
   const tOpt = useTranslations('dhcpOptionCodes');
   const tSr = useTranslations('serverResponse');
-  const { locale } = use(params);
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -76,8 +75,7 @@ export default function LogsPage({ params }: { params: Promise<{ locale: string 
   const [ip, setIp] = useState('');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(3000);
-  const [macNotes, setMacNotes] = useState<Record<string, string>>({});
-  const [knownMacs, setKnownMacs] = useState<string[]>([]);
+  const { macNotes, knownMacs, fetchMacNotes } = useMacNotes();
   const [knownIps, setKnownIps] = useState<string[]>([]);
   const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -93,17 +91,6 @@ export default function LogsPage({ params }: { params: Promise<{ locale: string 
     setVisibleKeys(keys);
     try { localStorage.setItem(LOGS_VISIBLE_COLS_KEY, JSON.stringify(keys)); } catch { /* ignore */ }
   };
-
-  const fetchMacNotes = useCallback(async () => {
-    try {
-      const res = await fetch('/api/mac-notes');
-      if (res.ok) {
-        const notes = await res.json();
-        setMacNotes(notes);
-        setKnownMacs(Object.keys(notes));
-      }
-    } catch { /* ignore */ }
-  }, []);
 
   const fetchKnownIps = useCallback(async () => {
     try {
@@ -199,13 +186,7 @@ export default function LogsPage({ params }: { params: Promise<{ locale: string 
   }));
 
   return (
-    <AppLayout locale={locale} onLocaleChange={() => {}}>
-      <style>{`
-        .log-row-even td { background: #ffffff; }
-        .log-row-odd td { background: #f5f5f5; }
-        .log-row-even:hover td, .log-row-odd:hover td { background: inherit; }
-        .ant-table-tbody > tr.ant-table-row:hover > td { background: inherit; }
-      `}</style>
+    <>
       <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
 
       <Space wrap style={{ marginBottom: 16 }} align="center">
@@ -292,6 +273,6 @@ export default function LogsPage({ params }: { params: Promise<{ locale: string 
           ),
         }}
       />
-    </AppLayout>
+    </>
   );
 }

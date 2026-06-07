@@ -1,16 +1,16 @@
 'use client';
 
-import React, { use, useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card, Row, Col, Typography, Progress, Tag, Space, Tooltip, Spin, Alert } from 'antd';
 import {
   TeamOutlined, ClusterOutlined, EnvironmentOutlined, LineChartOutlined,
   ClockCircleOutlined, DashboardOutlined,
 } from '@ant-design/icons';
-import AppLayout from '@/components/AppLayout';
 import MacAddress from '@/components/MacAddress';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
 import { translateServerResponse } from '@/lib/server-response';
+import { useMacNotes } from '@/hooks/useMacNotes';
 
 const { Title, Text } = Typography;
 
@@ -59,22 +59,14 @@ function StatCard({ icon, color, title, value, suffix, bgColor }: StatCardProps)
   );
 }
 
-export default function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function DashboardPage() {
   const t = useTranslations('dashboard');
   const tMsg = useTranslations('messageTypes');
   const tSr = useTranslations('serverResponse');
-  const { locale } = use(params);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [macNotes, setMacNotes] = useState<Record<string, string>>({});
-
-  const fetchMacNotes = useCallback(async () => {
-    try {
-      const res = await fetch('/api/mac-notes');
-      if (res.ok) setMacNotes(await res.json());
-    } catch { /* ignore */ }
-  }, []);
+  const { macNotes, fetchMacNotes } = useMacNotes();
 
   useEffect(() => { fetchMacNotes(); }, [fetchMacNotes]);
 
@@ -111,7 +103,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
     ? Math.round((data.activeLeases / data.totalIPs) * 100) : 0;
 
   return (
-    <AppLayout locale={locale} onLocaleChange={() => {}}>
+    <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
         <DashboardOutlined style={{ fontSize: 22, color: '#0ea5e9' }} />
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
@@ -226,6 +218,6 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
           </Card>
         </>
       )}
-    </AppLayout>
+    </>
   );
 }

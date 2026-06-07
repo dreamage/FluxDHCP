@@ -1,10 +1,9 @@
 'use client';
 
-import React, { use, useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Select, message, Space, Row, Col, Spin } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ColumnHeightOutlined, ExpandOutlined, ShrinkOutlined } from '@ant-design/icons';
-import AppLayout from '@/components/AppLayout';
 import { translateError } from '@/lib/error-map';
 
 const { Title } = Typography;
@@ -21,10 +20,9 @@ function formatLeaseTime(seconds: number, t: (key: string) => string): string {
   return parts.length > 0 ? `${seconds} (${parts.join('')})` : `${seconds}${t('seconds')}`;
 }
 
-export default function PoolsPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function PoolsPage() {
   const t = useTranslations('pools');
   const tc = useTranslations('common');
-  const { locale } = use(params);
   const ipRule = { pattern: /^(\d{1,3}\.){3}\d{1,3}$/, message: tc('invalidIpv4') };
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -216,9 +214,9 @@ export default function PoolsPage({ params }: { params: Promise<{ locale: string
       title: tc('actions'), key: 'actions', width: 100, fixed: 'right' as const,
       render: (_: any, r: any) => (
         <Space>
-          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(r)} />
+          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(r)} aria-label={tc('edit')} />
           <Popconfirm title={t('deleteConfirm')} onConfirm={() => handleDelete(r.id)}>
-            <Button icon={<DeleteOutlined />} size="small" danger />
+            <Button icon={<DeleteOutlined />} size="small" danger aria-label={tc('delete')} />
           </Popconfirm>
         </Space>
       ),
@@ -226,7 +224,7 @@ export default function PoolsPage({ params }: { params: Promise<{ locale: string
   ];
 
   return (
-    <AppLayout locale={locale} onLocaleChange={() => {}}>
+    <>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
@@ -274,6 +272,6 @@ export default function PoolsPage({ params }: { params: Promise<{ locale: string
           </Form.Item>
         </Form>
       </Modal>
-    </AppLayout>
+    </>
   );
 }

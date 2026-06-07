@@ -1,19 +1,17 @@
 'use client';
 
-import React, { use, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Form, InputNumber, Input, Button, Badge, message, Popconfirm, Space, Alert, Card, Row, Col, Divider, Upload, Modal, Checkbox, Select, Switch } from 'antd';
 import { CheckCircleFilled, CloseCircleFilled, DeleteOutlined, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined } from '@ant-design/icons';
-import AppLayout from '@/components/AppLayout';
 import { translateError } from '@/lib/error-map';
 
 const { Title, Text } = Typography;
 
-export default function SettingsPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function SettingsPage() {
   const t = useTranslations('settings');
   const tc = useTranslations('common');
   const tl = useTranslations('layout');
-  const { locale } = use(params);
   const [form] = Form.useForm();
   const [dhcpStatus, setDhcpStatus] = useState<'running' | 'stopped' | null>(null);
   const [loading, setLoading] = useState(false);
@@ -211,7 +209,7 @@ export default function SettingsPage({ params }: { params: Promise<{ locale: str
   const isRunning = dhcpStatus === 'running';
 
   return (
-    <AppLayout locale={locale} onLocaleChange={() => {}}>
+    <>
       <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
 
       {startError && (
@@ -383,6 +381,6 @@ export default function SettingsPage({ params }: { params: Promise<{ locale: str
           </div>
         )}
       </Modal>
-    </AppLayout>
+    </>
   );
 }

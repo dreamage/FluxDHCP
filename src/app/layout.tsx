@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html className={`${dmSans.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${dmSans.variable} ${jetbrainsMono.variable}`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

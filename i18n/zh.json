@@ -19,7 +19,8 @@
     "closeRightTabs": "关闭右侧",
     "themeSystem": "跟随系统",
     "themeLight": "浅色",
-    "themeDark": "深色"
+    "themeDark": "深色",
+    "skipToContent": "跳到内容"
   },
   "dashboard": {
     "title": "仪表盘",

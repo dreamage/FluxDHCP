@@ -18,15 +18,13 @@ const { Sider, Content } = Layout;
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  locale: string;
-  onLocaleChange: (locale: string) => void;
 }
 
 interface TabItem { key: string; label: string; }
 
 const TABS_KEY = 'fluxdhcp_open_tabs';
 
-export default function AppLayout({ children, locale, onLocaleChange }: AppLayoutProps) {
+export default function AppLayout({ children }: AppLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -34,6 +32,14 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
   const router = useRouter();
   const t = useTranslations('layout');
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
+
+  // Extract locale from pathname (e.g. /en/dashboard -> en)
+  const locale = pathname?.split('/')[1] || 'en';
+
+  // Set lang attribute on <html> for accessibility
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   // Detect mobile
   useEffect(() => {
@@ -165,7 +171,6 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
   };
 
   const handleLocaleChange = (newLocale: string) => {
-    onLocaleChange(newLocale);
     document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000`;
     if (pathname) {
       const newPath = pathname.replace(`/${locale}`, `/${newLocale}`);
@@ -229,6 +234,17 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
 
   return (
     <Layout style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
+      {/* Skip to content link for keyboard navigation */}
+      <a href="#main-content" style={{
+        position: 'absolute', left: -9999, top: 0, zIndex: 99999,
+        background: 'var(--color-primary)', color: '#fff', padding: '8px 16px',
+        fontSize: 14, fontWeight: 600, textDecoration: 'none', borderRadius: '0 0 8px 0',
+      }}
+        onFocus={(e) => { e.currentTarget.style.left = '0'; }}
+        onBlur={(e) => { e.currentTarget.style.left = '-9999px'; }}
+      >
+        {t('skipToContent')}
+      </a>
       {/* Desktop sidebar */}
       {!isMobile && (
         <Sider collapsed={collapsed} width={220} trigger={null}
@@ -277,7 +293,7 @@ export default function AppLayout({ children, locale, onLocaleChange }: AppLayou
             </div>
           </div>
         </div>
-        <Content style={{ padding: isMobile ? 12 : 24, minHeight: 'calc(100vh - 44px)' }}>
+        <Content id="main-content" style={{ padding: isMobile ? 12 : 24, minHeight: 'calc(100vh - 44px)' }}>
           {children}
         </Content>
       </Layout>

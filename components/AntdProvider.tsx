@@ -36,8 +36,11 @@ export default function AntdProvider({ children, locale = 'en' }: AntdProviderPr
           colorText: isDark ? '#f1f5f9' : '#0f172a',
           colorTextSecondary: isDark ? '#94a3b8' : '#64748b',
           controlHeight: 36,
+          fontSize: 14,
+          lineHeight: 1.5,
           boxShadow: isDark ? '0 1px 3px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.06)',
           boxShadowSecondary: isDark ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.08)',
+          wireframe: false,
         },
         components: {
           Table: {
@@ -46,6 +49,7 @@ export default function AntdProvider({ children, locale = 'en' }: AntdProviderPr
             rowHoverBg: isDark ? '#1e293b' : '#f8fafc',
             borderColor: isDark ? '#334155' : '#f1f5f9',
             cellPaddingBlock: 12,
+            headerBorderRadius: 10,
           },
           Menu: {
             itemBorderRadius: 8,
@@ -53,19 +57,41 @@ export default function AntdProvider({ children, locale = 'en' }: AntdProviderPr
             itemHeight: 40,
             iconSize: 16,
             collapsedIconSize: 18,
+            itemHoverBg: isDark ? '#1e293b' : '#f8fafc',
+            itemSelectedBg: isDark ? '#082f49' : '#f0f9ff',
+            itemSelectedColor: isDark ? '#38bdf8' : '#0ea5e9',
           },
           Card: {
             paddingLG: 20,
+            borderRadiusLG: 12,
           },
           Button: {
             controlHeight: 36,
             borderRadius: 8,
+            contentFontSizeLG: 15,
           },
           Input: {
             controlHeight: 36,
+            borderRadius: 8,
           },
           Select: {
             controlHeight: 36,
+            borderRadius: 8,
+          },
+          Modal: {
+            borderRadiusLG: 14,
+          },
+          Tag: {
+            borderRadiusSM: 6,
+          },
+          Switch: {
+            trackHeight: 22,
+          },
+          Progress: {
+            remainingColor: isDark ? '#334155' : '#f1f5f9',
+          },
+          Badge: {
+            dotSize: 8,
           },
         },
       }}

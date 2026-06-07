@@ -1,10 +1,9 @@
 'use client';
 
-import React, { use, useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Button, Modal, Form, Input, Popconfirm, message, Space, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, TagOutlined } from '@ant-design/icons';
-import AppLayout from '@/components/AppLayout';
 import MacInput from '@/components/MacInput';
 import { translateError } from '@/lib/error-map';
 import { formatLocalTime } from '@/lib/format-time';
@@ -18,10 +17,9 @@ interface MacNoteRow {
   updated_at: string;
 }
 
-export default function MacNotesPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function MacNotesPage() {
   const t = useTranslations('macNotes');
   const tc = useTranslations('common');
-  const { locale } = use(params);
   const [data, setData] = useState<MacNoteRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -125,9 +123,9 @@ export default function MacNotesPage({ params }: { params: Promise<{ locale: str
       title: tc('actions'), key: 'actions', width: 100, fixed: 'right' as const,
       render: (_: any, r: MacNoteRow) => (
         <Space>
-          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(r)} />
+          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(r)} aria-label={tc('edit')} />
           <Popconfirm title={t('deleteConfirm')} onConfirm={() => handleDelete(r.mac_address)}>
-            <Button icon={<DeleteOutlined />} size="small" danger />
+            <Button icon={<DeleteOutlined />} size="small" danger aria-label={tc('delete')} />
           </Popconfirm>
         </Space>
       ),
@@ -135,7 +133,7 @@ export default function MacNotesPage({ params }: { params: Promise<{ locale: str
   ];
 
   return (
-    <AppLayout locale={locale} onLocaleChange={() => {}}>
+    <>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>{t('addNote')}</Button>
@@ -158,6 +156,6 @@ export default function MacNotesPage({ params }: { params: Promise<{ locale: str
           </Form.Item>
         </Form>
       </Modal>
-    </AppLayout>
+    </>
   );
 }

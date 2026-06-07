@@ -19,7 +19,8 @@
     "closeRightTabs": "Close Right",
     "themeSystem": "System",
     "themeLight": "Light",
-    "themeDark": "Dark"
+    "themeDark": "Dark",
+    "skipToContent": "Skip to content"
   },
   "dashboard": {
     "title": "Dashboard",

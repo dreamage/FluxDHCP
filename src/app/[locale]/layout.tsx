@@ -3,6 +3,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '../../i18n/routing';
 import Providers from '@/components/Providers';
+import AppLayout from '@/components/AppLayout';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 
 export default async function LocaleLayout({
@@ -24,7 +25,9 @@ export default async function LocaleLayout({
     <AntdRegistry>
       <NextIntlClientProvider messages={messages}>
         <Providers locale={locale}>
-          {children}
+          <AppLayout>
+            {children}
+          </AppLayout>
         </Providers>
       </NextIntlClientProvider>
     </AntdRegistry>

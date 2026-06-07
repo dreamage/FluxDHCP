@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Fonts are loaded via next/font/google in layout.tsx — no @import needed */
 
 /* ========== Light Theme ========== */
 :root {
@@ -332,6 +332,13 @@ code, pre, .mono {
   background: var(--color-surface-elevated) !important;
   border: 1px solid var(--color-border) !important;
 }
+
+/* ========== Log Row Alternating Background ========== */
+.log-row-even td { background: var(--color-surface); }
+.log-row-odd td { background: var(--color-tab-bar-bg); }
+.log-row-even:hover td, .log-row-odd:hover td { background: inherit; }
+.ant-table-tbody > tr.log-row-even:hover > td,
+.ant-table-tbody > tr.log-row-odd:hover > td { background: inherit; }
 
 /* ========== Page Transition ========== */
 @keyframes fadeIn {

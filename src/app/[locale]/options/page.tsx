@@ -1,13 +1,13 @@
 'use client';
 
-import React, { use, useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Button, Modal, Form, Input, InputNumber, Popconfirm, Select, message, Space } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import AppLayout from '@/components/AppLayout';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { translateError } from '@/lib/error-map';
+import { useMacNotes } from '@/hooks/useMacNotes';
 
 const { Title } = Typography;
 
@@ -24,24 +24,16 @@ const COMMON_OPTIONS = [
   { value: 119, label: '119 - Domain Search' },
 ];
 
-export default function OptionsPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function OptionsPage() {
   const t = useTranslations('options');
   const tc = useTranslations('common');
   const tOpt = useTranslations('dhcpOptionCodes');
-  const { locale } = use(params);
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
-  const [macNotes, setMacNotes] = useState<Record<string, string>>({});
+  const { macNotes, fetchMacNotes } = useMacNotes();
   const [form] = Form.useForm();
-
-  const fetchMacNotes = useCallback(async () => {
-    try {
-      const res = await fetch('/api/mac-notes');
-      if (res.ok) setMacNotes(await res.json());
-    } catch { /* ignore */ }
-  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -110,9 +102,9 @@ export default function OptionsPage({ params }: { params: Promise<{ locale: stri
       title: tc('actions'), key: 'actions', width: 100, fixed: 'right' as const,
       render: (_: any, r: any) => (
         <Space>
-          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(r)} />
+          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(r)} aria-label={tc('edit')} />
           <Popconfirm title={t('deleteConfirm')} onConfirm={() => handleDelete(r.id)}>
-            <Button icon={<DeleteOutlined />} size="small" danger />
+            <Button icon={<DeleteOutlined />} size="small" danger aria-label={tc('delete')} />
           </Popconfirm>
         </Space>
       ),
@@ -120,7 +112,7 @@ export default function OptionsPage({ params }: { params: Promise<{ locale: stri
   ];
 
   return (
-    <AppLayout locale={locale} onLocaleChange={() => {}}>
+    <>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>{t('addOption')}</Button>
@@ -164,6 +156,6 @@ export default function OptionsPage({ params }: { params: Promise<{ locale: stri
           </Form.Item>
         </Form>
       </Modal>
-    </AppLayout>
+    </>
   );
 }

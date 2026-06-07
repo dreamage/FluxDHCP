@@ -1,13 +1,13 @@
 'use client';
 
-import React, { use, useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Tag, Select, Popconfirm, Button, message } from 'antd';
 import { DeleteOutlined, UndoOutlined } from '@ant-design/icons';
-import AppLayout from '@/components/AppLayout';
 import MacAddress from '@/components/MacAddress';
 import { formatLocalTime } from '@/lib/format-time';
 import { translateError } from '@/lib/error-map';
+import { useMacNotes } from '@/hooks/useMacNotes';
 
 const { Title } = Typography;
 
@@ -18,26 +18,18 @@ const STATE_COLORS: Record<string, string> = {
   RELEASED: 'red',
 };
 
-export default function LeasesPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function LeasesPage() {
   const t = useTranslations('leases');
   const tc = useTranslations('common');
-  const { locale } = use(params);
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [state, setState] = useState('ALL');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [macNotes, setMacNotes] = useState<Record<string, string>>({});
   const [sortField, setSortField] = useState('lease_end');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-
-  const fetchMacNotes = useCallback(async () => {
-    try {
-      const res = await fetch('/api/mac-notes');
-      if (res.ok) setMacNotes(await res.json());
-    } catch { /* ignore */ }
-  }, []);
+  const { macNotes, fetchMacNotes } = useMacNotes();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -108,7 +100,7 @@ export default function LeasesPage({ params }: { params: Promise<{ locale: strin
   ];
 
   return (
-    <AppLayout locale={locale} onLocaleChange={() => {}}>
+    <>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Select value={state} onChange={v => { setState(v); setPage(1); }} style={{ width: 150 }}>
@@ -128,6 +120,6 @@ export default function LeasesPage({ params }: { params: Promise<{ locale: strin
           }
         }}
         pagination={{ current: page, pageSize, total, showSizeChanger: true, pageSizeOptions: [10, 20, 50, 100], onChange: (p, ps) => { setPage(p); setPageSize(ps); } }} />
-    </AppLayout>
+    </>
   );
 }
