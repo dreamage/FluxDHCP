@@ -141,7 +141,7 @@ export default function MacNotesPage() {
 
       <Table columns={columns} dataSource={data} rowKey="mac_address" loading={loading}
         size="small" scroll={{ x: 'max-content' }}
-        pagination={{ showSizeChanger: true, pageSizeOptions: [10, 20, 50, 100], defaultPageSize: 20 }} />
+        pagination={{ showSizeChanger: true, pageSizeOptions: [20, 50, 100], defaultPageSize: 20 }} />
 
       <Modal title={editingMac ? t('editNote') : t('addNote')} open={modalOpen}
         onOk={handleSubmit} onCancel={() => setModalOpen(false)}>

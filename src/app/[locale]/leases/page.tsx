@@ -119,7 +119,7 @@ export default function LeasesPage() {
             setSortOrder(sorter.order === 'ascend' ? 'asc' : 'desc');
           }
         }}
-        pagination={{ current: page, pageSize, total, showSizeChanger: true, pageSizeOptions: [10, 20, 50, 100], onChange: (p, ps) => { setPage(p); setPageSize(ps); } }} />
+        pagination={{ current: page, pageSize, total, showSizeChanger: true, pageSizeOptions: [20, 50, 100], onChange: (p, ps) => { setPage(p); setPageSize(ps); } }} />
     </>
   );
 }

@@ -162,7 +162,7 @@ export default function ReservationsPage() {
       </div>
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"
         scroll={{ x: 'max-content' }}
-        pagination={{ showSizeChanger: true, pageSizeOptions: [10, 20, 50, 100], defaultPageSize: 20 }} />
+        pagination={{ showSizeChanger: true, pageSizeOptions: [20, 50, 100], defaultPageSize: 20 }} />
 
       <Modal title={editingRecord ? t('editReservation') : t('addReservation')} open={modalOpen}
         onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={600}>
