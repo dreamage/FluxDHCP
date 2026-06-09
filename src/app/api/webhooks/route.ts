@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   try {
     const db = getDb();
     const body = await request.json();
-    const { name, url, method, events, fields, body_mode, headers, secret } = body;
+    const { name, url, method, events, fields, body_mode, headers } = body;
 
     if (!name || !url || !method || !events || events.length === 0) {
       return NextResponse.json({ error: 'Missing required fields: name, url, method, events' }, { status: 400 });
@@ -28,15 +28,14 @@ export async function POST(request: Request) {
     }
 
     const result = db.prepare(`
-      INSERT INTO webhooks (name, url, method, events, fields, body_mode, headers, secret)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO webhooks (name, url, method, events, fields, body_mode, headers)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(
       name, url, method,
       JSON.stringify(events),
       JSON.stringify(fields || []),
       body_mode || 'json',
       JSON.stringify(headers || {}),
-      secret || null,
     );
 
     return NextResponse.json({ id: result.lastInsertRowid, message: 'Webhook created' }, { status: 201 });

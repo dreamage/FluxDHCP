@@ -139,6 +139,7 @@ CREATE TABLE IF NOT EXISTS webhook_deliveries (
   event_type  TEXT NOT NULL,
   url         TEXT NOT NULL,
   method      TEXT NOT NULL,
+  request_body TEXT,
   status      TEXT NOT NULL DEFAULT 'pending',
   http_status INTEGER,
   response    TEXT,

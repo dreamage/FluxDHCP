@@ -73,13 +73,14 @@ function logDelivery(
   httpStatus?: number,
   response?: string,
   error?: string,
+  requestBody?: string,
 ): void {
   try {
     const db = getDb();
     db.prepare(`
-      INSERT INTO webhook_deliveries (webhook_id, webhook_name, event_type, url, method, status, http_status, response, error, attempt, max_attempts, completed_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).run(webhookId, webhookName, eventType, url, method, status, httpStatus || null, response || null, error || null, attempt, MAX_ATTEMPTS);
+      INSERT INTO webhook_deliveries (webhook_id, webhook_name, event_type, url, method, request_body, status, http_status, response, error, attempt, max_attempts, completed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).run(webhookId, webhookName, eventType, url, method, requestBody || null, status, httpStatus || null, response || null, error || null, attempt, MAX_ATTEMPTS);
   } catch (err) {
     console.error('[Webhook] Failed to log delivery:', err);
   }
@@ -92,6 +93,7 @@ async function fetchWithRetry(
   webhookName: string,
   eventType: string,
   method: string,
+  requestBody?: string,
 ): Promise<void> {
   let lastError = '';
 
@@ -101,19 +103,19 @@ async function fetchWithRetry(
       const body = await res.text().catch(() => '');
 
       if (res.ok) {
-        logDelivery(webhookId, webhookName, eventType, url, method, 'success', attempt, res.status, body.slice(0, 500));
+        logDelivery(webhookId, webhookName, eventType, url, method, 'success', attempt, res.status, body.slice(0, 500), undefined, requestBody);
         return;
       }
 
       // HTTP error (4xx/5xx) — retry on 5xx only
       lastError = `HTTP ${res.status}: ${body.slice(0, 200)}`;
-      logDelivery(webhookId, webhookName, eventType, url, method, 'failed', attempt, res.status, body.slice(0, 500), lastError);
+      logDelivery(webhookId, webhookName, eventType, url, method, 'failed', attempt, res.status, body.slice(0, 500), lastError, requestBody);
 
       if (res.status < 500) return; // Don't retry client errors
 
     } catch (err: any) {
       lastError = err?.message || String(err);
-      logDelivery(webhookId, webhookName, eventType, url, method, 'failed', attempt, undefined, undefined, lastError);
+      logDelivery(webhookId, webhookName, eventType, url, method, 'failed', attempt, undefined, undefined, lastError, requestBody);
     }
 
     // Wait before retry (exponential backoff)
@@ -123,7 +125,7 @@ async function fetchWithRetry(
   }
 
   // All attempts failed
-  logDelivery(webhookId, webhookName, eventType, url, method, 'error', MAX_ATTEMPTS, undefined, undefined, `All ${MAX_ATTEMPTS} attempts failed. Last: ${lastError}`);
+  logDelivery(webhookId, webhookName, eventType, url, method, 'error', MAX_ATTEMPTS, undefined, undefined, `All ${MAX_ATTEMPTS} attempts failed. Last: ${lastError}`, requestBody);
   console.error(`[Webhook] Failed after ${MAX_ATTEMPTS} attempts: ${webhookName} (${url}) - ${lastError}`);
 }
 
@@ -156,9 +158,6 @@ export async function triggerWebhooks(eventType: number, data: Record<string, an
       try { headers = JSON.parse(webhook.headers || '{}'); } catch { /* ignore */ }
 
       const reqHeaders: Record<string, string> = { ...headers };
-      if (webhook.secret) {
-        reqHeaders['X-Webhook-Secret'] = webhook.secret;
-      }
 
       // Resolve field name-value pairs with template variables
       const resolvedFields: Record<string, string> = {};
@@ -167,6 +166,7 @@ export async function triggerWebhooks(eventType: number, data: Record<string, an
       }
 
       let targetUrl = webhook.url;
+      let requestBody = '';
       const fetchOptions: RequestInit = {
         method: webhook.method,
         headers: reqHeaders,
@@ -179,20 +179,22 @@ export async function triggerWebhooks(eventType: number, data: Record<string, an
           urlObj.searchParams.set(k, v);
         }
         targetUrl = urlObj.toString();
+        requestBody = urlObj.search ? urlObj.search.slice(1) : '';
       } else {
         const bodyMode = webhook.body_mode || 'json';
         if (bodyMode === 'form') {
           reqHeaders['Content-Type'] = 'application/x-www-form-urlencoded';
-          fetchOptions.body = new URLSearchParams(resolvedFields).toString();
+          requestBody = new URLSearchParams(resolvedFields).toString();
         } else {
           reqHeaders['Content-Type'] = 'application/json';
-          fetchOptions.body = JSON.stringify(resolvedFields);
+          requestBody = JSON.stringify(resolvedFields);
         }
+        fetchOptions.body = requestBody;
         fetchOptions.headers = reqHeaders;
       }
 
       // Fire with retry (non-blocking — don't await in the caller)
-      fetchWithRetry(targetUrl, fetchOptions, webhook.id, webhook.name, eventName, webhook.method)
+      fetchWithRetry(targetUrl, fetchOptions, webhook.id, webhook.name, eventName, webhook.method, requestBody)
         .catch(err => console.error(`[Webhook] Unexpected error: ${webhook.name}`, err));
     }
   } catch (err) {

@@ -233,9 +233,6 @@ export default function WebhooksPage() {
             )}
           </Form.List>
 
-          <Form.Item name="secret" label={t('secret')} style={{ marginTop: 12 }}>
-            <Input.Password placeholder={t('secretPlaceholder')} />
-          </Form.Item>
           <Form.Item name="headers" label={t('headers')}>
             <Input.TextArea rows={2} placeholder={t('headersPlaceholder')} />
           </Form.Item>

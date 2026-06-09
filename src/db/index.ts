@@ -70,6 +70,9 @@ export function getDatabase(dbPath?: string): Database.Database {
   try { db.exec("ALTER TABLE logs ADD COLUMN siaddr TEXT"); } catch { /* column already exists */ }
   try { db.exec("ALTER TABLE logs ADD COLUMN giaddr TEXT"); } catch { /* column already exists */ }
 
+  // Migration: add request_body column to webhook_deliveries if missing
+  try { db.exec("ALTER TABLE webhook_deliveries ADD COLUMN request_body TEXT"); } catch { /* column already exists */ }
+
   // 执行索引创建
   for (const indexSql of CREATE_INDEXES) {
     db.exec(indexSql);

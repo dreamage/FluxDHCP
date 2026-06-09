@@ -46,9 +46,6 @@ export async function POST(request: Request) {
     }
 
     const headers: Record<string, string> = { ...customHeaders };
-    if (webhook.secret) {
-      headers['X-Webhook-Secret'] = webhook.secret;
-    }
 
     const fetchOptions: RequestInit = {
       method: webhook.method,

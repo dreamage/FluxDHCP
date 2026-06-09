@@ -9,7 +9,7 @@ export async function GET() {
     const pools = db.prepare('SELECT * FROM pools').all();
     const reservations = db.prepare('SELECT * FROM reservations').all();
     const deviceOptions = db.prepare('SELECT * FROM device_options').all();
-    const webhooks = db.prepare('SELECT id, name, url, method, events, fields, body_mode, headers, secret, enabled FROM webhooks').all();
+    const webhooks = db.prepare('SELECT id, name, url, method, events, fields, body_mode, headers, enabled FROM webhooks').all();
     const macNotes = db.prepare('SELECT * FROM mac_notes').all();
 
     const data = {

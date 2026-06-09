@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Select, Popconfirm, message, Space, Tag } from 'antd';
+import { Typography, Table, Button, Select, Popconfirm, message, Space, Tag, Tooltip } from 'antd';
 import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -134,6 +134,12 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
     {
       title: 'URL', dataIndex: 'url', key: 'url', ellipsis: true,
       render: (url: string) => <Text style={{ fontSize: 12 }} ellipsis>{url}</Text>,
+    },
+    {
+      title: tLogs('requestBody'), dataIndex: 'request_body', key: 'request_body', width: 180, ellipsis: true,
+      render: (body: string) => body
+        ? <Tooltip title={<span style={{ fontFamily: 'monospace', wordBreak: 'break-all', whiteSpace: 'pre-wrap', maxWidth: 400, display: 'block' }}>{body}</span>} placement="topLeft"><Text style={{ fontSize: 12 }} ellipsis>{body}</Text></Tooltip>
+        : <Text type="secondary">-</Text>,
     },
     {
       title: tLogs('error'), dataIndex: 'error', key: 'error', width: 120, ellipsis: true,

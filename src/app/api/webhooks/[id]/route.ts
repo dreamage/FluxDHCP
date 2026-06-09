@@ -21,7 +21,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const db = getDb();
     const body = await request.json();
-    const { name, url, method, events, fields, body_mode, headers, secret, enabled } = body;
+    const { name, url, method, events, fields, body_mode, headers, enabled } = body;
 
     const existing = db.prepare('SELECT * FROM webhooks WHERE id = ?').get(id) as any;
     if (!existing) {
@@ -38,7 +38,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     db.prepare(`
       UPDATE webhooks SET
         name = ?, url = ?, method = ?, events = ?, fields = ?,
-        body_mode = ?, headers = ?, secret = ?, enabled = ?, updated_at = datetime('now')
+        body_mode = ?, headers = ?, enabled = ?, updated_at = datetime('now')
       WHERE id = ?
     `).run(
       name !== undefined ? name : existing.name,
@@ -48,7 +48,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       fields !== undefined ? JSON.stringify(fields) : existing.fields,
       body_mode !== undefined ? body_mode : existing.body_mode,
       headers !== undefined ? JSON.stringify(headers) : existing.headers,
-      secret !== undefined ? secret : existing.secret,
       enabled !== undefined ? (enabled ? 1 : 0) : existing.enabled,
       id,
     );

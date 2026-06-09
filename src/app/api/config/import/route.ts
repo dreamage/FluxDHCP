@@ -72,11 +72,11 @@ export async function POST(request: Request) {
       if (body.webhooks) {
         db.prepare('DELETE FROM webhooks').run();
         const insertWh = db.prepare(`
-          INSERT INTO webhooks (id, name, url, method, events, fields, body_mode, headers, secret, enabled, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO webhooks (id, name, url, method, events, fields, body_mode, headers, enabled, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
         for (const w of body.webhooks) {
-          insertWh.run(w.id, w.name, w.url, w.method || 'POST', w.events || '[]', w.fields || '[]', w.body_mode || 'json', w.headers || '{}', w.secret || null, w.enabled ?? 1, w.created_at || null, w.updated_at || null);
+          insertWh.run(w.id, w.name, w.url, w.method || 'POST', w.events || '[]', w.fields || '[]', w.body_mode || 'json', w.headers || '{}', w.enabled ?? 1, w.created_at || null, w.updated_at || null);
         }
       }
 
