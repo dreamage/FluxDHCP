@@ -8,7 +8,6 @@ import MacInput from '@/components/MacInput';
 import MacAddress from '@/components/MacAddress';
 import { useMacNotes } from '@/hooks/useMacNotes';
 import { translateError } from '@/lib/error-map';
-import { formatLocalTimeNoMs } from '@/lib/format-time';
 
 const { Title } = Typography;
 
@@ -43,7 +42,7 @@ export default function MacBlacklistPage() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchData(); fetchMacNotes(); }, [fetchData, fetchMacNotes]);
 
   const handleAdd = () => {
     setEditingMac(null);
