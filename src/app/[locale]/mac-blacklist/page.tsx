@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Typography, Table, Button, Modal, Form, Input, Popconfirm, message, Space, Switch } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import MacInput from '@/components/MacInput';
+import MacAddress from '@/components/MacAddress';
+import { useMacNotes } from '@/hooks/useMacNotes';
 import { translateError } from '@/lib/error-map';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
 
@@ -26,6 +28,7 @@ export default function MacBlacklistPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMac, setEditingMac] = useState<string | null>(null);
   const [form] = Form.useForm();
+  const { macNotes, fetchMacNotes } = useMacNotes();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -122,8 +125,8 @@ export default function MacBlacklistPage() {
 
   const columns = [
     {
-      title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 220,
-      render: (mac: string) => <span style={{ fontFamily: "var(--font-jetbrains-mono), monospace", fontSize: 13 }}>{mac}</span>,
+      title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 280,
+      render: (mac: string) => <MacAddress mac={mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} />,
       sorter: (a: MacBlacklistRow, b: MacBlacklistRow) => a.mac_address.localeCompare(b.mac_address),
     },
     {
