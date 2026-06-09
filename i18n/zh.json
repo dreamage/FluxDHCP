@@ -5,6 +5,7 @@
     "reservations": "保留地址",
     "leases": "租约",
     "options": "设备选项",
+    "macBlacklist": "MAC黑名单",
     "macNotes": "MAC备注",
     "logs": "日志",
     "settings": "设置",
@@ -249,6 +250,7 @@
     "errOptionNotFound": "设备选项不存在",
     "errWebhookNotFound": "Webhook不存在",
     "errMacNoteNotFound": "MAC备注不存在",
+    "errMacBlacklistNotFound": "MAC黑名单记录不存在",
     "errNoteRequired": "备注不能为空",
     "errMacNoteRequired": "MAC地址和备注不能为空",
     "errNoActiveLease": "该IP没有活跃租约",
@@ -418,6 +420,18 @@
     "deleteNote": "删除备注",
     "placeholder": "如：张三的笔记本",
     "deleteConfirm": "确定要删除此MAC备注吗？"
+  },
+  "macBlacklist": {
+    "title": "MAC黑名单管理",
+    "macAddress": "MAC地址",
+    "macPlaceholder": "AA:BB:CC:DD:EE:FF",
+    "reason": "封禁原因",
+    "reasonPlaceholder": "如：未授权设备",
+    "enabled": "状态",
+    "addEntry": "添加黑名单",
+    "editEntry": "编辑黑名单",
+    "deleteEntry": "移出黑名单",
+    "deleteConfirm": "确定要将此MAC移出黑名单吗？"
   },
   "serverResponse": {
     "srDecline": "客户端拒绝IP {ip}（地址冲突）",

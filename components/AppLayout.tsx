@@ -8,7 +8,7 @@ import {
   SettingOutlined, HistoryOutlined, ToolOutlined, ApiOutlined,
   MenuFoldOutlined, MenuUnfoldOutlined, MenuOutlined,
   CloseOutlined, ColumnWidthOutlined, ReloadOutlined, TagOutlined,
-  SunOutlined, MoonOutlined, DesktopOutlined,
+  SunOutlined, MoonOutlined, DesktopOutlined, StopOutlined,
 } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -60,7 +60,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   }, []);
 
   const pageKey = useMemo(() => {
-    const match = pathname?.match(/\/(dashboard|pools|leases|reservations|options|mac-notes|webhooks|logs|settings)/);
+    const match = pathname?.match(/\/(dashboard|pools|leases|reservations|options|mac-blacklist|mac-notes|webhooks|logs|settings)/);
     return match ? `/${match[1]}` : '/dashboard';
   }, [pathname]);
 
@@ -70,6 +70,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { key: '/leases', icon: <FileTextOutlined />, label: t('leases') },
     { key: '/reservations', icon: <PushpinOutlined />, label: t('reservations') },
     { key: '/options', icon: <ToolOutlined />, label: t('options') },
+    { key: '/mac-blacklist', icon: <StopOutlined />, label: t('macBlacklist') },
     { key: '/mac-notes', icon: <TagOutlined />, label: t('macNotes') },
     { key: '/webhooks', icon: <ApiOutlined />, label: t('webhooks') },
     { key: '/logs', icon: <HistoryOutlined />, label: t('logs') },

@@ -114,6 +114,15 @@ CREATE TABLE IF NOT EXISTS mac_notes (
   updated_at  TEXT DEFAULT (datetime('now'))
 )`;
 
+export const CREATE_TABLE_MAC_BLACKLIST = `
+CREATE TABLE IF NOT EXISTS mac_blacklist (
+  mac_address TEXT PRIMARY KEY,
+  reason      TEXT DEFAULT '',
+  enabled     INTEGER DEFAULT 1,
+  created_at  TEXT DEFAULT (datetime('now')),
+  updated_at  TEXT DEFAULT (datetime('now'))
+)`;
+
 export const CREATE_TABLE_DECLINED_IPS = `
 CREATE TABLE IF NOT EXISTS declined_ips (
   ip_address  TEXT PRIMARY KEY,
@@ -157,6 +166,7 @@ export const CREATE_INDEXES: string[] = [
   'CREATE INDEX IF NOT EXISTS idx_declined_expires ON declined_ips(expires_at)',
   'CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook ON webhook_deliveries(webhook_id)',
   'CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_status ON webhook_deliveries(status)',
+  'CREATE INDEX IF NOT EXISTS idx_mac_blacklist_enabled ON mac_blacklist(enabled)',
   'CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_created ON webhook_deliveries(created_at)',
 ];
 

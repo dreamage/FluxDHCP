@@ -16,6 +16,7 @@ const ERROR_MAP: Record<string, string> = {
   'Option not found': 'errOptionNotFound',
   'Webhook not found': 'errWebhookNotFound',
   'MAC note not found': 'errMacNoteNotFound',
+  'MAC blacklist entry not found': 'errMacBlacklistNotFound',
   'Note is required': 'errNoteRequired',
   'MAC address and note are required': 'errMacNoteRequired',
   'No active lease found for this IP': 'errNoActiveLease',
@@ -61,6 +62,10 @@ const ERROR_MAP: Record<string, string> = {
   'Failed to fetch MAC note': 'errFailedFetch',
   'Failed to update MAC note': 'errFailedUpdate',
   'Failed to delete MAC note': 'errFailedDelete',
+  'Failed to fetch MAC blacklist': 'errFailedFetch',
+  'Failed to save MAC blacklist entry': 'errFailedCreate',
+  'Failed to update MAC blacklist entry': 'errFailedUpdate',
+  'Failed to delete MAC blacklist entry': 'errFailedDelete',
 };
 
 // For messages that start with a known prefix (e.g., long MAC format messages)

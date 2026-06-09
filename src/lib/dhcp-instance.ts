@@ -215,6 +215,20 @@ class DhcpInstance extends EventEmitter {
         return;
       }
 
+      // MAC 黑名单检查 — 静默丢弃，不发送任何响应
+      const blocked = this.db.prepare(
+        'SELECT reason FROM mac_blacklist WHERE mac_address = ? AND enabled = 1'
+      ).get(packet.chaddr) as { reason: string } | undefined;
+      if (blocked) {
+        console.log(`[DHCP] Blocked: ${packet.chaddr} (reason: ${blocked.reason || 'blacklisted'})`);
+        this.packetLogger.logServerResponse(
+          packet.messageType, packet.chaddr, '0.0.0.0', packet.xid,
+          undefined, `SR|BLOCKED|${blocked.reason || 'blacklisted'}`,
+          undefined, undefined, this.serverIP, packet.giaddr,
+        );
+        return;
+      }
+
       this.packetLogger.logPacket(packet);
 
       switch (packet.messageType) {

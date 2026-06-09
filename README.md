@@ -14,6 +14,7 @@
 - **DECLINE IP Blacklist** - Declined IPs are blocked from reassignment for a configurable duration (default 1 hour), scoped per-pool
 - **Packet Logger** - Logs all DHCP transactions with millisecond timestamps, direction (received/sent), raw options, yiaddr/siaddr/giaddr, vendor class, client ID, hostname, and fully localized server response messages
 - **MAC Notes** - Dedicated management page for adding custom notes/labels to MAC addresses
+- **MAC Blacklist** - Block specific MAC addresses from receiving any DHCP response; blacklist entries can be enabled/disabled individually with optional reason
 - **Webhook Notifications** - Push DHCP events (ACK/RELEASE/etc.) to external services via HTTP POST/GET with template variables, SSRF-protected URLs
 - **Web Dashboard** - Icon stat cards, overall IP usage bar, color-coded pool progress bars, recent event timeline with consistent row heights
 - **Config Import/Export** - Export all configuration to JSON with confirmation modal on import, optional lease/log clearing, data structure validation, and hot-reload
@@ -95,6 +96,7 @@ FluxDHCP
 │   │       ├── webhooks/    # Webhook CRUD + test (SSRF-protected)
 │   │       ├── logs/        # DHCP packet logs (ms precision)
 │   │       ├── mac-notes/   # MAC note management
+│   │       ├── mac-blacklist/ # MAC blacklist (block MACs from DHCP)
 │   │       └── mac-info/    # MAC lookup across tables
 │   ├── dhcp/
 │   │   ├── protocol/        # Packet parser, serializer, constants
@@ -129,6 +131,7 @@ FluxDHCP
 | **Leases** | Lease list with state filtering (ALL/BOUND/OFFERED/EXPIRED/RELEASED), server-side sorting, page size selector, distinct release/delete icons |
 | **Reservations** | Static MAC-IP bindings, MAC autocomplete with auto-uppercase, random MAC, auto-fill from notes, active lease conflict detection, IPv4 validation |
 | **Options** | Per-device DHCP option overrides, common option code dropdown, page size selector |
+| **MAC Blacklist** | Block MAC addresses from DHCP, enable/disable toggle, optional reason, page size selector |
 | **MAC Notes** | MAC address labels and notes, sortable columns, page size selector |
 | **Webhooks** | Webhook CRUD, event subscription, template variables, custom headers, SSRF-protected URLs, test button |
 | **Logs** | Millisecond timestamps, direction indicator, 60+ option code translations, column visibility selector, auto-refresh, MAC/IP autocomplete filters, page size selector |
