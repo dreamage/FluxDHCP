@@ -41,6 +41,7 @@ export function translateServerResponse(
         case 'OFFER':   return t('srOffer', { ip: p1, pool: p2 });
         case 'ASSIGN':  return t('srAssign', { ip: p1, pool: p2 });
         case 'INFORM':  return t('srInform');
+        case 'BLOCKED': return t('srBlocked', { reason: p1 });
         default: return mainPart;
       }
     } catch {

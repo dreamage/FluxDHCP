@@ -446,6 +446,7 @@
     "srNakIpLeased": "NAK: IP {ip} 已分配给 {mac}",
     "srNakPoolDisabled": "NAK: 保留地址 {ip} 所在地址池已禁用",
     "srNakUseOwnIp": "NAK: 您已有IP {own_ip}，请续期自己的IP，而非请求 {requested_ip}",
-    "srNakMustDiscover": "NAK: 无现有租约，请先发送 DISCOVER"
+    "srNakMustDiscover": "NAK: 无现有租约，请先发送 DISCOVER",
+    "srBlocked": "已被MAC黑名单拦截（{reason}）"
   }
 }

@@ -446,6 +446,7 @@
     "srNakIpLeased": "NAK: IP {ip} already leased to {mac}",
     "srNakPoolDisabled": "NAK: Pool for reserved IP {ip} is disabled",
     "srNakUseOwnIp": "NAK: You have lease for {own_ip}, requested {requested_ip}",
-    "srNakMustDiscover": "NAK: No existing lease. Send DISCOVER first"
+    "srNakMustDiscover": "NAK: No existing lease. Send DISCOVER first",
+    "srBlocked": "Blocked by MAC blacklist ({reason})"
   }
 }
