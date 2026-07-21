@@ -7,7 +7,7 @@
 ## Features
 
 - **Full DHCPv4 Protocol** - RFC 2131 compliant: DISCOVER/OFFER/REQUEST/ACK/NAK/RELEASE/DECLINE/INFORM
-- **IP Pool Management** - Define subnets with start/end IP ranges, gateway, DNS servers, netmask, and per-pool lease times with overlap detection. Atomic IP allocation prevents race conditions.
+- **IP Pool Management** - Define subnets with start/end IP ranges, gateway, DNS servers, netmask, and per-pool lease times with overlap detection. Atomic IP allocation prevents race conditions. Dual visualization: color-coded IP grid and detailed IP list with hostname/reservation columns.
 - **Static Reservations** - Bind MAC addresses to specific IPs with random MAC generation, active lease conflict detection, and IPv4 format validation
 - **Per-device DHCP Options** - Assign custom option codes/values per MAC address with 60+ translated option codes
 - **Lease Lifecycle Tracking** - Full state machine: OFFERED/BOUND/RELEASED/EXPIRED with automatic expiry cleanup
@@ -127,7 +127,7 @@ FluxDHCP
 | Page | Description |
 |------|-------------|
 | **Dashboard** | Stat cards with icons, IP usage bar, pool progress bars (hidden for disabled pools), recent event timeline |
-| **Pools** | Address pool CRUD, IP grid visualization (auto-expanded, color-coded), expand/collapse all, IPv4 validation |
+| **Pools** | Address pool CRUD, dual view toggle (IP grid / IP list, default grid), color-coded grid with reserved-online visual distinction (orange bottom strip) and hostname in hover tooltips, list view with show/hide-free toggle plus hostname/MAC/reservation-note columns, expand/collapse all, IPv4 validation |
 | **Leases** | Lease list with state filtering (ALL/BOUND/OFFERED/EXPIRED/RELEASED), server-side sorting, page size selector, distinct release/delete icons |
 | **Reservations** | Static MAC-IP bindings, MAC autocomplete with auto-uppercase, random MAC, auto-fill from notes, active lease conflict detection, IPv4 validation |
 | **Options** | Per-device DHCP option overrides, common option code dropdown, page size selector |
