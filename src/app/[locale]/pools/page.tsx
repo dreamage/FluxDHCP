@@ -32,6 +32,7 @@ export default function PoolsPage() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
   const [ipLoading, setIpLoading] = useState<Record<number, boolean>>({});
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showFree, setShowFree] = useState(false);
   const [form] = Form.useForm();
 
   const fetchData = useCallback(async () => {
@@ -179,12 +180,8 @@ export default function PoolsPage() {
             {ips.map((item: any) => {
               const lastOctet = item.ip.split('.').pop();
               const isReservedActive = item.isReserved && (item.status === 'bound' || item.status === 'offered');
-              const cellBackground = isReservedActive
-                ? (item.status === 'bound' ? 'var(--color-ip-reserved-bound)' : 'var(--color-ip-reserved-offered)')
-                : (STATUS_COLORS[item.status] || STATUS_COLORS.free);
-              const cellTextColor = isReservedActive
-                ? STATUS_TEXT_COLORS[item.status]
-                : (STATUS_TEXT_COLORS[item.status] || STATUS_TEXT_COLORS.free);
+              const cellBackground = STATUS_COLORS[item.status] || STATUS_COLORS.free;
+              const cellTextColor = STATUS_TEXT_COLORS[item.status] || STATUS_TEXT_COLORS.free;
               let statusText: string;
               if (item.isReserved && item.status === 'bound') statusText = t('reservedBound');
               else if (item.isReserved && item.status === 'offered') statusText = t('reservedOffered');
@@ -202,12 +199,17 @@ export default function PoolsPage() {
                   style={{
                     width: 34, height: 24, borderRadius: 3,
                     background: cellBackground,
+                    position: 'relative',
+                    overflow: 'hidden',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10, fontFamily: "var(--font-jetbrains-mono), monospace",
                     fontWeight: 500,
                     color: cellTextColor,
                   }}>
-                  {lastOctet}
+                  {isReservedActive && (
+                    <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: 'var(--color-ip-reserved)', pointerEvents: 'none' }} />
+                  )}
+                  <span style={{ position: 'relative', zIndex: 1 }}>{lastOctet}</span>
                 </div>
               );
             })}
@@ -216,7 +218,7 @@ export default function PoolsPage() {
           <Table
             size="small"
             rowKey="ip"
-            dataSource={ips}
+            dataSource={showFree ? ips : ips.filter((i: any) => i.status !== 'free')}
             pagination={false}
             scroll={{ y: 400 }}
             columns={[
@@ -227,12 +229,13 @@ export default function PoolsPage() {
                   let bg: string;
                   let textColor: string;
                   let text: string;
-                  if (item.isReserved && item.status === 'bound') {
-                    bg = 'var(--color-ip-reserved-bound)';
+                  const isRA = item.isReserved && (item.status === 'bound' || item.status === 'offered');
+                  if (isRA && item.status === 'bound') {
+                    bg = STATUS_COLORS.bound;
                     textColor = STATUS_TEXT_COLORS.bound;
                     text = t('reservedBound');
-                  } else if (item.isReserved && item.status === 'offered') {
-                    bg = 'var(--color-ip-reserved-offered)';
+                  } else if (isRA) {
+                    bg = STATUS_COLORS.offered;
                     textColor = STATUS_TEXT_COLORS.offered;
                     text = t('reservedOffered');
                   } else {
@@ -240,7 +243,7 @@ export default function PoolsPage() {
                     textColor = STATUS_TEXT_COLORS[item.status] || STATUS_TEXT_COLORS.free;
                     text = t(item.status);
                   }
-                  return <Tag style={{ background: bg, color: textColor, border: 'none' }}>{text}</Tag>;
+                  return <Tag style={{ background: bg, color: textColor, border: 'none', borderBottom: isRA ? '2px solid var(--color-ip-reserved)' : undefined }}>{text}</Tag>;
                 },
               },
               { title: t('listMac'), dataIndex: 'mac', key: 'mac', width: 160, render: (v: string) => v || '-' },
@@ -297,6 +300,10 @@ export default function PoolsPage() {
               { label: t('viewList'), value: 'list', icon: <UnorderedListOutlined /> },
             ]}
           />
+          {viewMode === 'list' && (
+            <Switch checked={showFree} onChange={setShowFree} size="small"
+              checkedChildren={t('showFree')} unCheckedChildren={t('hideFree')} />
+          )}
           <Button icon={<ExpandOutlined />} size="small"
             onClick={() => { setExpandedRowKeys(data.map((p: any) => p.id)); data.forEach((p: any) => fetchPoolIPs(p.id)); }}>
             {t('expandAll')}
