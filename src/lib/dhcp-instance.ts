@@ -646,4 +646,18 @@ class DhcpInstance extends EventEmitter {
   }
 }
 
-export const dhcpInstance = new DhcpInstance();
+// Use globalThis to share a single instance across module systems.
+// Next.js custom server (src/server.ts) and API routes (src/app/api/*) run in
+// separate module scopes, which would otherwise create TWO DhcpInstance objects.
+// The API-side instance never truly binds UDP 67 (it gets EADDRINUSE because the
+// server.ts instance owns the port), so calling stop() from the API only flips an
+// in-memory flag without closing the real socket — the server keeps running.
+// Pinning the singleton on globalThis guarantees one instance process-wide.
+const globalForDhcp = globalThis as unknown as { __dhcpInstance?: DhcpInstance };
+
+export const dhcpInstance =
+  globalForDhcp.__dhcpInstance ?? new DhcpInstance();
+
+if (!globalForDhcp.__dhcpInstance) {
+  globalForDhcp.__dhcpInstance = dhcpInstance;
+}

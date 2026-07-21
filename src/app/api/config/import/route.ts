@@ -100,6 +100,23 @@ export async function POST(request: Request) {
       dhcpInstance.reloadConfig();
     } catch { /* DHCP may not be initialized */ }
 
+    // Sync the running state of the DHCP service with the imported
+    // dhcp_enabled value so the live process matches the imported config
+    // (otherwise a restart would be required for them to match).
+    try {
+      const importedEnabled = (body.config || []).find(
+        (c: { key: string; value: string }) => c.key === 'dhcp_enabled',
+      );
+      const currentStatus = dhcpInstance.getStatus();
+      if (importedEnabled?.value === '1' && currentStatus === 'stopped') {
+        await dhcpInstance.start();
+      } else if (importedEnabled?.value === '0' && currentStatus === 'running') {
+        await dhcpInstance.stop();
+      }
+    } catch (e) {
+      console.error('[API] Failed to sync DHCP state after import:', e);
+    }
+
     return NextResponse.json({
       message: 'Config imported successfully',
       tables: {
