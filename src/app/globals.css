@@ -404,6 +404,9 @@ code, pre, .mono {
   --color-ip-bound-text: #fff;
   --color-ip-offered: #3b82f6;
   --color-ip-offered-text: #fff;
+  /* Reserved + active lease: 90% status color on top, 10% orange stripe at bottom */
+  --color-ip-reserved-bound: linear-gradient(to bottom, #22c55e 0%, #22c55e 88%, #f59e0b 88%, #f59e0b 100%);
+  --color-ip-reserved-offered: linear-gradient(to bottom, #3b82f6 0%, #3b82f6 88%, #f59e0b 88%, #f59e0b 100%);
 }
 :root[data-theme="dark"] {
   --color-ip-free: #475569;

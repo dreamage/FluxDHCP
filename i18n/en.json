@@ -81,7 +81,17 @@
     "statsFree": "Free",
     "statsReserved": "Reserved",
     "statsBound": "In Use",
-    "statsOffered": "Offered"
+    "statsOffered": "Offered",
+    "reservedBound": "Reserved, in use...",
+    "reservedOffered": "Reserved, offered...",
+    "viewGrid": "IP Blocks",
+    "viewList": "IP List",
+    "listIp": "IP Address",
+    "listStatus": "Status",
+    "listMac": "MAC Address",
+    "listHostname": "Hostname",
+    "listReservationNote": "Reservation Note",
+    "listMacNote": "MAC Note"
   },
   "reservations": {
     "title": "Reservations",

@@ -81,7 +81,17 @@
     "statsFree": "空闲",
     "statsReserved": "保留",
     "statsBound": "使用中",
-    "statsOffered": "已分配"
+    "statsOffered": "已分配",
+    "reservedBound": "保留，使用中...",
+    "reservedOffered": "保留，已分配...",
+    "viewGrid": "IP地址块",
+    "viewList": "IP列表",
+    "listIp": "IP地址",
+    "listStatus": "状态",
+    "listMac": "MAC地址",
+    "listHostname": "主机名",
+    "listReservationNote": "保留描述",
+    "listMacNote": "MAC备注"
   },
   "reservations": {
     "title": "保留地址管理",

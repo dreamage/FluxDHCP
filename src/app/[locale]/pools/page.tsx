@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Select, message, Space, Row, Col, Spin } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ColumnHeightOutlined, ExpandOutlined, ShrinkOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Select, message, Space, Row, Col, Spin, Segmented } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ColumnHeightOutlined, ExpandOutlined, ShrinkOutlined, AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { translateError } from '@/lib/error-map';
 
 const { Title } = Typography;
@@ -31,6 +31,7 @@ export default function PoolsPage() {
   const [ipGridData, setIpGridData] = useState<Record<number, { ips: any[]; stats: any }>>({});
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
   const [ipLoading, setIpLoading] = useState<Record<number, boolean>>({});
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [form] = Form.useForm();
 
   const fetchData = useCallback(async () => {
@@ -173,29 +174,82 @@ export default function PoolsPage() {
             <span style={{ display: 'inline-block', width: 12, height: 12, background: STATUS_COLORS.offered, marginRight: 4, borderRadius: 3 }} />
           </span>
         </Space>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          {ips.map((item: any) => {
-            const lastOctet = item.ip.split('.').pop();
-            return (
-              <div key={item.ip} title={
-                  item.status === 'reserved' && item.mac
-                    ? `${item.ip} - ${t(item.status)} (${item.mac}${item.note ? ` - ${item.note}` : ''}${item.reservationNote ? ` - ${item.reservationNote}` : ''})`
-                    : `${item.ip} - ${t(item.status)}${item.mac ? ` (${item.mac}${item.note ? ` - ${item.note}` : ''})` : ''}`
-                }
-                className="ip-grid-cell"
-                style={{
-                  width: 34, height: 24, borderRadius: 3,
-                  background: STATUS_COLORS[item.status] || STATUS_COLORS.free,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, fontFamily: "var(--font-jetbrains-mono), monospace",
-                  fontWeight: 500,
-                  color: STATUS_TEXT_COLORS[item.status] || STATUS_TEXT_COLORS.free,
-                }}>
-                {lastOctet}
-              </div>
-            );
-          })}
-        </div>
+        {viewMode === 'grid' ? (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            {ips.map((item: any) => {
+              const lastOctet = item.ip.split('.').pop();
+              const isReservedActive = item.isReserved && (item.status === 'bound' || item.status === 'offered');
+              const cellBackground = isReservedActive
+                ? (item.status === 'bound' ? 'var(--color-ip-reserved-bound)' : 'var(--color-ip-reserved-offered)')
+                : (STATUS_COLORS[item.status] || STATUS_COLORS.free);
+              const cellTextColor = isReservedActive
+                ? STATUS_TEXT_COLORS[item.status]
+                : (STATUS_TEXT_COLORS[item.status] || STATUS_TEXT_COLORS.free);
+              let statusText: string;
+              if (item.isReserved && item.status === 'bound') statusText = t('reservedBound');
+              else if (item.isReserved && item.status === 'offered') statusText = t('reservedOffered');
+              else statusText = t(item.status);
+              const parts: string[] = [];
+              if (item.mac) parts.push(item.mac);
+              if (item.hostname) parts.push(item.hostname);
+              if (item.note) parts.push(item.note);
+              if (item.reservationNote) parts.push(item.reservationNote);
+              const detail = parts.length > 0 ? ` (${parts.join(' - ')})` : '';
+              const tooltipText = `${item.ip} - ${statusText}${detail}`;
+              return (
+                <div key={item.ip} title={tooltipText}
+                  className="ip-grid-cell"
+                  style={{
+                    width: 34, height: 24, borderRadius: 3,
+                    background: cellBackground,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, fontFamily: "var(--font-jetbrains-mono), monospace",
+                    fontWeight: 500,
+                    color: cellTextColor,
+                  }}>
+                  {lastOctet}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <Table
+            size="small"
+            rowKey="ip"
+            dataSource={ips}
+            pagination={false}
+            scroll={{ y: 400 }}
+            columns={[
+              { title: t('listIp'), dataIndex: 'ip', key: 'ip', width: 130, fixed: 'left' as const },
+              {
+                title: t('listStatus'), key: 'status', width: 150,
+                render: (_: any, item: any) => {
+                  let bg: string;
+                  let textColor: string;
+                  let text: string;
+                  if (item.isReserved && item.status === 'bound') {
+                    bg = 'var(--color-ip-reserved-bound)';
+                    textColor = STATUS_TEXT_COLORS.bound;
+                    text = t('reservedBound');
+                  } else if (item.isReserved && item.status === 'offered') {
+                    bg = 'var(--color-ip-reserved-offered)';
+                    textColor = STATUS_TEXT_COLORS.offered;
+                    text = t('reservedOffered');
+                  } else {
+                    bg = STATUS_COLORS[item.status] || STATUS_COLORS.free;
+                    textColor = STATUS_TEXT_COLORS[item.status] || STATUS_TEXT_COLORS.free;
+                    text = t(item.status);
+                  }
+                  return <Tag style={{ background: bg, color: textColor, border: 'none' }}>{text}</Tag>;
+                },
+              },
+              { title: t('listMac'), dataIndex: 'mac', key: 'mac', width: 160, render: (v: string) => v || '-' },
+              { title: t('listHostname'), dataIndex: 'hostname', key: 'hostname', width: 150, render: (v: string) => v || '-' },
+              { title: t('listReservationNote'), dataIndex: 'reservationNote', key: 'reservationNote', width: 160, render: (v: string) => v || '-' },
+              { title: t('listMacNote'), dataIndex: 'note', key: 'note', render: (v: string) => v || '-' },
+            ]}
+          />
+        )}
       </div>
     );
   };
@@ -235,6 +289,14 @@ export default function PoolsPage() {
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
+          <Segmented
+            value={viewMode}
+            onChange={(v) => setViewMode(v as 'grid' | 'list')}
+            options={[
+              { label: t('viewGrid'), value: 'grid', icon: <AppstoreOutlined /> },
+              { label: t('viewList'), value: 'list', icon: <UnorderedListOutlined /> },
+            ]}
+          />
           <Button icon={<ExpandOutlined />} size="small"
             onClick={() => { setExpandedRowKeys(data.map((p: any) => p.id)); data.forEach((p: any) => fetchPoolIPs(p.id)); }}>
             {t('expandAll')}
