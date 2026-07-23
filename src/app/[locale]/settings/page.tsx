@@ -6,6 +6,7 @@ import { Typography, Form, InputNumber, Input, Button, Badge, Popconfirm, Space,
 import { CheckCircleFilled, CloseCircleFilled, DeleteOutlined, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { isValidIPv4 } from '@/lib/ip-utils';
+import { CONFIG_CATEGORIES, DEFAULT_EXPORT_KEYS } from '@/lib/config-categories';
 
 const { Title, Text } = Typography;
 
@@ -20,8 +21,12 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [pendingImportData, setPendingImportData] = useState<any>(null);
-  const [clearLeases, setClearLeases] = useState(false);
-  const [clearLogs, setClearLogs] = useState(false);
+  const [importCats, setImportCats] = useState<string[]>([]);
+  const [importFileStats, setImportFileStats] = useState<Record<string, number>>({});
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportCats, setExportCats] = useState<string[]>(DEFAULT_EXPORT_KEYS);
+  const [exportStats, setExportStats] = useState<Record<string, number>>({});
+  const [exporting, setExporting] = useState(false);
   const notify = useNotify();
 
   useEffect(() => {
@@ -91,9 +96,27 @@ export default function SettingsPage() {
     }
   };
 
-  const handleExport = async () => {
+  const handleExportClick = async () => {
     try {
-      const res = await fetch('/api/config/export');
+      const res = await fetch('/api/config/stats');
+      const stats = await res.json();
+      setExportStats(stats);
+      setExportCats(DEFAULT_EXPORT_KEYS);
+      setExportModalOpen(true);
+    } catch {
+      notify.error(null);
+    }
+  };
+
+  const handleExportConfirm = async () => {
+    if (exportCats.length === 0) {
+      notify.warn(t('exportNoneSelected'));
+      return;
+    }
+    try {
+      setExporting(true);
+      const catsParam = exportCats.join(',');
+      const res = await fetch(`/api/config/export?categories=${encodeURIComponent(catsParam)}`);
       if (!res.ok) throw new Error('Export failed');
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -103,8 +126,11 @@ export default function SettingsPage() {
       a.click();
       URL.revokeObjectURL(url);
       notify.success(t('exportSuccess'));
+      setExportModalOpen(false);
     } catch {
       notify.error(null);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -112,21 +138,25 @@ export default function SettingsPage() {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      if (!data.version || !data.config) {
+      if (!data.version) {
         notify.warn(t('importInvalidFormat'));
         return;
       }
-      // Validate structure (#3)
-      const arrayFields = ['pools', 'reservations', 'device_options', 'webhooks', 'mac_notes'] as const;
-      for (const field of arrayFields) {
-        if (data[field] && !Array.isArray(data[field])) {
-          notify.warn(t('importInvalidFormat'));
-          return;
+      const fileCats: string[] = [];
+      const fileStats: Record<string, number> = {};
+      for (const cat of CONFIG_CATEGORIES) {
+        if (Array.isArray(data[cat.key])) {
+          fileCats.push(cat.key);
+          fileStats[cat.key] = data[cat.key].length;
         }
       }
+      if (fileCats.length === 0) {
+        notify.warn(t('importInvalidFormat'));
+        return;
+      }
       setPendingImportData(data);
-      setClearLeases(false);
-      setClearLogs(false);
+      setImportFileStats(fileStats);
+      setImportCats(fileCats);
       setImportModalOpen(true);
     } catch {
       notify.warn(t('importInvalidFormat'));
@@ -135,11 +165,15 @@ export default function SettingsPage() {
 
   const handleConfirmImport = async () => {
     if (!pendingImportData) return;
+    if (importCats.length === 0) {
+      notify.warn(t('importNoneSelected'));
+      return;
+    }
     try {
       const res = await fetch('/api/config/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...pendingImportData, clearLeases, clearLogs }),
+        body: JSON.stringify({ ...pendingImportData, categories: importCats }),
       });
       const result = await res.json();
       if (res.ok) {
@@ -311,7 +345,7 @@ export default function SettingsPage() {
       {/* Import / Export */}
       <Card title={t('importExport') || 'Import / Export'} style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Button icon={<ExportOutlined />} size="small" onClick={handleExport}>{t('exportConfig')}</Button>
+          <Button icon={<ExportOutlined />} size="small" onClick={handleExportClick}>{t('exportConfig')}</Button>
           <Upload accept=".json" showUploadList={false}
             beforeUpload={(file) => { handleImport(file); return false; }}>
             <Button icon={<ImportOutlined />} size="small">{t('importConfig')}</Button>
@@ -337,6 +371,35 @@ export default function SettingsPage() {
         </div>
       </Card>
 
+      {/* Export Modal */}
+      <Modal
+        title={t('exportConfig')}
+        open={exportModalOpen}
+        onOk={handleExportConfirm}
+        onCancel={() => setExportModalOpen(false)}
+        okText={tc('confirm')}
+        cancelText={tc('cancel')}
+        confirmLoading={exporting}
+      >
+        <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>{t('exportDesc')}</Text>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {CONFIG_CATEGORIES.map(cat => (
+            <Checkbox
+              key={cat.key}
+              checked={exportCats.includes(cat.key)}
+              onChange={e => {
+                if (e.target.checked) setExportCats([...exportCats, cat.key]);
+                else setExportCats(exportCats.filter(c => c !== cat.key));
+              }}
+              style={{ display: 'flex', alignItems: 'center' }}
+            >
+              <span style={{ display: 'inline-block', minWidth: 110 }}>{t(cat.label)}</span>
+              <Badge count={exportStats[cat.key] || 0} style={{ backgroundColor: '#94a3b8' }} />
+            </Checkbox>
+          ))}
+        </div>
+      </Modal>
+
       {/* Import Confirmation Modal */}
       <Modal
         title={t('importConfirmTitle')}
@@ -345,29 +408,30 @@ export default function SettingsPage() {
         onCancel={() => { setImportModalOpen(false); setPendingImportData(null); }}
         okText={tc('confirm')}
         cancelText={tc('cancel')}
-        okButtonProps={{ danger: clearLeases || clearLogs }}
+        okButtonProps={{ danger: importCats.includes('leases') || importCats.includes('dhcp_logs') }}
       >
         {pendingImportData && (
           <div>
-            <Text style={{ display: 'block', marginBottom: 12 }}>{t('importConfirmDesc')}</Text>
-            <div style={{ background: 'var(--color-hover)', borderRadius: 8, padding: 12, marginBottom: 16 }}>
-              <Text strong style={{ fontSize: 13 }}>{t('importWillReplace')}:</Text>
-              <ul style={{ margin: '8px 0 0', paddingLeft: 20, fontSize: 13 }}>
-                {pendingImportData.config && <li>{t('importConfigItems')}: {pendingImportData.config.length}</li>}
-                {pendingImportData.pools && <li>{t('importPools')}: {pendingImportData.pools.length}</li>}
-                {pendingImportData.reservations && <li>{t('importReservations')}: {pendingImportData.reservations.length}</li>}
-                {pendingImportData.device_options && <li>{t('importDeviceOptions')}: {pendingImportData.device_options.length}</li>}
-                {pendingImportData.webhooks && <li>{t('importWebhooks')}: {pendingImportData.webhooks.length}</li>}
-                {pendingImportData.mac_notes && <li>{t('importMacNotes')}: {pendingImportData.mac_notes.length}</li>}
-              </ul>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Checkbox checked={clearLeases} onChange={e => setClearLeases(e.target.checked)}>
-                <Text>{t('importClearLeases')}</Text>
-              </Checkbox>
-              <Checkbox checked={clearLogs} onChange={e => setClearLogs(e.target.checked)}>
-                <Text>{t('importClearLogs')}</Text>
-              </Checkbox>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>{t('importConfirmDesc')}</Text>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {CONFIG_CATEGORIES.map(cat => {
+                const count = importFileStats[cat.key];
+                if (count === undefined) return null;
+                return (
+                  <Checkbox
+                    key={cat.key}
+                    checked={importCats.includes(cat.key)}
+                    onChange={e => {
+                      if (e.target.checked) setImportCats([...importCats, cat.key]);
+                      else setImportCats(importCats.filter(c => c !== cat.key));
+                    }}
+                    style={{ display: 'flex', alignItems: 'center' }}
+                  >
+                    <span style={{ display: 'inline-block', minWidth: 110 }}>{t(cat.label)}</span>
+                    <Badge count={count} style={{ backgroundColor: '#94a3b8' }} />
+                  </Checkbox>
+                );
+              })}
             </div>
           </div>
         )}
