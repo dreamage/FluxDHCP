@@ -11,7 +11,7 @@ import { useMacNotes } from '@/hooks/useMacNotes';
 import { useNotify } from '@/hooks/useNotify';
 import type { ColumnsType } from 'antd/es/table';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const MSG_TYPE_COLORS: Record<number, string> = {
   1: 'blue',    // DISCOVER
@@ -76,7 +76,7 @@ export default function LogsPage() {
   const [mac, setMac] = useState('');
   const [ip, setIp] = useState('');
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(3000);
+  const [refreshInterval, setRefreshInterval] = useState(10000);
   const { macNotes, knownMacs, fetchMacNotes } = useMacNotes();
   const [knownIps, setKnownIps] = useState<string[]>([]);
   const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -247,18 +247,20 @@ export default function LogsPage() {
         </span>
         {autoRefresh && (
           <Select value={refreshInterval} onChange={setRefreshInterval} style={{ width: 90 }} size="small">
-            <Select.Option value={3000}>3s</Select.Option>
-            <Select.Option value={5000}>5s</Select.Option>
-            <Select.Option value={10000}>10s</Select.Option>
-            <Select.Option value={30000}>30s</Select.Option>
+            <Select.Option value={3000}>3{t('seconds')}</Select.Option>
+            <Select.Option value={5000}>5{t('seconds')}</Select.Option>
+            <Select.Option value={10000}>10{t('seconds')}</Select.Option>
+            <Select.Option value={30000}>30{t('seconds')}</Select.Option>
+            <Select.Option value={60000}>60{t('seconds')}</Select.Option>
           </Select>
         )}
         <Dropdown menu={{ items: columnMenuItems }} trigger={['click']} placement="bottomRight">
           <Button icon={<SettingOutlined />} size="small" />
         </Dropdown>
         <Popconfirm title={t('clearConfirm')} onConfirm={handleClearLogs} okText={tc('confirm')} cancelText={tc('cancel')}>
-          <Button icon={<DeleteOutlined />} size="small" danger />
+          <Button icon={<DeleteOutlined />} size="small" danger>{t('clearLogs')}</Button>
         </Popconfirm>
+        <Text type="secondary" style={{ fontSize: 12 }}>{t('total')}: {total}</Text>
       </Space>
 
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"

@@ -7,7 +7,7 @@
 ## Features
 
 - **Full DHCPv4 Protocol** - RFC 2131 compliant: DISCOVER/OFFER/REQUEST/ACK/NAK/RELEASE/DECLINE/INFORM
-- **IP Pool Management** - Define subnets with start/end IP ranges, gateway, DNS servers, netmask, and per-pool lease times with overlap detection. Atomic IP allocation prevents race conditions. Dual visualization: color-coded IP grid and detailed IP list with hostname/reservation columns.
+- **IP Pool Management** - Define subnets with start/end IP ranges, gateway, DNS servers, netmask, and per-pool lease times with overlap detection. Subnet range validation on create/edit (frontend + backend). Atomic IP allocation prevents race conditions. Dual visualization: color-coded IP grid and detailed IP list with hostname/reservation columns.
 - **Static Reservations** - Bind MAC addresses to specific IPs with random MAC generation, active lease conflict detection, and IPv4 format validation
 - **Per-device DHCP Options** - Assign custom option codes/values per MAC address with 60+ translated option codes
 - **Lease Lifecycle Tracking** - Full state machine: OFFERED/BOUND/RELEASED/EXPIRED with automatic expiry cleanup
@@ -16,8 +16,8 @@
 - **MAC Notes** - Dedicated management page for adding custom notes/labels to MAC addresses
 - **MAC Blacklist** - Block specific MAC addresses from receiving any DHCP response; blacklist entries can be enabled/disabled individually with optional reason
 - **Webhook Notifications** - Push DHCP events (ACK/RELEASE/etc.) to external services via HTTP POST/GET with template variables, SSRF-protected URLs
-- **Web Dashboard** - Icon stat cards, overall IP usage bar, color-coded pool progress bars, recent event timeline with consistent row heights
-- **Config Import/Export** - Export all configuration to JSON with confirmation modal on import, optional lease/log clearing, data structure validation, and hot-reload
+- **Web Dashboard** - Icon stat cards, overall IP usage circular gauge (with active/total/free breakdown), mini ring charts for pool usage (hidden for disabled pools), recent event timeline with consistent row heights
+- **Config Import/Export** - Export all configuration to JSON with confirmation modal (card-style category selector, select all/none, count labels, exported-at timestamp display), optional lease/log clearing, data structure validation, and hot-reload
 - **Log Retention** - Configurable automatic cleanup of old logs (default 90 days)
 - **Dark Mode** - Follow System / Light / Dark theme with CSS variables, Ant Design dark algorithm, and persisted preference
 - **Responsive UI** - Mobile-friendly layout with drawer sidebar, responsive cards, compact tables with horizontal scroll, and page size selectors
@@ -126,16 +126,16 @@ FluxDHCP
 
 | Page | Description |
 |------|-------------|
-| **Dashboard** | Stat cards with icons, IP usage bar, pool progress bars (hidden for disabled pools), recent event timeline |
-| **Pools** | Address pool CRUD, dual view toggle (IP grid / IP list, default grid), color-coded grid with reserved-online visual distinction (orange bottom strip) and hostname in hover tooltips, list view with show/hide-free toggle plus hostname/MAC/reservation-note columns, expand/collapse all, IPv4 validation |
+| **Dashboard** | Stat cards with icons, overall IP usage circular gauge (with active/total/free breakdown), mini ring charts for pool usage (hidden for disabled pools), recent event timeline |
+| **Pools** | Address pool CRUD, dual view toggle (IP grid / IP list, default grid), color-coded grid with reserved-online visual distinction (orange bottom strip) and hostname in hover tooltips, list view with show/hide-free toggle plus hostname/MAC/reservation-note columns, expand/collapse all, IPv4 validation, subnet range validation on create/edit (frontend + backend) |
 | **Leases** | Lease list with state filtering (ALL/BOUND/OFFERED/EXPIRED/RELEASED), server-side sorting, page size selector, distinct release/delete icons |
 | **Reservations** | Static MAC-IP bindings, MAC autocomplete with auto-uppercase, random MAC, auto-fill from notes, active lease conflict detection, IPv4 validation |
 | **Options** | Per-device DHCP option overrides, common option code dropdown, page size selector |
 | **MAC Blacklist** | Block MAC addresses from DHCP, enable/disable toggle, optional reason, page size selector |
 | **MAC Notes** | MAC address labels and notes, sortable columns, page size selector |
 | **Webhooks** | Webhook CRUD, event subscription, template variables, custom headers, SSRF-protected URLs, test button |
-| **Logs** | Millisecond timestamps, direction indicator, 60+ option code translations, column visibility selector, auto-refresh, MAC/IP autocomplete filters, page size selector |
-| **Settings** | DHCP service control, server config, T1/T2 with tooltips, log retention days, DECLINE blacklist duration, config import/export with validation, clear logs |
+| **Logs** | Millisecond timestamps, direction indicator, 60+ option code translations, column visibility selector, auto-refresh (3/5/10/30/60s, default 10s), MAC/IP autocomplete filters, clear-all button with total count, page size selector |
+| **Settings** | DHCP service control, server config, T1/T2 with tooltips, log retention days, DECLINE blacklist duration, config import/export (card-style selector, exported-at display, validation) |
 
 ## UI Features
 
@@ -148,7 +148,7 @@ FluxDHCP
 
 ## Config Import/Export
 
-Export all configuration to a JSON file (excludes logs and leases). On import, a confirmation modal shows what will be replaced with optional checkboxes to also clear leases and/or logs. The JSON includes:
+Export all configuration to a JSON file (excludes logs and leases). On import, a confirmation modal displays each category as a card with item counts, select all/none toggles, and the file's exported-at timestamp (converted to local timezone), with optional checkboxes to also clear leases and/or logs. The JSON includes:
 
 - `config` - Server settings
 - `pools` - Address pool definitions

@@ -188,9 +188,11 @@
     "noFilters": "无筛选",
     "timeRange": "时间范围",
     "allTypes": "全部类型",
-    "clearLogs": "清空日志",
+    "clearLogs": "清空全部",
     "clearConfirm": "确定要清空所有日志吗？此操作不可撤销。",
     "clearSuccess": "日志已清空",
+    "total": "总数",
+    "seconds": "秒",
     "columns": "列"
   },
   "settings": {
@@ -246,6 +248,7 @@
     "importInvalidFormat": "无效的配置文件格式",
     "importConfirmTitle": "确认导入",
     "importConfirmDesc": "选择要导入的内容（将覆盖现有数据）：",
+    "exportedAt": "导出时间",
     "exportDesc": "选择要导出的内容：",
     "exportNoneSelected": "请至少选择一项导出",
     "importNoneSelected": "请至少选择一项导入",

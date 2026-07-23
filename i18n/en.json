@@ -188,9 +188,11 @@
     "noFilters": "No filters",
     "timeRange": "Time Range",
     "allTypes": "All Types",
-    "clearLogs": "Clear Logs",
+    "clearLogs": "Clear All",
     "clearConfirm": "Are you sure you want to clear all logs? This cannot be undone.",
     "clearSuccess": "All logs cleared",
+    "total": "Total",
+    "seconds": "s",
     "columns": "Columns"
   },
   "settings": {
@@ -246,6 +248,7 @@
     "importInvalidFormat": "Invalid config file format",
     "importConfirmTitle": "Confirm Import",
     "importConfirmDesc": "Select items to import (will overwrite existing data):",
+    "exportedAt": "Exported at",
     "exportDesc": "Select items to export:",
     "exportNoneSelected": "Please select at least one item to export",
     "importNoneSelected": "Please select at least one item to import",

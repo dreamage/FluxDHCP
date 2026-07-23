@@ -3,9 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Form, InputNumber, Input, Button, Popconfirm, Space, Card, Row, Col, Upload, Modal, Checkbox, Select, Switch } from 'antd';
-import { CheckCircleFilled, CloseCircleFilled, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined, AppstoreOutlined, EnvironmentOutlined, ControlOutlined, StopOutlined, FileTextOutlined, BellOutlined, ToolOutlined, FieldTimeOutlined, ProfileOutlined } from '@ant-design/icons';
+import { CheckCircleFilled, CloseCircleFilled, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined, AppstoreOutlined, EnvironmentOutlined, ControlOutlined, StopOutlined, FileTextOutlined, BellOutlined, ToolOutlined, FieldTimeOutlined, ProfileOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { isValidIPv4 } from '@/lib/ip-utils';
+import { formatLocalTimeNoMs } from '@/lib/format-time';
 import { CONFIG_CATEGORIES, DEFAULT_EXPORT_KEYS } from '@/lib/config-categories';
 
 const { Title, Text } = Typography;
@@ -455,6 +456,13 @@ export default function SettingsPage() {
         {pendingImportData && (
           <div>
             <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>{t('importConfirmDesc')}</Text>
+            {pendingImportData.exported_at && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '8px 12px', borderRadius: 8, background: 'var(--color-hover)', fontSize: 13 }}>
+                <ClockCircleOutlined style={{ color: 'var(--color-text-secondary)' }} />
+                <Text type="secondary">{t('exportedAt')}</Text>
+                <Text strong style={{ fontFamily: 'var(--font-mono)' }}>{formatLocalTimeNoMs(pendingImportData.exported_at)}</Text>
+              </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Space size="small">
                 <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setImportCats(Object.keys(importFileStats))}>{t('selectAll')}</Button>
