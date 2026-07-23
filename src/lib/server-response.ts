@@ -1,6 +1,6 @@
 /**
  * Translate structured server response strings to localized text.
- * Handles both new format (SR|TYPE|params) and legacy format (NAK: reason, etc.)
+ * Format: SR|TYPE|param1|param2
  */
 export function translateServerResponse(
   response: string | null | undefined,
@@ -47,44 +47,6 @@ export function translateServerResponse(
     } catch {
       return mainPart.replace(/^SR\|/, '').replace(/\|/g, ' ');
     }
-  }
-
-  // Legacy format: translate known patterns
-  if (mainPart.startsWith('NAK: ')) {
-    const reason = mainPart.substring(5); // Remove "NAK: " prefix
-    if (reason === 'No requested IP') return t('srNakNoRequestedIp');
-    if (reason.startsWith('Reserved IP mismatch for')) return t('srNakReservedMismatch', { reserved: '—', requested: '—' });
-    if (reason.startsWith('IP ') && reason.includes('not in any enabled pool')) {
-      const ip = reason.replace('IP ', '').replace(' not in any enabled pool', '');
-      return t('srNakNotInPool', { ip });
-    }
-    if (reason.startsWith('IP ') && reason.includes('already leased to')) {
-      const match = reason.match(/^IP (.+) already leased to (.+)$/);
-      return t('srNakIpLeased', { ip: match?.[1] || '', mac: match?.[2] || '' });
-    }
-    // Unknown reason, return as-is
-    return mainPart;
-  }
-
-  // Legacy: Offered/Assigned/Declined/Released/INFORM (plain English)
-  if (mainPart.startsWith('Offered IP ')) {
-    const match = mainPart.match(/^Offered IP (.+) from pool "(.+)"$/);
-    if (match) return t('srOffer', { ip: match[1], pool: match[2] });
-  }
-  if (mainPart.startsWith('Assigned IP ')) {
-    const match = mainPart.match(/^Assigned IP (.+) from pool "(.+)"$/);
-    if (match) return t('srAssign', { ip: match[1], pool: match[2] });
-  }
-  if (mainPart.startsWith('Client declined IP ')) {
-    const ip = mainPart.replace('Client declined IP ', '').replace(' (address conflict)', '');
-    return t('srDecline', { ip });
-  }
-  if (mainPart.startsWith('Client released IP ')) {
-    const ip = mainPart.replace('Client released IP ', '');
-    return t('srRelease', { ip });
-  }
-  if (mainPart === 'INFORM response with configuration options') {
-    return t('srInform');
   }
 
   return mainPart;
