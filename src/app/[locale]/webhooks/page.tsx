@@ -33,7 +33,8 @@ const EVENT_OPTIONS = [
 
 const TEMPLATE_HINTS = [
   '{{mac_address}}', '{{ip_address}}', '{{hostname}}',
-  '{{message_type}}', '{{pool_name}}', '{{mac_note}}', '{{timestamp}}',
+  '{{message_type}}', '{{pool_name}}', '{{mac_note}}',
+  '{{timestamp}}', '{{datetime}}',
 ];
 
 export default function WebhooksPage() {

@@ -141,7 +141,7 @@ export default function OptionsPage() {
               dropdownRender={(menu) => (
                 <>
                   {menu}
-                  <div style={{ padding: '4px 8px', borderTop: '1px solid #d9d9d9' }}>
+                  <div style={{ padding: '4px 8px', borderTop: '1px solid var(--color-border)' }}>
                     <InputNumber min={1} max={254} placeholder={t('customCode')}
                       style={{ width: '100%' }}
                       onPressEnter={(e) => {

@@ -257,7 +257,7 @@ export default function LogsPage() {
               {record.raw_options && (
                 <div style={{ marginBottom: 8 }}>
                   <strong>{t('rawOptions')}:</strong>
-                  <pre style={{ marginTop: 4, background: '#f1f5f9', padding: 8, borderRadius: 4, fontSize: 12, maxHeight: 200, overflow: 'auto' }}>
+                  <pre style={{ marginTop: 4, background: 'var(--color-surface)', padding: 8, borderRadius: 4, fontSize: 12, maxHeight: 200, overflow: 'auto', border: '1px solid var(--color-border)' }}>
                     {renderRawOptions(record.raw_options, tOpt)}
                   </pre>
                 </div>
@@ -272,7 +272,7 @@ export default function LogsPage() {
                       <>
                         <strong>{t('serverResponse')}:</strong> {translateServerResponse(record.server_response, tSr)}
                         {respOptions && (
-                          <pre style={{ marginTop: 4, background: '#f0fdf4', padding: 8, borderRadius: 4, fontSize: 12, maxHeight: 200, overflow: 'auto', border: '1px solid #bbf7d0' }}>
+                          <pre style={{ marginTop: 4, background: 'var(--color-surface)', padding: 8, borderRadius: 4, fontSize: 12, maxHeight: 200, overflow: 'auto', border: '1px solid var(--color-border)' }}>
                             {renderRawOptions(respOptions, tOpt)}
                           </pre>
                         )}

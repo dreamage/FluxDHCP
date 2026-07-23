@@ -360,9 +360,9 @@ export default function PoolsPage() {
           </Form.Item>
           {dnsServers.length > 1 && (
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)', marginBottom: 4 }}>{t('dnsOrderHint')}</div>
+              <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{t('dnsOrderHint')}</div>
               {dnsServers.map((ip, idx) => (
-                <div key={ip + idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', borderBottom: '1px solid #f0f0f0' }}>
+                <div key={ip + idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', borderBottom: '1px solid var(--color-border-subtle)' }}>
                   <span><Tag color="blue" style={{ marginRight: 8 }}>{idx + 1}</Tag>{ip}</span>
                   <Space size="small">
                     <Button size="small" type="text" icon={<ArrowUpOutlined />} disabled={idx === 0} onClick={() => moveDns(idx, -1)} title={t('moveUp')} />

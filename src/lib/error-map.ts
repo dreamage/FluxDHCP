@@ -9,6 +9,8 @@ const ERROR_MAP: Record<string, string> = {
   'Missing required fields': 'errMissingFields',
   'Invalid MAC address format': 'errInvalidMac',
   'Invalid URL format': 'errInvalidUrl',
+  'Invalid IP address format': 'errInvalidIp',
+  'MAC address is required': 'errMacRequired',
 
   // Resource not found
   'Pool not found': 'errPoolNotFound',
@@ -20,6 +22,8 @@ const ERROR_MAP: Record<string, string> = {
   'Note is required': 'errNoteRequired',
   'MAC address and note are required': 'errMacNoteRequired',
   'No active lease found for this IP': 'errNoActiveLease',
+  'No released/expired lease found for this IP': 'errNoLeaseToRelease',
+  'No valid config keys provided': 'errNoValidConfigKeys',
 
   // Duplicate / conflict
   'MAC address already reserved': 'errMacAlreadyReserved',
@@ -30,7 +34,9 @@ const ERROR_MAP: Record<string, string> = {
   // Range / format
   'IP address is not within the selected pool range': 'errIpOutOfRange',
   'IP address is not within the subnet': 'errIpOutOfRange',
+  'Start/End IP is not within the subnet': 'errIpOutOfRange',
   'Start IP must be less than or equal to End IP': 'errStartIpGreaterThanEnd',
+  'Invalid config file format': 'errInvalidConfigFormat',
 
   // Generic failures
   'Failed to fetch config': 'errFailedFetch',
@@ -66,12 +72,26 @@ const ERROR_MAP: Record<string, string> = {
   'Failed to save MAC blacklist entry': 'errFailedCreate',
   'Failed to update MAC blacklist entry': 'errFailedUpdate',
   'Failed to delete MAC blacklist entry': 'errFailedDelete',
+  'Failed to process lease': 'errFailedProcess',
+  'Failed to clear logs': 'errFailedClearLogs',
+  'Failed to clear webhook deliveries': 'errFailedClearDeliveries',
+  'Failed to export config': 'errFailedExport',
+  'Failed to import config': 'errFailedImport',
+  'Failed to start DHCP server': 'errFailedStartDhcp',
+  'Failed to stop DHCP server': 'errFailedStopDhcp',
 };
 
 // For messages that start with a known prefix (e.g., long MAC format messages)
 const PREFIX_MAP: Array<[string, string]> = [
   ['Invalid MAC address format', 'errInvalidMac'],
   ['Missing required fields', 'errMissingFields'],
+  ['Invalid IP address', 'errInvalidIp'],
+  ['IP range overlaps', 'errIpOverlap'],
+  ['Pool has', 'errPoolHasLeases'],
+  ['Failed to fetch', 'errFailedFetch'],
+  ['Failed to create', 'errFailedCreate'],
+  ['Failed to update', 'errFailedUpdate'],
+  ['Failed to delete', 'errFailedDelete'],
 ];
 
 // For network/transport errors that aren't fixed strings (fetch reject / 5xx / timeout)

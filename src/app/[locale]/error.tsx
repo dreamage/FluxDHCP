@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Button, Result } from 'antd';
+import { useTranslations } from 'next-intl';
 
 export default function ErrorPage({
   error,
@@ -10,15 +11,16 @@ export default function ErrorPage({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations('common');
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: 'var(--color-bg)' }}>
       <Result
         status="error"
-        title="Something went wrong"
-        subTitle={error.message || 'An unexpected error occurred'}
+        title={t('errorTitle')}
+        subTitle={error.message || t('unknownError')}
         extra={
           <Button type="primary" onClick={reset}>
-            Try Again
+            {t('tryAgain')}
           </Button>
         }
       />

@@ -6,7 +6,7 @@ import { Typography, Table, Tag, Select, Popconfirm, Button, Modal, Form, Input,
 import { DeleteOutlined, UndoOutlined, PlusOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
-import { formatLocalTime } from '@/lib/format-time';
+import { formatLocalTimeNoMs } from '@/lib/format-time';
 import { translateError } from '@/lib/error-map';
 import { useMacNotes } from '@/hooks/useMacNotes';
 import { useNotify } from '@/hooks/useNotify';
@@ -136,9 +136,9 @@ export default function LeasesPage() {
       render: (state: string) => <Tag color={STATE_COLORS[state] || 'default'}>{t(state.toLowerCase())}</Tag>,
     },
     { title: t('startTime'), dataIndex: 'lease_start', key: 'lease_start', width: 170, sorter: true,
-      render: (v: string) => formatLocalTime(v) },
+      render: (v: string) => formatLocalTimeNoMs(v) },
     { title: t('endTime'), dataIndex: 'lease_end', key: 'lease_end', width: 170, sorter: true,
-      render: (v: string) => formatLocalTime(v) },
+      render: (v: string) => formatLocalTimeNoMs(v) },
     { title: t('pool'), dataIndex: 'pool_name', key: 'pool_name', width: 100, sorter: true },
     {
       title: tc('actions'), key: 'actions', width: 220, fixed: 'right' as const,
