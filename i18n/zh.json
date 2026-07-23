@@ -134,7 +134,14 @@
     "expired": "已过期",
     "released": "已释放",
     "all": "全部",
-    "filterByState": "按状态筛选"
+    "advancedSearch": "高级搜索",
+    "allPools": "全部地址池",
+    "allStates": "全部状态",
+    "ipRange": "IP范围",
+    "ipStartPlaceholder": "起始IP",
+    "ipEndPlaceholder": "结束IP",
+    "ipRangeBothRequired": "起始和结束IP需同时填写",
+    "reset": "重置"
   },
   "options": {
     "title": "设备选项管理",

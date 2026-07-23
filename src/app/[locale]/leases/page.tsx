@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Tag, Select, Popconfirm, Button, Modal, Form, Input, Space, Alert } from 'antd';
-import { DeleteOutlined, UndoOutlined, PlusOutlined } from '@ant-design/icons';
+import { Typography, Table, Tag, Select, Popconfirm, Button, Modal, Form, Input, Space, Alert, Card } from 'antd';
+import { DeleteOutlined, UndoOutlined, PlusOutlined, SearchOutlined, ReloadOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
 import { translateError } from '@/lib/error-map';
 import { useMacNotes } from '@/hooks/useMacNotes';
 import { useNotify } from '@/hooks/useNotify';
-import { isValidIPv4 } from '@/lib/ip-utils';
+import { isValidIPv4, ipToNum } from '@/lib/ip-utils';
 
 const { Title } = Typography;
 
@@ -21,6 +21,8 @@ const STATE_COLORS: Record<string, string> = {
   RELEASED: 'red',
 };
 
+const STATE_OPTIONS = ['BOUND', 'OFFERED', 'EXPIRED', 'RELEASED'] as const;
+
 export default function LeasesPage() {
   const t = useTranslations('leases');
   const tc = useTranslations('common');
@@ -29,7 +31,9 @@ export default function LeasesPage() {
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [state, setState] = useState('ALL');
+  const [activeFilters, setActiveFilters] = useState({ poolId: 'ALL', state: 'ALL', ipStart: '', ipEnd: '' });
+  const [filterOpen, setFilterOpen] = useState(true);
+  const [filterForm] = Form.useForm();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortField, setSortField] = useState('lease_end');
@@ -49,7 +53,12 @@ export default function LeasesPage() {
     setLoading(true);
     try {
       const searchParams = new URLSearchParams({ page: String(page), pageSize: String(pageSize), sort: sortField, order: sortOrder });
-      if (state !== 'ALL') searchParams.set('state', state);
+      if (activeFilters.state !== 'ALL') searchParams.set('state', activeFilters.state);
+      if (activeFilters.poolId !== 'ALL') searchParams.set('pool_id', activeFilters.poolId);
+      if (activeFilters.ipStart && activeFilters.ipEnd) {
+        searchParams.set('ip_start', activeFilters.ipStart);
+        searchParams.set('ip_end', activeFilters.ipEnd);
+      }
       const [res, resRes, poolRes] = await Promise.all([
         fetch(`/api/leases?${searchParams}`),
         fetch('/api/reservations'),
@@ -66,9 +75,29 @@ export default function LeasesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, state, sortField, sortOrder]);
+  }, [page, pageSize, activeFilters, sortField, sortOrder]);
 
   useEffect(() => { fetchData(); fetchMacNotes(); }, [fetchData, fetchMacNotes]);
+
+  const handleSearch = async () => {
+    try {
+      const values = await filterForm.validateFields();
+      setActiveFilters({
+        poolId: values.pool_id || 'ALL',
+        state: values.state || 'ALL',
+        ipStart: values.ip_start || '',
+        ipEnd: values.ip_end || '',
+      });
+      setPage(1);
+    } catch { /* validation */ }
+  };
+
+  const handleReset = () => {
+    filterForm.resetFields();
+    filterForm.setFieldsValue({ pool_id: 'ALL', state: 'ALL', ip_start: '', ip_end: '' });
+    setActiveFilters({ poolId: 'ALL', state: 'ALL', ipStart: '', ipEnd: '' });
+    setPage(1);
+  };
 
   const handleRelease = async (ip: string) => {
     const res = await fetch(`/api/leases/${ip}`, { method: 'DELETE' });
@@ -175,14 +204,69 @@ export default function LeasesPage() {
     <>
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
-        <Select value={state} onChange={v => { setState(v); setPage(1); }} style={{ width: 150 }} size="small">
-          <Select.Option value="ALL">{t('all')}</Select.Option>
-          <Select.Option value="BOUND">{t('bound')}</Select.Option>
-          <Select.Option value="OFFERED">{t('offered')}</Select.Option>
-          <Select.Option value="EXPIRED">{t('expired')}</Select.Option>
-          <Select.Option value="RELEASED">{t('released')}</Select.Option>
-        </Select>
+        <Button
+          size="small"
+          icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
+          onClick={() => setFilterOpen(!filterOpen)}
+        >
+          {t('advancedSearch')}
+        </Button>
       </div>
+
+      {filterOpen && (
+        <Card size="small" style={{ marginBottom: 12 }}>
+          <Form form={filterForm} layout="inline" initialValues={{ pool_id: 'ALL', state: 'ALL', ip_start: '', ip_end: '' }}>
+            <Form.Item name="pool_id" label={t('pool')}>
+              <Select style={{ width: 160 }} size="small" allowClear>
+                <Select.Option value="ALL">{t('allPools')}</Select.Option>
+                {pools.map((p: any) => (
+                  <Select.Option key={p.id} value={String(p.id)}>{p.name}</Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item name="state" label={t('state')}>
+              <Select style={{ width: 130 }} size="small" allowClear>
+                <Select.Option value="ALL">{t('allStates')}</Select.Option>
+                {STATE_OPTIONS.map(s => (
+                  <Select.Option key={s} value={s}>{t(s.toLowerCase())}</Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item name="ip_start" label={t('ipRange')} dependencies={['ip_end']}
+              rules={[ipRule, ({ getFieldValue }) => ({
+                validator(_: any, value: string) {
+                  const end = getFieldValue('ip_end');
+                  if ((value && !end) || (!value && end)) return Promise.reject(t('ipRangeBothRequired'));
+                  return Promise.resolve();
+                },
+              })]}>
+              <Input size="small" placeholder={t('ipStartPlaceholder')} style={{ width: 150 }} />
+            </Form.Item>
+            <span style={{ alignSelf: 'center', color: 'var(--color-text-secondary)' }}>~</span>
+            <Form.Item name="ip_end" dependencies={['ip_start']}
+              rules={[ipRule, ({ getFieldValue }) => ({
+                validator(_: any, value: string) {
+                  const start = getFieldValue('ip_start');
+                  if ((value && !start) || (!value && start)) return Promise.reject(t('ipRangeBothRequired'));
+                  return Promise.resolve();
+                },
+              })]}>
+              <Input size="small" placeholder={t('ipEndPlaceholder')} style={{ width: 150 }} />
+            </Form.Item>
+            <Form.Item>
+              <Space>
+                <Button type="primary" size="small" icon={<SearchOutlined />} onClick={handleSearch}>
+                  {tc('search')}
+                </Button>
+                <Button size="small" icon={<ReloadOutlined />} onClick={handleReset}>
+                  {t('reset')}
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Card>
+      )}
+
       <Table columns={columns} dataSource={data} rowKey="ip_address" loading={loading} size="small"
         scroll={{ x: 'max-content' }}
         onChange={(_pagination, _filters, sorter: any) => {

@@ -81,6 +81,20 @@ export function getDatabase(dbPath?: string): Database.Database {
   // 插入初始配置
   db.exec(SEED_CONFIG);
 
+  // 注册 IPv4 → 数值 自定义函数(供 SQL 层 IP 范围查询使用)
+  db.function('ip2num', (ip: string): number => {
+    if (!ip) return 0;
+    const parts = ip.split('.');
+    if (parts.length !== 4) return 0;
+    let n = 0;
+    for (let i = 0; i < 4; i++) {
+      const oct = parseInt(parts[i], 10);
+      if (isNaN(oct) || oct < 0 || oct > 255) return 0;
+      n = (n * 256) + oct;
+    }
+    return n >>> 0;
+  });
+
   return db;
 }
 

@@ -134,7 +134,14 @@
     "expired": "Expired",
     "released": "Released",
     "all": "All",
-    "filterByState": "Filter by State"
+    "advancedSearch": "Advanced Search",
+    "allPools": "All Pools",
+    "allStates": "All States",
+    "ipRange": "IP Range",
+    "ipStartPlaceholder": "Start IP",
+    "ipEndPlaceholder": "End IP",
+    "ipRangeBothRequired": "Both start and end IP are required",
+    "reset": "Reset"
   },
   "options": {
     "title": "Device Options",
