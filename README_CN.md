@@ -87,14 +87,15 @@ FluxDHCP
 │   │   ├── globals.css      # 设计系统：CSS 变量、深色模式、响应式
 │   │   ├── error.tsx        # React Error Boundary
 │   │   └── api/
-│   │       ├── config/      # 配置读写、导入导出（含校验）
+│   │       ├── config/      # 配置读写、导入导出、统计（含校验）
+│   │       ├── dashboard/   # 仪表盘聚合数据
 │   │       ├── dhcp/        # DHCP 启动/停止/状态
+│   │       ├── dhcp-logs/   # DHCP 数据包日志（毫秒精度）
 │   │       ├── pools/       # 地址池管理 + IP 可视化
 │   │       ├── leases/      # 租约管理、服务端排序
 │   │       ├── reservations/# 静态 MAC-IP 绑定 + 冲突检测
 │   │       ├── options/     # 设备级 DHCP 选项
-│   │       ├── webhooks/    # Webhook 管理 + 测试（SSRF 防护）
-│   │       ├── logs/        # DHCP 数据包日志（毫秒精度）
+│   │       ├── webhooks/    # Webhook 管理 + 测试 + 投递日志（SSRF 防护）
 │   │       ├── mac-notes/   # MAC 备注管理
 │   │       ├── mac-blacklist/ # MAC 黑名单（屏蔽指定 MAC 的 DHCP 响应）
 │   │       └── mac-info/    # MAC 地址信息查询
@@ -102,15 +103,23 @@ FluxDHCP
 │   │   ├── protocol/        # 数据包解析器、序列化器、常量定义
 │   │   ├── lease-manager.ts # 租约生命周期 + 日志清理 + 原子分配
 │   │   ├── pool-manager.ts  # IP 地址池分配 + DECLINE 黑名单（按池隔离）
-│   │   └── option-manager.ts# 设备级 DHCP 选项管理
+│   │   ├── option-manager.ts# 设备级 DHCP 选项管理
+│   │   └── packet-logger.ts # DHCP 数据包日志记录
 │   ├── db/                  # SQLite 数据库结构、迁移、初始化
+│   ├── hooks/
+│   │   ├── useMacNotes.ts   # MAC 备注全局状态 Hook
+│   │   └── useNotify.ts     # 统一通知 Hook（成功/错误/警告）
 │   └── lib/
-│       ├── ip-utils.ts      # 共享 IP 工具（ipToNum、isValidIPv4、isIPInSubnet）
+│       ├── ip-utils.ts        # 共享 IP 工具（ipToNum、isValidIPv4、isIPInSubnet）
 │       ├── server-response.ts # 服务器响应国际化（SR|TYPE|参数 格式）
 │       ├── url-validate.ts    # Webhook URL SSRF 防护
 │       ├── mac-utils.ts       # MAC 地址规范化
 │       ├── error-map.ts       # API 错误到 i18n key 映射
-│       └── format-time.ts     # 毫秒级时间格式化
+│       ├── format-time.ts     # 毫秒级时间格式化（UTC→本地时区）
+│       ├── config-categories.ts # 导入导出配置类别定义
+│       ├── webhook-trigger.ts # Webhook 触发 + 模板变量 + 重试 + 投递日志
+│       ├── db-instance.ts     # SQLite 数据库单例
+│       └── dhcp-instance.ts   # DHCP 服务器单例
 ├── components/
 │   ├── AppLayout.tsx        # 侧边栏、底部对齐 Tab 栏、主题切换、响应式抽屉
 │   ├── ThemeContext.tsx      # 深色模式状态（system/light/dark）持久化
@@ -134,7 +143,7 @@ FluxDHCP
 | **MAC 黑名单** | 屏蔽指定 MAC 地址的 DHCP 响应，支持启用/禁用开关、封禁原因，每页条数选择器 |
 | **MAC 备注** | 独立页面管理 MAC 地址的备注标签，支持增删改查和排序，每页条数选择器 |
 | **Webhook** | Webhook 增删改查，支持事件订阅、模板变量、自定义请求头、SSRF 防护、测试按钮 |
-| **日志** | 毫秒级时间戳，方向标识，60+ DHCP 选项码翻译，列显示选择器，自动刷新（3/5/10/30/60 秒，默认 10 秒），MAC/IP 自动补全搜索，IP 筛选支持所有 IP 列，清空全部按钮（带总数显示），每页条数选择器 |
+| **DHCP日志** | 毫秒级时间戳，方向标识，60+ DHCP 选项码翻译，列显示选择器，自动刷新（3/5/10/30/60 秒，默认 10 秒），MAC/IP 自动补全搜索，IP 筛选支持所有 IP 列，清空全部按钮（带总数显示），每页条数选择器 |
 | **设置** | DHCP 服务控制、服务器配置、T1/T2 参数（带说明）、日志保留天数、DECLINE 黑名单时长、配置导入导出（卡片式选择器、显示导出时间、含校验） |
 
 ## UI 特性
@@ -148,14 +157,19 @@ FluxDHCP
 
 ## 配置导入导出
 
-导出全部配置为 JSON 文件（不包含日志和租约）。导入时弹出确认窗口，以卡片式列表显示各类别及数据条目数，支持全选/清空，并显示配置文件的导出时间（自动转换为本地时区），可选择是否同时清空所有租约和/或日志。JSON 文件包含：
+导出全部配置为 JSON 文件，可选择导出类别（默认不含租约和日志）。导入时弹出确认窗口，以卡片式列表显示各类别及数据条目数，支持全选/清空，并显示配置文件的导出时间（自动转换为本地时区），可选择是否同时清空所有租约和/或日志。JSON 文件包含：
 
+- `version` - 配置文件格式版本
+- `exported_at` - 导出时间（ISO 8601）
 - `config` - 服务器设置（IP、端口、租约时间、T1/T2 比例等）
 - `pools` - 地址池定义
 - `reservations` - 静态 MAC-IP 绑定
 - `device_options` - 设备级 DHCP 选项覆盖
-- `webhooks` - Webhook 配置
+- `mac_blacklist` - MAC 黑名单
 - `mac_notes` - MAC 地址备注
+- `webhooks` - Webhook 配置
+- `leases` - 租约记录（可选导出）
+- `dhcp_logs` - DHCP 数据包日志（可选导出）
 
 导入后 DHCP 配置自动热加载，无需重启服务。
 
@@ -170,6 +184,7 @@ FluxDHCP
 | `{{pool_name}}` | IP 地址池名称 |
 | `{{mac_note}}` | MAC 地址的自定义备注 |
 | `{{timestamp}}` | ISO 8601 时间戳 |
+| `{{datetime}}` | 本地日期时间（如 `2026-07-23 12:34:56`）|
 
 ## 许可证
 

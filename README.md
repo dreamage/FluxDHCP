@@ -87,14 +87,15 @@ FluxDHCP
 │   │   ├── globals.css      # Design system: CSS variables, dark mode, responsive
 │   │   ├── error.tsx        # React error boundary
 │   │   └── api/
-│   │       ├── config/      # Config CRUD, import/export with validation
+│   │       ├── config/      # Config CRUD, import/export, stats with validation
+│   │       ├── dashboard/   # Dashboard aggregated data
 │   │       ├── dhcp/        # DHCP start/stop/status
+│   │       ├── dhcp-logs/   # DHCP packet logs (ms precision)
 │   │       ├── pools/       # Pool management + IP grid
 │   │       ├── leases/      # Lease management, server-side sorting
 │   │       ├── reservations/# Static MAC-IP bindings + conflict check
 │   │       ├── options/     # Per-device DHCP options
-│   │       ├── webhooks/    # Webhook CRUD + test (SSRF-protected)
-│   │       ├── logs/        # DHCP packet logs (ms precision)
+│   │       ├── webhooks/    # Webhook CRUD + test + delivery logs (SSRF-protected)
 │   │       ├── mac-notes/   # MAC note management
 │   │       ├── mac-blacklist/ # MAC blacklist (block MACs from DHCP)
 │   │       └── mac-info/    # MAC lookup across tables
@@ -102,15 +103,23 @@ FluxDHCP
 │   │   ├── protocol/        # Packet parser, serializer, constants
 │   │   ├── lease-manager.ts # Lease lifecycle + log cleanup + atomic allocation
 │   │   ├── pool-manager.ts  # IP pool allocation + DECLINE blacklist (pool-scoped)
-│   │   └── option-manager.ts# Per-device DHCP options
+│   │   ├── option-manager.ts# Per-device DHCP options
+│   │   └── packet-logger.ts # DHCP packet logging
 │   ├── db/                  # SQLite schema, migrations, init
+│   ├── hooks/
+│   │   ├── useMacNotes.ts   # MAC notes global state hook
+│   │   └── useNotify.ts     # Unified notification hook (success/error/warn)
 │   └── lib/
-│       ├── ip-utils.ts      # Shared IP utilities (ipToNum, isValidIPv4, isIPInSubnet)
+│       ├── ip-utils.ts        # Shared IP utilities (ipToNum, isValidIPv4, isIPInSubnet)
 │       ├── server-response.ts # Server response i18n (SR|TYPE|params format)
 │       ├── url-validate.ts    # SSRF protection for webhook URLs
 │       ├── mac-utils.ts       # MAC address normalization
 │       ├── error-map.ts       # API error to i18n key mapping
-│       └── format-time.ts     # Millisecond time formatting
+│       ├── format-time.ts     # Millisecond time formatting (UTC→local timezone)
+│       ├── config-categories.ts # Import/export category definitions
+│       ├── webhook-trigger.ts # Webhook trigger + template vars + retry + delivery logs
+│       ├── db-instance.ts     # SQLite database singleton
+│       └── dhcp-instance.ts   # DHCP server singleton
 ├── components/
 │   ├── AppLayout.tsx        # Sidebar, grounded tab bar, theme toggle, responsive drawer
 │   ├── ThemeContext.tsx      # Dark mode state (system/light/dark) with persistence
@@ -134,7 +143,7 @@ FluxDHCP
 | **MAC Blacklist** | Block MAC addresses from DHCP, enable/disable toggle, optional reason, page size selector |
 | **MAC Notes** | MAC address labels and notes, sortable columns, page size selector |
 | **Webhooks** | Webhook CRUD, event subscription, template variables, custom headers, SSRF-protected URLs, test button |
-| **Logs** | Millisecond timestamps, direction indicator, 60+ option code translations, column visibility selector, auto-refresh (3/5/10/30/60s, default 10s), MAC/IP autocomplete filters, clear-all button with total count, page size selector |
+| **DHCP Logs** | Millisecond timestamps, direction indicator, 60+ option code translations, column visibility selector, auto-refresh (3/5/10/30/60s, default 10s), MAC/IP autocomplete filters, clear-all button with total count, page size selector |
 | **Settings** | DHCP service control, server config, T1/T2 with tooltips, log retention days, DECLINE blacklist duration, config import/export (card-style selector, exported-at display, validation) |
 
 ## UI Features
@@ -148,14 +157,19 @@ FluxDHCP
 
 ## Config Import/Export
 
-Export all configuration to a JSON file (excludes logs and leases). On import, a confirmation modal displays each category as a card with item counts, select all/none toggles, and the file's exported-at timestamp (converted to local timezone), with optional checkboxes to also clear leases and/or logs. The JSON includes:
+Export configuration to a JSON file with selectable categories (leases and logs excluded by default). On import, a confirmation modal displays each category as a card with item counts, select all/none toggles, and the file's exported-at timestamp (converted to local timezone), with optional checkboxes to also clear leases and/or logs. The JSON includes:
 
+- `version` - Config file format version
+- `exported_at` - Export timestamp (ISO 8601)
 - `config` - Server settings
 - `pools` - Address pool definitions
 - `reservations` - Static MAC-IP bindings
 - `device_options` - Per-device DHCP options
-- `webhooks` - Webhook configurations
+- `mac_blacklist` - MAC blacklist entries
 - `mac_notes` - MAC address labels
+- `webhooks` - Webhook configurations
+- `leases` - Lease records (optional export)
+- `dhcp_logs` - DHCP packet logs (optional export)
 
 DHCP config is automatically hot-reloaded after import (no service restart needed).
 
@@ -170,6 +184,7 @@ DHCP config is automatically hot-reloaded after import (no service restart neede
 | `{{pool_name}}` | IP pool name |
 | `{{mac_note}}` | Custom note for the MAC address |
 | `{{timestamp}}` | ISO 8601 timestamp |
+| `{{datetime}}` | Local date-time (e.g. `2026-07-23 12:34:56`) |
 
 ## License
 
