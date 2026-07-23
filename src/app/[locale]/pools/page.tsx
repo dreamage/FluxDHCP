@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Typography, Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Select, message, Space, Row, Col, Spin, Segmented } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ColumnHeightOutlined, ExpandOutlined, ShrinkOutlined, AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { translateError } from '@/lib/error-map';
+import { isValidIPv4, ipToNum } from '@/lib/ip-utils';
 
 const { Title } = Typography;
 

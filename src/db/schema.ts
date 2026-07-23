@@ -62,8 +62,8 @@ CREATE TABLE IF NOT EXISTS leases (
   xid          TEXT
 )`;
 
-export const CREATE_TABLE_LOGS = `
-CREATE TABLE IF NOT EXISTS logs (
+export const CREATE_TABLE_DHCP_LOGS = `
+CREATE TABLE IF NOT EXISTS dhcp_logs (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   timestamp       TEXT    DEFAULT (datetime('now')),
   message_type    INTEGER NOT NULL,
