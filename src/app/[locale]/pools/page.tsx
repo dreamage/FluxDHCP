@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Select, Space, Row, Col, Spin, Segmented } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ColumnHeightOutlined, ExpandOutlined, ShrinkOutlined, AppstoreOutlined, UnorderedListOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
-import { isValidIPv4, ipToNum } from '@/lib/ip-utils';
+import { isValidIPv4, ipToNum, isIPInSubnet } from '@/lib/ip-utils';
 import { useNotify } from '@/hooks/useNotify';
 
 const { Title } = Typography;
@@ -25,6 +25,16 @@ export default function PoolsPage() {
   const t = useTranslations('pools');
   const tc = useTranslations('common');
   const ipRule = { validator: (_: any, value: string) => (value && !isValidIPv4(value) ? Promise.reject(tc('invalidIpv4')) : Promise.resolve()) };
+  const subnetRule = ({ getFieldValue }: any) => ({
+    validator(_: any, value: string) {
+      const subnet = getFieldValue('subnet');
+      const netmask = getFieldValue('netmask');
+      if (value && subnet && netmask && isValidIPv4(value) && isValidIPv4(subnet) && isValidIPv4(netmask) && !isIPInSubnet(value, subnet, netmask)) {
+        return Promise.reject(tc('errIpNotInSubnet'));
+      }
+      return Promise.resolve();
+    },
+  });
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -351,10 +361,10 @@ export default function PoolsPage() {
             <Col span={12}><Form.Item name="netmask" label={t('netmask')} rules={[{ required: true }, ipRule]}><Input placeholder={t('netmaskPlaceholder')} /></Form.Item></Col>
           </Row>
           <Row gutter={16}>
-            <Col span={12}><Form.Item name="start_ip" label={t('startIp')} dependencies={['end_ip']} rules={[{ required: true }, ipRule, ({ getFieldValue }) => ({ validator(_: any, value: string) { const end = getFieldValue('end_ip'); if (value && end && isValidIPv4(value) && isValidIPv4(end) && ipToNum(value) > ipToNum(end)) return Promise.reject(tc('errStartIpGreaterThanEnd')); return Promise.resolve(); } })]}><Input placeholder={t('startIpPlaceholder')} /></Form.Item></Col>
-            <Col span={12}><Form.Item name="end_ip" label={t('endIp')} dependencies={['start_ip']} rules={[{ required: true }, ipRule, ({ getFieldValue }) => ({ validator(_: any, value: string) { const start = getFieldValue('start_ip'); if (value && start && isValidIPv4(value) && isValidIPv4(start) && ipToNum(value) < ipToNum(start)) return Promise.reject(tc('errStartIpGreaterThanEnd')); return Promise.resolve(); } })]}><Input placeholder={t('endIpPlaceholder')} /></Form.Item></Col>
+            <Col span={12}><Form.Item name="start_ip" label={t('startIp')} dependencies={['end_ip', 'subnet', 'netmask']} rules={[{ required: true }, ipRule, subnetRule, ({ getFieldValue }) => ({ validator(_: any, value: string) { const end = getFieldValue('end_ip'); if (value && end && isValidIPv4(value) && isValidIPv4(end) && ipToNum(value) > ipToNum(end)) return Promise.reject(tc('errStartIpGreaterThanEnd')); return Promise.resolve(); } })]}><Input placeholder={t('startIpPlaceholder')} /></Form.Item></Col>
+            <Col span={12}><Form.Item name="end_ip" label={t('endIp')} dependencies={['start_ip', 'subnet', 'netmask']} rules={[{ required: true }, ipRule, subnetRule, ({ getFieldValue }) => ({ validator(_: any, value: string) { const start = getFieldValue('start_ip'); if (value && start && isValidIPv4(value) && isValidIPv4(start) && ipToNum(value) < ipToNum(start)) return Promise.reject(tc('errStartIpGreaterThanEnd')); return Promise.resolve(); } })]}><Input placeholder={t('endIpPlaceholder')} /></Form.Item></Col>
           </Row>
-          <Form.Item name="gateway" label={t('gateway')} rules={[ipRule]}><Input placeholder={t('gatewayPlaceholder')} /></Form.Item>
+          <Form.Item name="gateway" label={t('gateway')} dependencies={['subnet', 'netmask']} rules={[ipRule, subnetRule]}><Input placeholder={t('gatewayPlaceholder')} /></Form.Item>
           <Form.Item name="dns_servers" label={t('dns')} rules={[{ validator: (_: any, value: string[]) => { if (!value || value.length === 0) return Promise.resolve(); for (const v of value) { if (!isValidIPv4(v)) return Promise.reject(tc('invalidIpv4')); } return Promise.resolve(); } }]}>
             <Select mode="tags" placeholder={t('dnsPlaceholder')} />
           </Form.Item>

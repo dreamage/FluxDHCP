@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Tag, Select, AutoComplete, Switch, Space, Button, Dropdown, Checkbox } from 'antd';
-import { SearchOutlined, ReloadOutlined, SettingOutlined } from '@ant-design/icons';
+import { Typography, Table, Tag, Select, AutoComplete, Switch, Space, Button, Dropdown, Checkbox, Popconfirm } from 'antd';
+import { SearchOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import { formatLocalTime } from '@/lib/format-time';
 import { translateServerResponse } from '@/lib/server-response';
@@ -66,6 +66,7 @@ export default function LogsPage() {
   const tMsg = useTranslations('messageTypes');
   const tOpt = useTranslations('dhcpOptionCodes');
   const tSr = useTranslations('serverResponse');
+  const tc = useTranslations('common');
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -195,6 +196,17 @@ export default function LogsPage() {
     ),
   }));
 
+  const handleClearLogs = async () => {
+    const res = await fetch('/api/dhcp-logs', { method: 'DELETE' });
+    if (res.ok) {
+      notify.success(t('clearSuccess'));
+      setPage(1);
+      fetchData();
+    } else {
+      notify.error(null);
+    }
+  };
+
   return (
     <>
       <div className="page-title-bar">
@@ -244,6 +256,9 @@ export default function LogsPage() {
         <Dropdown menu={{ items: columnMenuItems }} trigger={['click']} placement="bottomRight">
           <Button icon={<SettingOutlined />} size="small" />
         </Dropdown>
+        <Popconfirm title={t('clearConfirm')} onConfirm={handleClearLogs} okText={tc('confirm')} cancelText={tc('cancel')}>
+          <Button icon={<DeleteOutlined />} size="small" danger />
+        </Popconfirm>
       </Space>
 
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"

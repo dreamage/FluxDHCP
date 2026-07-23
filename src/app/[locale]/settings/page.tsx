@@ -2,13 +2,29 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Form, InputNumber, Input, Button, Badge, Popconfirm, Space, Card, Row, Col, Divider, Upload, Modal, Checkbox, Select, Switch } from 'antd';
-import { CheckCircleFilled, CloseCircleFilled, DeleteOutlined, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined } from '@ant-design/icons';
+import { Typography, Form, InputNumber, Input, Button, Popconfirm, Space, Card, Row, Col, Upload, Modal, Checkbox, Select, Switch } from 'antd';
+import { CheckCircleFilled, CloseCircleFilled, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined, AppstoreOutlined, EnvironmentOutlined, ControlOutlined, StopOutlined, FileTextOutlined, BellOutlined, ToolOutlined, FieldTimeOutlined, ProfileOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { isValidIPv4 } from '@/lib/ip-utils';
 import { CONFIG_CATEGORIES, DEFAULT_EXPORT_KEYS } from '@/lib/config-categories';
 
 const { Title, Text } = Typography;
+
+// Category visual metadata: icon + accent color for the import/export selector
+const CATEGORY_META: Record<string, { icon: React.ReactNode; color: string }> = {
+  pools: { icon: <AppstoreOutlined />, color: '#0ea5e9' },
+  reservations: { icon: <EnvironmentOutlined />, color: '#8b5cf6' },
+  device_options: { icon: <ControlOutlined />, color: '#14b8a6' },
+  mac_blacklist: { icon: <StopOutlined />, color: '#ef4444' },
+  mac_notes: { icon: <FileTextOutlined />, color: '#f59e0b' },
+  webhooks: { icon: <BellOutlined />, color: '#ec4899' },
+  config: { icon: <ToolOutlined />, color: '#64748b' },
+  leases: { icon: <FieldTimeOutlined />, color: '#6366f1' },
+  dhcp_logs: { icon: <ProfileOutlined />, color: '#84cc16' },
+};
+
+// Categories that overwrite live data — flagged as dangerous on import
+const DANGEROUS_CATS = ['leases', 'dhcp_logs'];
 
 export default function SettingsPage() {
   const t = useTranslations('settings');
@@ -85,15 +101,6 @@ export default function SettingsPage() {
       }
     }
     finally { setSaving(false); }
-  };
-
-  const handleClearLogs = async () => {
-    const res = await fetch('/api/dhcp-logs', { method: 'DELETE' });
-    if (res.ok) {
-      notify.success(t('clearSuccess'));
-    } else {
-      notify.error(null);
-    }
   };
 
   const handleExportClick = async () => {
@@ -236,6 +243,49 @@ export default function SettingsPage() {
 
   const isRunning = dhcpStatus === 'running';
 
+  // Shared renderer for a selectable category row in import/export modals
+  const renderCatRow = (
+    cat: typeof CONFIG_CATEGORIES[number],
+    count: number,
+    checked: boolean,
+    onToggle: (checked: boolean) => void,
+  ) => {
+    const meta = CATEGORY_META[cat.key];
+    const isDanger = DANGEROUS_CATS.includes(cat.key);
+    return (
+      <div
+        key={cat.key}
+        onClick={() => onToggle(!checked)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
+          border: `1px solid ${checked ? (isDanger ? '#f59e0b' : 'var(--color-primary)') : 'var(--color-border)'}`,
+          background: checked ? (isDanger ? 'rgba(245,158,11,0.08)' : 'var(--color-primary-subtle)') : 'transparent',
+          transition: 'all 0.15s ease',
+        }}
+      >
+        <Checkbox checked={checked} onChange={e => { e.stopPropagation(); onToggle(e.target.checked); }} />
+        {meta && (
+          <span style={{
+            width: 28, height: 28, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: `${meta.color}1a`, color: meta.color, fontSize: 14, flexShrink: 0,
+          }}>
+            {meta.icon}
+          </span>
+        )}
+        <span style={{ flex: 1, fontWeight: 500, fontSize: 14 }}>{t(cat.label)}</span>
+        <span style={{
+          fontSize: 12, fontWeight: 600, minWidth: 44, textAlign: 'center' as const,
+          padding: '2px 10px', borderRadius: 10,
+          color: checked ? (isDanger ? '#d97706' : 'var(--color-primary)') : 'var(--color-text-secondary)',
+          background: checked ? (isDanger ? 'rgba(245,158,11,0.15)' : 'var(--color-primary-light)') : 'var(--color-hover)',
+        }}>
+          {t('itemsCount', { count })}
+        </span>
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="page-title-bar">
@@ -360,14 +410,9 @@ export default function SettingsPage() {
           <Button type="primary" icon={<SaveOutlined />} size="small" onClick={handleSave} loading={saving}>
             {tc('save')}
           </Button>
-          <Space split={<Divider type="vertical" />}>
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              {t('dbPath')}: {process.env.DB_PATH || './data/fluxdhcp.db'}
-            </Text>
-            <Popconfirm title={t('clearConfirm')} onConfirm={handleClearLogs} okText={tc('confirm')} cancelText={tc('cancel')}>
-              <Button icon={<DeleteOutlined />} danger size="small">{t('clearLogs')}</Button>
-            </Popconfirm>
-          </Space>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            {t('dbPath')}: {process.env.DB_PATH || './data/fluxdhcp.db'}
+          </Text>
         </div>
       </Card>
 
@@ -382,21 +427,18 @@ export default function SettingsPage() {
         confirmLoading={exporting}
       >
         <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>{t('exportDesc')}</Text>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {CONFIG_CATEGORIES.map(cat => (
-            <Checkbox
-              key={cat.key}
-              checked={exportCats.includes(cat.key)}
-              onChange={e => {
-                if (e.target.checked) setExportCats([...exportCats, cat.key]);
-                else setExportCats(exportCats.filter(c => c !== cat.key));
-              }}
-              style={{ display: 'flex', alignItems: 'center' }}
-            >
-              <span style={{ display: 'inline-block', minWidth: 110 }}>{t(cat.label)}</span>
-              <Badge count={exportStats[cat.key] || 0} style={{ backgroundColor: '#94a3b8' }} />
-            </Checkbox>
-          ))}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <Space size="small">
+            <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setExportCats(CONFIG_CATEGORIES.map(c => c.key))}>{t('selectAll')}</Button>
+            <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setExportCats([])}>{t('selectNone')}</Button>
+          </Space>
+          <Text type="secondary" style={{ fontSize: 12 }}>{t('selectedSummary', { count: exportCats.length })}</Text>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 360, overflowY: 'auto', paddingRight: 4 }}>
+          {CONFIG_CATEGORIES.map(cat => renderCatRow(cat, exportStats[cat.key] || 0, exportCats.includes(cat.key), (checked) => {
+            if (checked) setExportCats([...exportCats, cat.key]);
+            else setExportCats(exportCats.filter(c => c !== cat.key));
+          }))}
         </div>
       </Modal>
 
@@ -413,24 +455,21 @@ export default function SettingsPage() {
         {pendingImportData && (
           <div>
             <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>{t('importConfirmDesc')}</Text>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Space size="small">
+                <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setImportCats(Object.keys(importFileStats))}>{t('selectAll')}</Button>
+                <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setImportCats([])}>{t('selectNone')}</Button>
+              </Space>
+              <Text type="secondary" style={{ fontSize: 12 }}>{t('selectedSummary', { count: importCats.length })}</Text>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 360, overflowY: 'auto', paddingRight: 4 }}>
               {CONFIG_CATEGORIES.map(cat => {
                 const count = importFileStats[cat.key];
                 if (count === undefined) return null;
-                return (
-                  <Checkbox
-                    key={cat.key}
-                    checked={importCats.includes(cat.key)}
-                    onChange={e => {
-                      if (e.target.checked) setImportCats([...importCats, cat.key]);
-                      else setImportCats(importCats.filter(c => c !== cat.key));
-                    }}
-                    style={{ display: 'flex', alignItems: 'center' }}
-                  >
-                    <span style={{ display: 'inline-block', minWidth: 110 }}>{t(cat.label)}</span>
-                    <Badge count={count} style={{ backgroundColor: '#94a3b8' }} />
-                  </Checkbox>
-                );
+                return renderCatRow(cat, count, importCats.includes(cat.key), (checked) => {
+                  if (checked) setImportCats([...importCats, cat.key]);
+                  else setImportCats(importCats.filter(c => c !== cat.key));
+                });
               })}
             </div>
           </div>

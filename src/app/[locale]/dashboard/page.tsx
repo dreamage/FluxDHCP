@@ -147,30 +147,72 @@ export default function DashboardPage() {
             </Col>
           </Row>
 
-          {/* Overall usage bar */}
+          {/* Overall usage — circular gauge */}
           {data.totalIPs > 0 && (
             <Card bordered={false} style={{ marginTop: 16, borderRadius: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text strong>{t('overallUsage') || 'IP Usage'}</Text>
-                <Text type="secondary">{data.activeLeases} / {data.totalIPs}</Text>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <Progress
+                    type="circle"
+                    percent={usagePercent}
+                    size={148}
+                    strokeWidth={9}
+                    strokeColor="#4a90d9"
+                    format={() => (
+                      <div style={{ textAlign: 'center', lineHeight: 1.3 }}>
+                        <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--color-text)' }}>{usagePercent}%</div>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{t('overallUsage')}</div>
+                      </div>
+                    )}
+                  />
+                </div>
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#4a90d9', flexShrink: 0 }} />
+                      <Text style={{ fontSize: 14, flex: 1 }}>{t('activeLeases')}</Text>
+                      <Text strong style={{ fontSize: 18, fontFamily: 'var(--font-mono)' }}>{data.activeLeases}</Text>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-border)', flexShrink: 0 }} />
+                      <Text style={{ fontSize: 14, flex: 1 }}>{t('totalIPs')}</Text>
+                      <Text strong style={{ fontSize: 18, fontFamily: 'var(--font-mono)' }}>{data.totalIPs}</Text>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />
+                      <Text style={{ fontSize: 14, flex: 1 }}>{t('freeIPs')}</Text>
+                      <Text strong style={{ fontSize: 18, fontFamily: 'var(--font-mono)', color: '#22c55e' }}>{data.totalIPs - data.activeLeases}</Text>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <Progress percent={usagePercent} strokeColor="#4a90d9" showInfo={false} />
             </Card>
           )}
 
-          {/* Pool Usage */}
+          {/* Pool Usage — mini ring gauges */}
           <Title level={5} style={{ marginTop: 24, marginBottom: 12, color: 'var(--color-text-secondary)', fontWeight: 700 }}>{t('poolUsage')}</Title>
-          <Row gutter={[16, 12]}>
+          <Row gutter={[16, 16]}>
             {data.poolUsage.map(pool => {
-              const barColor = pool.percentage > 90 ? '#ef4444' : pool.percentage > 70 ? '#f59e0b' : '#4a90d9';
+              const color = pool.percentage > 90 ? '#ef4444' : pool.percentage > 70 ? '#f59e0b' : '#4a90d9';
               return (
-                <Col xs={24} sm={12} key={pool.poolId}>
-                  <Card bordered={false} size="small" style={{ borderRadius: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <Text strong style={{ fontSize: 14 }}>{pool.name}</Text>
-                      <Text type="secondary" style={{ fontSize: 13 }}>{pool.used} / {pool.total} ({pool.percentage}%)</Text>
+                <Col xs={12} sm={8} md={6} key={pool.poolId}>
+                  <Card bordered={false} size="small" className="stat-card" style={{ borderRadius: 10, textAlign: 'center', height: '100%' }}>
+                    <Progress
+                      type="circle"
+                      percent={pool.percentage}
+                      size={92}
+                      strokeWidth={8}
+                      strokeColor={color}
+                      format={() => (
+                        <div style={{ lineHeight: 1.2 }}>
+                          <div style={{ fontSize: 17, fontWeight: 800, color }}>{pool.percentage}%</div>
+                        </div>
+                      )}
+                    />
+                    <div style={{ marginTop: 10 }}>
+                      <Text strong style={{ fontSize: 13, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pool.name}</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>{pool.used} / {pool.total}</Text>
                     </div>
-                    <Progress percent={pool.percentage} showInfo={false} strokeColor={barColor} size="small" />
                   </Card>
                 </Col>
               );

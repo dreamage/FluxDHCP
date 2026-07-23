@@ -32,6 +32,7 @@
     "requests24h": "事件（24小时）",
     "poolUsage": "地址池使用率",
     "overallUsage": "总IP使用率",
+    "freeIPs": "空闲IP",
     "recentEvents": "最近事件",
     "noPools": "暂无地址池",
     "noEvents": "暂无事件",
@@ -256,7 +257,11 @@
     "catWebhooks": "Webhook",
     "catConfig": "设置",
     "catLeases": "租约",
-    "catDhcpLogs": "DHCP日志"
+    "catDhcpLogs": "DHCP日志",
+    "selectAll": "全选",
+    "selectNone": "清空",
+    "itemsCount": "{count} 项",
+    "selectedSummary": "已选 {count} 项"
   },
   "common": {
     "confirm": "确认",
@@ -305,6 +310,7 @@
     "errIpLeasedToOther": "该IP当前已分配给其他设备。只能为空闲IP或已分配给同一MAC的IP创建保留地址。",
     "errOptionAlreadyExists": "该MAC地址已存在此选项",
     "errIpOutOfRange": "IP地址不在所属子网范围内",
+    "errIpNotInSubnet": "IP地址不在所属子网范围内",
     "errIpOverlap": "IP范围与已有地址池重叠",
     "errPoolHasLeases": "地址池存在活跃租约，请先释放后再删除",
     "errStartIpGreaterThanEnd": "起始IP必须小于等于结束IP",

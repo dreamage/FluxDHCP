@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
-import { ipToNum, isValidIPv4 } from '@/lib/ip-utils';
+import { ipToNum, isValidIPv4, isIPInSubnet } from '@/lib/ip-utils';
 
 export async function GET() {
   try {
@@ -54,6 +54,16 @@ export async function POST(request: Request) {
     const newEnd = ipToNum(end_ip);
     if (newStart > newEnd) {
       return NextResponse.json({ error: 'Start IP must be less than or equal to End IP' }, { status: 400 });
+    }
+
+    // 校验 start/end IP 在子网范围内
+    if (!isIPInSubnet(start_ip, subnet, netmask) || !isIPInSubnet(end_ip, subnet, netmask)) {
+      return NextResponse.json({ error: 'Start/End IP is not within the subnet' }, { status: 400 });
+    }
+
+    // 校验网关在子网范围内
+    if (gateway && !isIPInSubnet(gateway, subnet, netmask)) {
+      return NextResponse.json({ error: 'Gateway is not within the subnet' }, { status: 400 });
     }
 
     const existingPools = db.prepare('SELECT * FROM pools').all() as any[];

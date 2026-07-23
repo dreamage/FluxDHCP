@@ -56,6 +56,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Start/End IP is not within the subnet' }, { status: 400 });
     }
 
+    // 校验网关在子网范围内
+    if (finalGateway && !isIPInSubnet(finalGateway, finalSubnet, finalNetmask)) {
+      return NextResponse.json({ error: 'Gateway is not within the subnet' }, { status: 400 });
+    }
+
     // 校验 IP 范围重叠（排除自身）
     const existingPools = db.prepare('SELECT * FROM pools WHERE id != ?').all(id) as any[];
     const overlapping = existingPools.find(p => {

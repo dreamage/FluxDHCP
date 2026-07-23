@@ -32,6 +32,7 @@
     "requests24h": "Events (24h)",
     "poolUsage": "Pool Usage",
     "overallUsage": "Overall IP Usage",
+    "freeIPs": "Free IPs",
     "recentEvents": "Recent Events",
     "noPools": "No pools configured",
     "noEvents": "No recent events",
@@ -256,7 +257,11 @@
     "catWebhooks": "Webhooks",
     "catConfig": "Settings",
     "catLeases": "Leases",
-    "catDhcpLogs": "DHCP Logs"
+    "catDhcpLogs": "DHCP Logs",
+    "selectAll": "Select all",
+    "selectNone": "Clear",
+    "itemsCount": "{count} items",
+    "selectedSummary": "{count} selected"
   },
   "common": {
     "confirm": "Confirm",
@@ -305,6 +310,7 @@
     "errIpLeasedToOther": "This IP is currently leased to another device. Only idle IPs or IPs already leased to the same MAC can be reserved.",
     "errOptionAlreadyExists": "Option already exists for this MAC address",
     "errIpOutOfRange": "IP address is not within the selected pool range",
+    "errIpNotInSubnet": "IP address is not within the subnet",
     "errIpOverlap": "IP range overlaps with an existing pool",
     "errPoolHasLeases": "Pool has active leases. Release them before deleting.",
     "errStartIpGreaterThanEnd": "Start IP must be less than or equal to End IP",
