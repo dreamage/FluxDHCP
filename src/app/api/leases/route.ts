@@ -20,6 +20,8 @@ export async function GET(request: Request) {
     const poolId = searchParams.get('pool_id');
     const ipStart = searchParams.get('ip_start');
     const ipEnd = searchParams.get('ip_end');
+    const mac = searchParams.get('mac');
+    const hostname = searchParams.get('hostname');
     const page = parseInt(searchParams.get('page') || '1', 10);
     const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '20', 10), 500);
     const sortField = searchParams.get('sort') || 'lease_end';
@@ -39,6 +41,14 @@ export async function GET(request: Request) {
     if (ipStart && ipEnd) {
       conditions.push('ip2num(l.ip_address) BETWEEN ? AND ?');
       params.push(ipToNum(ipStart), ipToNum(ipEnd));
+    }
+    if (mac) {
+      conditions.push('l.mac_address LIKE ?');
+      params.push(`%${mac}%`);
+    }
+    if (hostname) {
+      conditions.push('l.hostname LIKE ?');
+      params.push(`%${hostname}%`);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

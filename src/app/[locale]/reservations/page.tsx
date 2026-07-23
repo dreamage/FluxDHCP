@@ -2,14 +2,14 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Switch, Popconfirm, Select, Space, Alert } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Modal, Form, Input, Switch, Popconfirm, Select, Space, Alert, Card } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { translateError } from '@/lib/error-map';
 import { useMacNotes } from '@/hooks/useMacNotes';
 import { useNotify } from '@/hooks/useNotify';
-import { isValidIPv4 } from '@/lib/ip-utils';
+import { isValidIPv4, ipToNum } from '@/lib/ip-utils';
 
 const { Title } = Typography;
 
@@ -20,6 +20,9 @@ export default function ReservationsPage() {
   const [data, setData] = useState<any[]>([]);
   const [pools, setPools] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({ poolId: 'ALL', enabled: 'ALL', ipStart: '', ipEnd: '', mac: '', hostname: '' });
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterForm] = Form.useForm();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [submitError, setSubmitError] = useState('');
@@ -30,7 +33,19 @@ export default function ReservationsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [resRes, poolRes] = await Promise.all([fetch('/api/reservations'), fetch('/api/pools')]);
+      const searchParams = new URLSearchParams();
+      if (activeFilters.poolId !== 'ALL') searchParams.set('pool_id', activeFilters.poolId);
+      if (activeFilters.enabled !== 'ALL') searchParams.set('enabled', activeFilters.enabled);
+      if (activeFilters.ipStart && activeFilters.ipEnd) {
+        searchParams.set('ip_start', activeFilters.ipStart);
+        searchParams.set('ip_end', activeFilters.ipEnd);
+      }
+      if (activeFilters.mac) searchParams.set('mac', activeFilters.mac);
+      if (activeFilters.hostname) searchParams.set('hostname', activeFilters.hostname);
+      const [resRes, poolRes] = await Promise.all([
+        fetch(`/api/reservations?${searchParams}`),
+        fetch('/api/pools'),
+      ]);
       const resData = await resRes.json();
       const poolData = await poolRes.json();
       setData(Array.isArray(resData) ? resData : []);
@@ -38,9 +53,29 @@ export default function ReservationsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeFilters]);
 
   useEffect(() => { fetchData(); fetchMacNotes(); }, [fetchData, fetchMacNotes]);
+
+  const handleSearch = async () => {
+    try {
+      const values = await filterForm.validateFields();
+      setActiveFilters({
+        poolId: values.pool_id || 'ALL',
+        enabled: values.enabled || 'ALL',
+        ipStart: values.ip_start || '',
+        ipEnd: values.ip_end || '',
+        mac: values.mac || '',
+        hostname: values.hostname || '',
+      });
+    } catch { /* validation */ }
+  };
+
+  const handleReset = () => {
+    filterForm.resetFields();
+    filterForm.setFieldsValue({ pool_id: 'ALL', enabled: 'ALL', ip_start: '', ip_end: '', mac: '', hostname: '' });
+    setActiveFilters({ poolId: 'ALL', enabled: 'ALL', ipStart: '', ipEnd: '', mac: '', hostname: '' });
+  };
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -167,8 +202,79 @@ export default function ReservationsPage() {
     <>
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
-        <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addReservation')}</Button>
+        <Space>
+          <Button
+            size="small"
+            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => setFilterOpen(!filterOpen)}
+          >
+            {t('filter')}
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addReservation')}</Button>
+        </Space>
       </div>
+
+      {filterOpen && (
+        <Card size="small" style={{ marginBottom: 12 }}>
+          <Form form={filterForm} layout="inline" initialValues={{ pool_id: 'ALL', enabled: 'ALL', ip_start: '', ip_end: '', mac: '', hostname: '' }}>
+            <Form.Item name="pool_id" label={t('pool')}>
+              <Select style={{ width: 160 }} size="small" allowClear>
+                <Select.Option value="ALL">{t('allPools')}</Select.Option>
+                {pools.map((p: any) => (
+                  <Select.Option key={p.id} value={String(p.id)}>{p.name}</Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item name="enabled" label={t('status')}>
+              <Select style={{ width: 130 }} size="small" allowClear>
+                <Select.Option value="ALL">{t('allStates')}</Select.Option>
+                <Select.Option value="1">{t('enabled')}</Select.Option>
+                <Select.Option value="0">{t('disabled')}</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item name="ip_start" label={t('ipRange')} dependencies={['ip_end']}
+              rules={[ipRule, ({ getFieldValue }) => ({
+                validator(_: any, value: string) {
+                  const end = getFieldValue('ip_end');
+                  if ((value && !end) || (!value && end)) return Promise.reject(t('ipRangeBothRequired'));
+                  if (value && end && isValidIPv4(value) && isValidIPv4(end) && ipToNum(value) > ipToNum(end)) return Promise.reject(tc('errStartIpGreaterThanEnd'));
+                  return Promise.resolve();
+                },
+              })]}>
+              <Input size="small" placeholder={t('ipStartPlaceholder')} style={{ width: 150 }} />
+            </Form.Item>
+            <span style={{ alignSelf: 'center', color: 'var(--color-text-secondary)' }}>~</span>
+            <Form.Item name="ip_end" dependencies={['ip_start']}
+              rules={[ipRule, ({ getFieldValue }) => ({
+                validator(_: any, value: string) {
+                  const start = getFieldValue('ip_start');
+                  if ((value && !start) || (!value && start)) return Promise.reject(t('ipRangeBothRequired'));
+                  if (value && start && isValidIPv4(value) && isValidIPv4(start) && ipToNum(start) > ipToNum(value)) return Promise.reject(tc('errStartIpGreaterThanEnd'));
+                  return Promise.resolve();
+                },
+              })]}>
+              <Input size="small" placeholder={t('ipEndPlaceholder')} style={{ width: 150 }} />
+            </Form.Item>
+            <Form.Item name="mac" label={t('macAddress')}>
+              <Input size="small" placeholder={t('macPlaceholder')} style={{ width: 180 }} allowClear />
+            </Form.Item>
+            <Form.Item name="hostname" label={t('hostname')}>
+              <Input size="small" placeholder={t('hostnamePlaceholder')} style={{ width: 150 }} allowClear />
+            </Form.Item>
+            <Form.Item>
+              <Space>
+                <Button type="primary" size="small" icon={<SearchOutlined />} onClick={handleSearch}>
+                  {tc('search')}
+                </Button>
+                <Button size="small" icon={<ReloadOutlined />} onClick={handleReset}>
+                  {t('reset')}
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Card>
+      )}
+
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"
         scroll={{ x: 'max-content' }}
         pagination={{ showSizeChanger: true, pageSizeOptions: [20, 50, 100], defaultPageSize: 20 }} />

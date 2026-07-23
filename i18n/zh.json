@@ -115,7 +115,16 @@
     "randomMac": "随机",
     "randomMacNote": "随机生成MAC",
     "enabled": "已启用",
-    "disabled": "已禁用"
+    "disabled": "已禁用",
+    "filter": "筛选",
+    "allPools": "全部地址池",
+    "allStates": "全部状态",
+    "ipRange": "IP范围",
+    "ipStartPlaceholder": "起始IP",
+    "ipEndPlaceholder": "结束IP",
+    "ipRangeBothRequired": "起始和结束IP需同时填写",
+    "reset": "重置",
+    "hostnamePlaceholder": "主机名片段"
   },
   "leases": {
     "title": "租约管理",
@@ -134,14 +143,16 @@
     "expired": "已过期",
     "released": "已释放",
     "all": "全部",
-    "advancedSearch": "高级搜索",
+    "advancedSearch": "筛选",
     "allPools": "全部地址池",
     "allStates": "全部状态",
     "ipRange": "IP范围",
     "ipStartPlaceholder": "起始IP",
     "ipEndPlaceholder": "结束IP",
     "ipRangeBothRequired": "起始和结束IP需同时填写",
-    "reset": "重置"
+    "reset": "重置",
+    "macPlaceholder": "MAC地址片段",
+    "hostnamePlaceholder": "主机名片段"
   },
   "options": {
     "title": "设备选项管理",

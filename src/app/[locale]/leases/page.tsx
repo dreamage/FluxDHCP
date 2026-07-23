@@ -31,8 +31,8 @@ export default function LeasesPage() {
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [activeFilters, setActiveFilters] = useState({ poolId: 'ALL', state: 'ALL', ipStart: '', ipEnd: '' });
-  const [filterOpen, setFilterOpen] = useState(true);
+  const [activeFilters, setActiveFilters] = useState({ poolId: 'ALL', state: 'ALL', ipStart: '', ipEnd: '', mac: '', hostname: '' });
+  const [filterOpen, setFilterOpen] = useState(false);
   const [filterForm] = Form.useForm();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -59,6 +59,8 @@ export default function LeasesPage() {
         searchParams.set('ip_start', activeFilters.ipStart);
         searchParams.set('ip_end', activeFilters.ipEnd);
       }
+      if (activeFilters.mac) searchParams.set('mac', activeFilters.mac);
+      if (activeFilters.hostname) searchParams.set('hostname', activeFilters.hostname);
       const [res, resRes, poolRes] = await Promise.all([
         fetch(`/api/leases?${searchParams}`),
         fetch('/api/reservations'),
@@ -87,6 +89,8 @@ export default function LeasesPage() {
         state: values.state || 'ALL',
         ipStart: values.ip_start || '',
         ipEnd: values.ip_end || '',
+        mac: values.mac || '',
+        hostname: values.hostname || '',
       });
       setPage(1);
     } catch { /* validation */ }
@@ -94,8 +98,8 @@ export default function LeasesPage() {
 
   const handleReset = () => {
     filterForm.resetFields();
-    filterForm.setFieldsValue({ pool_id: 'ALL', state: 'ALL', ip_start: '', ip_end: '' });
-    setActiveFilters({ poolId: 'ALL', state: 'ALL', ipStart: '', ipEnd: '' });
+    filterForm.setFieldsValue({ pool_id: 'ALL', state: 'ALL', ip_start: '', ip_end: '', mac: '', hostname: '' });
+    setActiveFilters({ poolId: 'ALL', state: 'ALL', ipStart: '', ipEnd: '', mac: '', hostname: '' });
     setPage(1);
   };
 
@@ -184,7 +188,7 @@ export default function LeasesPage() {
         if (r.state === 'RELEASED' || r.state === 'EXPIRED') {
           buttons.push(
             <Popconfirm key="delete" title={t('deleteConfirm')} onConfirm={() => handleDelete(r.ip_address)}>
-              <Button icon={<DeleteOutlined />} size="small" danger />
+              <Button icon={<DeleteOutlined />} size="small" danger>{tc('delete')}</Button>
             </Popconfirm>
           );
         }
@@ -215,7 +219,7 @@ export default function LeasesPage() {
 
       {filterOpen && (
         <Card size="small" style={{ marginBottom: 12 }}>
-          <Form form={filterForm} layout="inline" initialValues={{ pool_id: 'ALL', state: 'ALL', ip_start: '', ip_end: '' }}>
+          <Form form={filterForm} layout="inline" initialValues={{ pool_id: 'ALL', state: 'ALL', ip_start: '', ip_end: '', mac: '', hostname: '' }}>
             <Form.Item name="pool_id" label={t('pool')}>
               <Select style={{ width: 160 }} size="small" allowClear>
                 <Select.Option value="ALL">{t('allPools')}</Select.Option>
@@ -237,6 +241,7 @@ export default function LeasesPage() {
                 validator(_: any, value: string) {
                   const end = getFieldValue('ip_end');
                   if ((value && !end) || (!value && end)) return Promise.reject(t('ipRangeBothRequired'));
+                  if (value && end && isValidIPv4(value) && isValidIPv4(end) && ipToNum(value) > ipToNum(end)) return Promise.reject(tc('errStartIpGreaterThanEnd'));
                   return Promise.resolve();
                 },
               })]}>
@@ -248,10 +253,17 @@ export default function LeasesPage() {
                 validator(_: any, value: string) {
                   const start = getFieldValue('ip_start');
                   if ((value && !start) || (!value && start)) return Promise.reject(t('ipRangeBothRequired'));
+                  if (value && start && isValidIPv4(value) && isValidIPv4(start) && ipToNum(start) > ipToNum(value)) return Promise.reject(tc('errStartIpGreaterThanEnd'));
                   return Promise.resolve();
                 },
               })]}>
               <Input size="small" placeholder={t('ipEndPlaceholder')} style={{ width: 150 }} />
+            </Form.Item>
+            <Form.Item name="mac" label={t('macAddress')}>
+              <Input size="small" placeholder={t('macPlaceholder')} style={{ width: 180 }} allowClear />
+            </Form.Item>
+            <Form.Item name="hostname" label={t('hostname')}>
+              <Input size="small" placeholder={t('hostnamePlaceholder')} style={{ width: 150 }} allowClear />
             </Form.Item>
             <Form.Item>
               <Space>

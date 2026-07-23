@@ -115,7 +115,16 @@
     "randomMac": "Random",
     "randomMacNote": "Randomly generated MAC",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "filter": "Filter",
+    "allPools": "All Pools",
+    "allStates": "All States",
+    "ipRange": "IP Range",
+    "ipStartPlaceholder": "Start IP",
+    "ipEndPlaceholder": "End IP",
+    "ipRangeBothRequired": "Both start and end IP are required",
+    "reset": "Reset",
+    "hostnamePlaceholder": "Hostname fragment"
   },
   "leases": {
     "title": "Leases",
@@ -134,14 +143,16 @@
     "expired": "Expired",
     "released": "Released",
     "all": "All",
-    "advancedSearch": "Advanced Search",
+    "advancedSearch": "Filter",
     "allPools": "All Pools",
     "allStates": "All States",
     "ipRange": "IP Range",
     "ipStartPlaceholder": "Start IP",
     "ipEndPlaceholder": "End IP",
     "ipRangeBothRequired": "Both start and end IP are required",
-    "reset": "Reset"
+    "reset": "Reset",
+    "macPlaceholder": "MAC fragment",
+    "hostnamePlaceholder": "Hostname fragment"
   },
   "options": {
     "title": "Device Options",

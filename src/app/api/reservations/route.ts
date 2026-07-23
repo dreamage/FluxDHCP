@@ -1,17 +1,52 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { normalizeMac } from '@/lib/mac-utils';
-import { isValidIPv4, isIPInSubnet } from '@/lib/ip-utils';
+import { isValidIPv4, isIPInSubnet, ipToNum } from '@/lib/ip-utils';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const db = getDb();
+    const { searchParams } = new URL(request.url);
+    const poolId = searchParams.get('pool_id');
+    const enabled = searchParams.get('enabled');
+    const ipStart = searchParams.get('ip_start');
+    const ipEnd = searchParams.get('ip_end');
+    const mac = searchParams.get('mac');
+    const hostname = searchParams.get('hostname');
+
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    if (poolId && poolId !== 'ALL') {
+      conditions.push('r.pool_id = ?');
+      params.push(Number(poolId));
+    }
+    if (enabled && enabled !== 'ALL') {
+      conditions.push('r.enabled = ?');
+      params.push(Number(enabled));
+    }
+    if (ipStart && ipEnd) {
+      conditions.push('ip2num(r.ip_address) BETWEEN ? AND ?');
+      params.push(ipToNum(ipStart), ipToNum(ipEnd));
+    }
+    if (mac) {
+      conditions.push('r.mac_address LIKE ?');
+      params.push(`%${mac}%`);
+    }
+    if (hostname) {
+      conditions.push('r.hostname LIKE ?');
+      params.push(`%${hostname}%`);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
     const reservations = db.prepare(`
       SELECT r.*, p.name as pool_name
       FROM reservations r
       LEFT JOIN pools p ON r.pool_id = p.id
+      ${whereClause}
       ORDER BY r.id
-    `).all();
+    `).all(...params);
     return NextResponse.json(reservations);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch reservations' }, { status: 500 });
