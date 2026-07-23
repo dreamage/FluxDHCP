@@ -40,10 +40,10 @@ export async function GET(request: Request) {
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    const total = db.prepare(`SELECT COUNT(*) as count FROM logs ${whereClause}`).get(...params) as { count: number };
+    const total = db.prepare(`SELECT COUNT(*) as count FROM dhcp_logs ${whereClause}`).get(...params) as { count: number };
 
     const logs = db.prepare(`
-      SELECT * FROM logs ${whereClause}
+      SELECT * FROM dhcp_logs ${whereClause}
       ORDER BY id DESC
       LIMIT ? OFFSET ?
     `).all(...params, pageSize, (page - 1) * pageSize);
@@ -63,7 +63,7 @@ export async function GET(request: Request) {
 export async function DELETE() {
   try {
     const db = getDb();
-    const result = db.prepare('DELETE FROM logs').run();
+    const result = db.prepare('DELETE FROM dhcp_logs').run();
     return NextResponse.json({ message: 'All logs cleared', deleted: result.changes });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to clear logs' }, { status: 500 });

@@ -8,13 +8,14 @@ import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { translateError } from '@/lib/error-map';
 import { useMacNotes } from '@/hooks/useMacNotes';
+import { isValidIPv4 } from '@/lib/ip-utils';
 
 const { Title } = Typography;
 
 export default function ReservationsPage() {
   const t = useTranslations('reservations');
   const tc = useTranslations('common');
-  const ipRule = { pattern: /^(\d{1,3}\.){3}\d{1,3}$/, message: tc('invalidIpv4') };
+  const ipRule = { validator: (_: any, value: string) => (value && !isValidIPv4(value) ? Promise.reject(tc('invalidIpv4')) : Promise.resolve()) };
   const [data, setData] = useState<any[]>([]);
   const [pools, setPools] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

@@ -21,7 +21,7 @@ export async function POST(request: Request) {
         db.prepare('DELETE FROM declined_ips').run();
       }
       if (clearLogs) {
-        db.prepare('DELETE FROM logs').run();
+        db.prepare('DELETE FROM dhcp_logs').run();
       }
 
       // 1. Config

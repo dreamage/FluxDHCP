@@ -146,7 +146,7 @@
     "deleteConfirm": "确定要删除此选项吗？",
     "customCode": "自定义选项码"
   },
-  "logs": {
+  "dhcpLogs": {
     "title": "DHCP日志",
     "timestamp": "时间",
     "messageType": "类型",

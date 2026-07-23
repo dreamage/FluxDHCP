@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { normalizeMac } from '@/lib/mac-utils';
-import { isIPInSubnet } from '@/lib/ip-utils';
+import { isIPInSubnet, isValidIPv4 } from '@/lib/ip-utils';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -45,8 +45,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'MAC address already reserved' }, { status: 409 });
     }
 
-    // 校验 IP 唯一（排除自身）
+    // 校验 IP 格式
     const ip = ip_address || existing.ip_address;
+    if (ip_address && !isValidIPv4(ip_address)) {
+      return NextResponse.json({ error: 'Invalid IP address format' }, { status: 400 });
+    }
+
+    // 校验 IP 唯一（排除自身）
     const dupIP = db.prepare('SELECT id FROM reservations WHERE ip_address = ? AND id != ?').get(ip, id);
     if (dupIP) {
       return NextResponse.json({ error: 'IP address already reserved' }, { status: 409 });

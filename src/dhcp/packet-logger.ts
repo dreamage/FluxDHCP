@@ -23,7 +23,7 @@ export class PacketLogger {
       const rawOptions = this.serializeOptions(packet.options);
 
       this.db.prepare(`
-        INSERT INTO logs (timestamp, message_type, client_mac, client_ip, yiaddr, siaddr, giaddr, requested_ip, hostname, client_id, vendor_class, xid, raw_options, pool_id, server_response, direction)
+        INSERT INTO dhcp_logs (timestamp, message_type, client_mac, client_ip, yiaddr, siaddr, giaddr, requested_ip, hostname, client_id, vendor_class, xid, raw_options, pool_id, server_response, direction)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'recv')
       `).run(
         new Date().toISOString(),
@@ -71,7 +71,7 @@ export class PacketLogger {
       }
 
       this.db.prepare(`
-        INSERT INTO logs (timestamp, message_type, client_mac, client_ip, yiaddr, siaddr, giaddr, hostname, xid, pool_id, server_response, direction)
+        INSERT INTO dhcp_logs (timestamp, message_type, client_mac, client_ip, yiaddr, siaddr, giaddr, hostname, xid, pool_id, server_response, direction)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'send')
       `).run(
         new Date().toISOString(),

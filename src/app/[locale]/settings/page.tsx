@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Typography, Form, InputNumber, Input, Button, Badge, message, Popconfirm, Space, Alert, Card, Row, Col, Divider, Upload, Modal, Checkbox, Select, Switch } from 'antd';
 import { CheckCircleFilled, CloseCircleFilled, DeleteOutlined, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined } from '@ant-design/icons';
 import { translateError } from '@/lib/error-map';
+import { isValidIPv4 } from '@/lib/ip-utils';
 
 const { Title, Text } = Typography;
 
@@ -12,6 +13,7 @@ export default function SettingsPage() {
   const t = useTranslations('settings');
   const tc = useTranslations('common');
   const tl = useTranslations('layout');
+  const ipRule = { validator: (_: any, value: string) => (value && !isValidIPv4(value) ? Promise.reject(tc('invalidIpv4')) : Promise.resolve()) };
   const [form] = Form.useForm();
   const [dhcpStatus, setDhcpStatus] = useState<'running' | 'stopped' | null>(null);
   const [loading, setLoading] = useState(false);
@@ -81,7 +83,7 @@ export default function SettingsPage() {
   };
 
   const handleClearLogs = async () => {
-    const res = await fetch('/api/logs', { method: 'DELETE' });
+    const res = await fetch('/api/dhcp-logs', { method: 'DELETE' });
     if (res.ok) {
       message.success(t('clearSuccess'));
     }
@@ -252,7 +254,7 @@ export default function SettingsPage() {
       <Card title={t('serverConfig')} style={{ marginBottom: 16 }}>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <Form.Item name="server_ip" label={t('serverIp')}>
+              <Form.Item name="server_ip" label={t('serverIp')} rules={[ipRule]}>
                 <Input placeholder="0.0.0.0" />
               </Form.Item>
             </Col>

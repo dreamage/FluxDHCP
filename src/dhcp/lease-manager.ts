@@ -85,7 +85,7 @@ export class LeaseManager {
       const days = row ? parseInt(row.value, 10) : 90;
       if (isNaN(days) || days < 1) return 0;
       const result = this.db.prepare(
-        `DELETE FROM logs WHERE timestamp < datetime('now', '-' || ? || ' days')`
+        `DELETE FROM dhcp_logs WHERE timestamp < datetime('now', '-' || ? || ' days')`
       ).run(days);
       if (result.changes > 0) {
         console.log(`[LeaseManager] Cleaned ${result.changes} expired log(s) (retention: ${days} days)`);

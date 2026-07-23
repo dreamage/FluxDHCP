@@ -47,7 +47,7 @@ export function getDatabase(dbPath?: string): Database.Database {
   db.exec(CREATE_TABLE_RESERVATIONS);
   db.exec(CREATE_TABLE_DEVICE_OPTIONS);
   db.exec(CREATE_TABLE_LEASES);
-  db.exec(CREATE_TABLE_LOGS);
+  db.exec(CREATE_TABLE_DHCP_LOGS);
   db.exec(CREATE_TABLE_CONFIG);
   db.exec(CREATE_TABLE_WEBHOOKS);
   db.exec(CREATE_TABLE_MAC_NOTES);
@@ -60,15 +60,15 @@ export function getDatabase(dbPath?: string): Database.Database {
     db.exec("ALTER TABLE webhooks ADD COLUMN body_mode TEXT DEFAULT 'json'");
   } catch { /* column already exists */ }
 
-  // Migration: add direction column to logs if missing
+  // Migration: add direction column to dhcp_logs if missing
   try {
-    db.exec("ALTER TABLE logs ADD COLUMN direction TEXT DEFAULT 'recv'");
+    db.exec("ALTER TABLE dhcp_logs ADD COLUMN direction TEXT DEFAULT 'recv'");
   } catch { /* column already exists */ }
 
-  // Migration: add yiaddr/siaddr/giaddr columns to logs if missing
-  try { db.exec("ALTER TABLE logs ADD COLUMN yiaddr TEXT"); } catch { /* column already exists */ }
-  try { db.exec("ALTER TABLE logs ADD COLUMN siaddr TEXT"); } catch { /* column already exists */ }
-  try { db.exec("ALTER TABLE logs ADD COLUMN giaddr TEXT"); } catch { /* column already exists */ }
+  // Migration: add yiaddr/siaddr/giaddr columns to dhcp_logs if missing
+  try { db.exec("ALTER TABLE dhcp_logs ADD COLUMN yiaddr TEXT"); } catch { /* column already exists */ }
+  try { db.exec("ALTER TABLE dhcp_logs ADD COLUMN siaddr TEXT"); } catch { /* column already exists */ }
+  try { db.exec("ALTER TABLE dhcp_logs ADD COLUMN giaddr TEXT"); } catch { /* column already exists */ }
 
   // Migration: add request_body column to webhook_deliveries if missing
   try { db.exec("ALTER TABLE webhook_deliveries ADD COLUMN request_body TEXT"); } catch { /* column already exists */ }

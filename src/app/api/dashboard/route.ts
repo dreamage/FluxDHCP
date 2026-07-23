@@ -24,7 +24,7 @@ export async function GET() {
 
     // 24小时内请求数
     const requests24h = db.prepare(
-      "SELECT COUNT(*) as count FROM logs WHERE timestamp >= datetime('now', '-1 day')"
+      "SELECT COUNT(*) as count FROM dhcp_logs WHERE timestamp >= datetime('now', '-1 day')"
     ).get() as { count: number };
 
     // 各地址池使用率 — 用单次查询获取所有租约计数 (#11)
@@ -49,7 +49,7 @@ export async function GET() {
     // 最近 10 条事件
     const recentEvents = db.prepare(`
       SELECT timestamp, message_type, client_mac, hostname, server_response, direction
-      FROM logs ORDER BY id DESC LIMIT 10
+      FROM dhcp_logs ORDER BY id DESC LIMIT 10
     `).all();
 
     return NextResponse.json({

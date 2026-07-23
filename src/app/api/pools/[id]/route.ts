@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
-import { ipToNum } from '@/lib/ip-utils';
+import { ipToNum, isValidIPv4, isIPInSubnet } from '@/lib/ip-utils';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -26,6 +26,45 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const pool = db.prepare('SELECT * FROM pools WHERE id = ?').get(id);
     if (!pool) {
       return NextResponse.json({ error: 'Pool not found' }, { status: 404 });
+    }
+
+    // 合并最终值（未传字段用原值）
+    const finalSubnet = subnet || (pool as any).subnet;
+    const finalNetmask = netmask || (pool as any).netmask;
+    const finalStartIp = start_ip || (pool as any).start_ip;
+    const finalEndIp = end_ip || (pool as any).end_ip;
+    const finalGateway = gateway !== undefined ? gateway : (pool as any).gateway;
+
+    // 校验 IP 格式
+    const ipsToCheck = [finalSubnet, finalNetmask, finalStartIp, finalEndIp];
+    if (finalGateway) ipsToCheck.push(finalGateway);
+    for (const ip of ipsToCheck) {
+      if (!isValidIPv4(ip)) {
+        return NextResponse.json({ error: `Invalid IP address: ${ip}` }, { status: 400 });
+      }
+    }
+
+    // 校验起始IP <= 结束IP
+    const newStart = ipToNum(finalStartIp);
+    const newEnd = ipToNum(finalEndIp);
+    if (newStart > newEnd) {
+      return NextResponse.json({ error: 'Start IP must be less than or equal to End IP' }, { status: 400 });
+    }
+
+    // 校验 start/end IP 在子网范围内
+    if (!isIPInSubnet(finalStartIp, finalSubnet, finalNetmask) || !isIPInSubnet(finalEndIp, finalSubnet, finalNetmask)) {
+      return NextResponse.json({ error: 'Start/End IP is not within the subnet' }, { status: 400 });
+    }
+
+    // 校验 IP 范围重叠（排除自身）
+    const existingPools = db.prepare('SELECT * FROM pools WHERE id != ?').all(id) as any[];
+    const overlapping = existingPools.find(p => {
+      const pStart = ipToNum(p.start_ip);
+      const pEnd = ipToNum(p.end_ip);
+      return newStart <= pEnd && newEnd >= pStart;
+    });
+    if (overlapping) {
+      return NextResponse.json({ error: `IP range overlaps with pool "${overlapping.name}"` }, { status: 400 });
     }
 
     const dnsJson = dns_servers ? JSON.stringify(dns_servers) : null;

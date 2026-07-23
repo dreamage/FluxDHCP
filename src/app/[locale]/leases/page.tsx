@@ -9,6 +9,7 @@ import MacInput from '@/components/MacInput';
 import { formatLocalTime } from '@/lib/format-time';
 import { translateError } from '@/lib/error-map';
 import { useMacNotes } from '@/hooks/useMacNotes';
+import { isValidIPv4 } from '@/lib/ip-utils';
 
 const { Title } = Typography;
 
@@ -23,7 +24,7 @@ export default function LeasesPage() {
   const t = useTranslations('leases');
   const tc = useTranslations('common');
   const tr = useTranslations('reservations');
-  const ipRule = { pattern: /^(\d{1,3}\.){3}\d{1,3}$/, message: tc('invalidIpv4') };
+  const ipRule = { validator: (_: any, value: string) => (value && !isValidIPv4(value) ? Promise.reject(tc('invalidIpv4')) : Promise.resolve()) };
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);

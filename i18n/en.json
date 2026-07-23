@@ -146,7 +146,7 @@
     "deleteConfirm": "Are you sure you want to delete this option?",
     "customCode": "Custom Code"
   },
-  "logs": {
+  "dhcpLogs": {
     "title": "DHCP Logs",
     "timestamp": "Time",
     "messageType": "Type",
