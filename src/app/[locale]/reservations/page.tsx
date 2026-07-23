@@ -256,7 +256,7 @@ export default function ReservationsPage() {
               <Input size="small" placeholder={t('ipEndPlaceholder')} style={{ width: 150 }} />
             </Form.Item>
             <Form.Item name="mac" label={t('macAddress')}>
-              <Input size="small" placeholder={t('macPlaceholder')} style={{ width: 180 }} allowClear />
+              <Input size="small" placeholder={t('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
             </Form.Item>
             <Form.Item name="hostname" label={t('hostname')}>
               <Input size="small" placeholder={t('hostnamePlaceholder')} style={{ width: 150 }} allowClear />

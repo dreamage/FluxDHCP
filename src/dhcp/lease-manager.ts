@@ -81,7 +81,7 @@ export class LeaseManager {
    */
   cleanExpiredLogs(): number {
     try {
-      const row = this.db.prepare("SELECT value FROM config WHERE key = 'log_retention_days'").get() as { value: string } | undefined;
+      const row = this.db.prepare("SELECT value FROM config WHERE key = 'dhcp_log_retention_days'").get() as { value: string } | undefined;
       const days = row ? parseInt(row.value, 10) : 90;
       if (isNaN(days) || days < 1) return 0;
       const result = this.db.prepare(

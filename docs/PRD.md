@@ -556,8 +556,7 @@ INSERT INTO config (key, value) VALUES
   ('t2_ratio', '0.875'),
   ('dhcp_enabled', '1'),
   ('web_port', '3000'),
-  ('language', 'en'),
-  ('log_retention_days', '30');
+  ('dhcp_log_retention_days', '30');
 ```
 
 ---

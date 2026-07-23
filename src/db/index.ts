@@ -73,6 +73,12 @@ export function getDatabase(dbPath?: string): Database.Database {
   // Migration: add request_body column to webhook_deliveries if missing
   try { db.exec("ALTER TABLE webhook_deliveries ADD COLUMN request_body TEXT"); } catch { /* column already exists */ }
 
+  // Migration: rename log_retention_days → dhcp_log_retention_days
+  try { db.exec("UPDATE config SET key = 'dhcp_log_retention_days' WHERE key = 'log_retention_days'"); } catch { /* already migrated */ }
+
+  // Migration: remove deprecated language config key
+  try { db.exec("DELETE FROM config WHERE key = 'language'"); } catch { /* no-op */ }
+
   // 执行索引创建
   for (const indexSql of CREATE_INDEXES) {
     db.exec(indexSql);

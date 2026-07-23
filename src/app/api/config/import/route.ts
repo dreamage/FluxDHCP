@@ -26,7 +26,11 @@ export async function POST(request: Request) {
           'INSERT OR REPLACE INTO config (key, value, updated_at) VALUES (?, ?, datetime(\'now\'))'
         );
         for (const row of body.config) {
-          upsertConfig.run(row.key, row.value);
+          // Skip deprecated language config key
+          if (row.key === 'language') continue;
+          // Backward compat: rename old log_retention_days → dhcp_log_retention_days
+          const key = row.key === 'log_retention_days' ? 'dhcp_log_retention_days' : row.key;
+          upsertConfig.run(key, row.value);
         }
         imported.config = body.config.length;
       }

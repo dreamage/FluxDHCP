@@ -144,7 +144,7 @@ FluxDHCP
 | **MAC Notes** | MAC address labels and notes, sortable columns, page size selector |
 | **Webhooks** | Webhook CRUD, event subscription, template variables, custom headers, SSRF-protected URLs, test button |
 | **DHCP Logs** | Millisecond timestamps, direction indicator, 60+ option code translations, column visibility selector, auto-refresh (3/5/10/30/60s, default 10s), MAC/IP autocomplete filters, clear-all button with total count, page size selector |
-| **Settings** | DHCP service control, server config, T1/T2 with tooltips, log retention days, DECLINE blacklist duration, config import/export (card-style selector, exported-at display, validation) |
+| **Settings** | DHCP service control, server config, T1/T2 with tooltips, DHCP log retention days, DECLINE blacklist duration, config import/export (card-style selector, exported-at display, validation) |
 
 ## UI Features
 
