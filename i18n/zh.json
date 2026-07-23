@@ -7,7 +7,7 @@
     "options": "设备选项",
     "macBlacklist": "MAC黑名单",
     "macNotes": "MAC备注",
-    "logs": "日志",
+    "logs": "DHCP日志",
     "settings": "设置",
     "webhooks": "Webhook",
     "dhcpStatus": "DHCP 服务",

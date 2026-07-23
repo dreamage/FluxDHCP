@@ -73,7 +73,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { key: '/mac-blacklist', icon: <StopOutlined />, label: t('macBlacklist') },
     { key: '/mac-notes', icon: <TagOutlined />, label: t('macNotes') },
     { key: '/webhooks', icon: <ApiOutlined />, label: t('webhooks') },
-    { key: '/logs', icon: <HistoryOutlined />, label: t('logs') },
+    { key: '/dhcp-logs', icon: <HistoryOutlined />, label: t('logs') },
     { key: '/settings', icon: <SettingOutlined />, label: t('settings') },
   ];
 

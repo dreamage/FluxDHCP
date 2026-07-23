@@ -93,7 +93,11 @@ export async function POST(request: Request) {
       }
     });
 
-    importTransaction();
+    try {
+      importTransaction();
+    } finally {
+      db.pragma('foreign_keys = ON');
+    }
 
     // Reload DHCP config in memory
     try {

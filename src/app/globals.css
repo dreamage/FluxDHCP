@@ -230,6 +230,12 @@ code, pre, .mono {
   box-shadow: none !important;
 }
 
+/* Fixed columns must keep a solid background to cover scrolled content beneath on hover */
+.ant-table-wrapper .ant-table-tbody > tr:hover > td.ant-table-cell-fix-left,
+.ant-table-wrapper .ant-table-tbody > tr:hover > td.ant-table-cell-fix-right {
+  background: var(--color-surface) !important;
+}
+
 /* Sortable column header cursor */
 .ant-table-wrapper .ant-table-thead > tr > th[class*="column-sort"] {
   cursor: pointer;

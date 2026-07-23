@@ -361,7 +361,7 @@ export default function SettingsPage() {
         {pendingImportData && (
           <div>
             <Text style={{ display: 'block', marginBottom: 12 }}>{t('importConfirmDesc')}</Text>
-            <div style={{ background: '#f8fafc', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+            <div style={{ background: 'var(--color-hover)', borderRadius: 8, padding: 12, marginBottom: 16 }}>
               <Text strong style={{ fontSize: 13 }}>{t('importWillReplace')}:</Text>
               <ul style={{ margin: '8px 0 0', paddingLeft: 20, fontSize: 13 }}>
                 {pendingImportData.config && <li>{t('importConfigItems')}: {pendingImportData.config.length}</li>}

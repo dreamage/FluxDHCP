@@ -232,7 +232,7 @@
     "importWebhooks": "Webhooks",
     "importMacNotes": "MAC Notes",
     "importClearLeases": "Also clear all leases and DECLINE blacklist",
-    "importClearLogs": "Also clear all logs"
+    "importClearLogs": "Also clear all DHCP logs"
   },
   "common": {
     "confirm": "Confirm",
