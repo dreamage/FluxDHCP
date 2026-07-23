@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Popover, Input, Button, Space, Popconfirm } from 'antd';
 import { EditOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslations } from 'next-intl';
+import { useNotify } from '@/hooks/useNotify';
 
 interface MacAddressProps {
   mac: string;
@@ -13,6 +14,7 @@ interface MacAddressProps {
 
 export default function MacAddress({ mac, macNotes, onNoteUpdate }: MacAddressProps) {
   const t = useTranslations('macNotes');
+  const notify = useNotify();
   const [open, setOpen] = useState(false);
   const [editingNote, setEditingNote] = useState('');
   const [saving, setSaving] = useState(false);
@@ -32,7 +34,12 @@ export default function MacAddress({ mac, macNotes, onNoteUpdate }: MacAddressPr
       if (res.ok) {
         setOpen(false);
         onNoteUpdate();
+      } else {
+        const result = await res.json().catch(() => ({}));
+        notify.error(result.error);
       }
+    } catch {
+      notify.error(null);
     } finally {
       setSaving(false);
     }
@@ -44,8 +51,13 @@ export default function MacAddress({ mac, macNotes, onNoteUpdate }: MacAddressPr
       if (res.ok) {
         setOpen(false);
         onNoteUpdate();
+      } else {
+        const result = await res.json().catch(() => ({}));
+        notify.error(result.error);
       }
-    } catch { /* ignore */ }
+    } catch {
+      notify.error(null);
+    }
   };
 
   const handleOpenChange = (visible: boolean) => {

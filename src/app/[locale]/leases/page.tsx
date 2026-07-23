@@ -2,13 +2,14 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Tag, Select, Popconfirm, Button, message, Modal, Form, Input, Space, Alert } from 'antd';
+import { Typography, Table, Tag, Select, Popconfirm, Button, Modal, Form, Input, Space, Alert } from 'antd';
 import { DeleteOutlined, UndoOutlined, PlusOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { formatLocalTime } from '@/lib/format-time';
 import { translateError } from '@/lib/error-map';
 import { useMacNotes } from '@/hooks/useMacNotes';
+import { useNotify } from '@/hooks/useNotify';
 import { isValidIPv4 } from '@/lib/ip-utils';
 
 const { Title } = Typography;
@@ -42,6 +43,7 @@ export default function LeasesPage() {
   const [resSubmitting, setResSubmitting] = useState(false);
   const [resError, setResError] = useState('');
   const [resForm] = Form.useForm();
+  const notify = useNotify();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -71,16 +73,16 @@ export default function LeasesPage() {
   const handleRelease = async (ip: string) => {
     const res = await fetch(`/api/leases/${ip}`, { method: 'DELETE' });
     const result = await res.json();
-    if (!res.ok) { message.error(translateError(result.error, tc) || tc('error')); return; }
-    message.success(t('released'));
+    if (!res.ok) { notify.error(result.error); return; }
+    notify.success(t('released'));
     fetchData();
   };
 
   const handleDelete = async (ip: string) => {
     const res = await fetch(`/api/leases/${ip}?purge=true`, { method: 'DELETE' });
     const result = await res.json();
-    if (!res.ok) { message.error(translateError(result.error, tc) || tc('error')); return; }
-    message.success(tc('deleteSuccess'));
+    if (!res.ok) { notify.error(result.error); return; }
+    notify.success(tc('deleteSuccess'));
     fetchData();
   };
 
@@ -110,17 +112,15 @@ export default function LeasesPage() {
       if (!res.ok) {
         const errMsg = translateError(result.error, tc) || tc('error');
         setResError(errMsg);
-        message.error(errMsg);
         return;
       }
-      message.success(tc('createSuccess'));
+      notify.success(tc('createSuccess'));
       setResModalOpen(false);
       fetchData();
     } catch (err: any) {
       if (err?.errorFields) return; // form validation, handled by Ant Design
       const errMsg = err?.message || tc('error');
       setResError(errMsg);
-      message.error(errMsg);
     } finally {
       setResSubmitting(false);
     }

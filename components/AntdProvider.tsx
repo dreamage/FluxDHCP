@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ConfigProvider, theme } from 'antd';
+import { ConfigProvider, theme, App as AntdApp } from 'antd';
 import enUS from 'antd/locale/en_US';
 import zhCN from 'antd/locale/zh_CN';
 import { useTheme } from './ThemeContext';
@@ -96,7 +96,7 @@ export default function AntdProvider({ children, locale = 'en' }: AntdProviderPr
         },
       }}
     >
-      {children}
+      <AntdApp>{children}</AntdApp>
     </ConfigProvider>
   );
 }

@@ -2,12 +2,13 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Switch, Popconfirm, Select, message, Space, Alert } from 'antd';
+import { Typography, Table, Button, Modal, Form, Input, Switch, Popconfirm, Select, Space, Alert } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { translateError } from '@/lib/error-map';
 import { useMacNotes } from '@/hooks/useMacNotes';
+import { useNotify } from '@/hooks/useNotify';
 import { isValidIPv4 } from '@/lib/ip-utils';
 
 const { Title } = Typography;
@@ -24,6 +25,7 @@ export default function ReservationsPage() {
   const [submitError, setSubmitError] = useState('');
   const { macNotes, fetchMacNotes } = useMacNotes();
   const [form] = Form.useForm();
+  const notify = useNotify();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -91,11 +93,10 @@ export default function ReservationsPage() {
       if (!res.ok) {
         const errMsg = translateError(result.error, tc) || tc('error');
         setSubmitError(errMsg);
-        message.error(errMsg);
         return;
       }
 
-      message.success(editingRecord ? tc('updateSuccess') : tc('createSuccess'));
+      notify.success(editingRecord ? tc('updateSuccess') : tc('createSuccess'));
       setModalOpen(false);
       setSubmitError('');
       fetchData();
@@ -103,14 +104,17 @@ export default function ReservationsPage() {
       if (err?.errorFields) return; // form validation, handled by Ant Design
       const errMsg = err?.message || tc('error');
       setSubmitError(errMsg);
-      message.error(errMsg);
     }
   };
 
   const handleDelete = async (id: number) => {
     const res = await fetch(`/api/reservations/${id}`, { method: 'DELETE' });
-    if (!res.ok) { message.error(tc('error')); return; }
-    message.success(tc('deleteSuccess'));
+    if (!res.ok) {
+      const result = await res.json().catch(() => ({}));
+      notify.error(result.error);
+      return;
+    }
+    notify.success(tc('deleteSuccess'));
     fetchData();
   };
 
@@ -121,10 +125,14 @@ export default function ReservationsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled }),
       });
-      if (!res.ok) throw new Error('Failed');
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        notify.error(result.error);
+        return;
+      }
       fetchData();
     } catch {
-      message.error(tc('error'));
+      notify.error(null);
     }
   };
 

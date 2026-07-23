@@ -74,6 +74,15 @@ const PREFIX_MAP: Array<[string, string]> = [
   ['Missing required fields', 'errMissingFields'],
 ];
 
+// For network/transport errors that aren't fixed strings (fetch reject / 5xx / timeout)
+const REGEX_MAP: Array<[RegExp, string]> = [
+  [/^Failed to fetch$/i, 'errNetwork'],
+  [/NetworkError|ECONNREFUSED|network error/i, 'errNetwork'],
+  [/timeout|aborted|ETIMEDOUT/i, 'errTimeout'],
+  [/^Internal Server Error$/i, 'errServer'],
+  [/^5\d{2}\b/, 'errServer'],
+];
+
 export function getErrorKey(errorMessage: string): string | null {
   // Exact match
   if (ERROR_MAP[errorMessage]) return ERROR_MAP[errorMessage];
@@ -81,6 +90,11 @@ export function getErrorKey(errorMessage: string): string | null {
   // Prefix match
   for (const [prefix, key] of PREFIX_MAP) {
     if (errorMessage.startsWith(prefix)) return key;
+  }
+
+  // Regex fallback (network / server / timeout)
+  for (const [re, key] of REGEX_MAP) {
+    if (re.test(errorMessage)) return key;
   }
 
   return null;

@@ -8,6 +8,7 @@ import MacAddress from '@/components/MacAddress';
 import { formatLocalTime } from '@/lib/format-time';
 import { translateServerResponse } from '@/lib/server-response';
 import { useMacNotes } from '@/hooks/useMacNotes';
+import { useNotify } from '@/hooks/useNotify';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title } = Typography;
@@ -78,6 +79,8 @@ export default function LogsPage() {
   const { macNotes, knownMacs, fetchMacNotes } = useMacNotes();
   const [knownIps, setKnownIps] = useState<string[]>([]);
   const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const notify = useNotify();
+  const hasNotified = useRef(false);
 
   // Column visibility state
   const [visibleKeys, setVisibleKeys] = useState<string[]>(DEFAULT_VISIBLE);
@@ -110,9 +113,16 @@ export default function LogsPage() {
       if (mac) params.set('mac', mac);
       if (ip) params.set('ip', ip);
       const res = await fetch(`/api/dhcp-logs?${params}`);
+      if (!res.ok) {
+        if (!hasNotified.current) { notify.error(null); hasNotified.current = true; }
+        return;
+      }
       const json = await res.json();
       setData(json.data || []);
       setTotal(json.total || 0);
+      hasNotified.current = false;
+    } catch {
+      if (!hasNotified.current) { notify.error(null); hasNotified.current = true; }
     } finally {
       setLoading(false);
     }

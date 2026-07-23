@@ -94,6 +94,7 @@ export async function POST(request: Request) {
     });
 
     try {
+      db.pragma('foreign_keys = OFF');
       importTransaction();
     } finally {
       db.pragma('foreign_keys = ON');

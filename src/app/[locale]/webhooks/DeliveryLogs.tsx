@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Select, Popconfirm, message, Space, Tag, Tooltip } from 'antd';
+import { Typography, Table, Button, Select, Popconfirm, Space, Tag, Tooltip } from 'antd';
 import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useNotify } from '@/hooks/useNotify';
 
 const { Text } = Typography;
 
@@ -57,6 +58,7 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
   const t = useTranslations('webhook');
   const tLogs = useTranslations('webhookLogs');
   const tc = useTranslations('common');
+  const notify = useNotify();
 
   const [logs, setLogs] = useState<any[]>([]);
   const [logsTotal, setLogsTotal] = useState(0);
@@ -84,8 +86,10 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
   const handleClearLogs = async () => {
     const res = await fetch('/api/webhooks/deliveries', { method: 'DELETE' });
     if (res.ok) {
-      message.success(tLogs('clearSuccess'));
+      notify.success(tLogs('clearSuccess'));
       fetchLogs();
+    } else {
+      notify.error(null);
     }
   };
 

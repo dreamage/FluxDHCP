@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Popconfirm, message, Space, Switch } from 'antd';
+import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Switch } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import MacInput from '@/components/MacInput';
 import MacAddress from '@/components/MacAddress';
 import { useMacNotes } from '@/hooks/useMacNotes';
-import { translateError } from '@/lib/error-map';
+import { useNotify } from '@/hooks/useNotify';
 
 const { Title } = Typography;
 
@@ -28,6 +28,7 @@ export default function MacBlacklistPage() {
   const [editingMac, setEditingMac] = useState<string | null>(null);
   const [form] = Form.useForm();
   const { macNotes, fetchMacNotes } = useMacNotes();
+  const notify = useNotify();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -76,10 +77,10 @@ export default function MacBlacklistPage() {
         });
         const result = await res.json();
         if (!res.ok) {
-          message.error(translateError(result.error, tc) || tc('error'));
+          notify.error(result.error);
           return;
         }
-        message.success(tc('updateSuccess'));
+        notify.success(tc('updateSuccess'));
       } else {
         const res = await fetch('/api/mac-blacklist', {
           method: 'POST',
@@ -88,10 +89,10 @@ export default function MacBlacklistPage() {
         });
         const result = await res.json();
         if (!res.ok) {
-          message.error(translateError(result.error, tc) || tc('error'));
+          notify.error(result.error);
           return;
         }
-        message.success(tc('createSuccess'));
+        notify.success(tc('createSuccess'));
       }
 
       setModalOpen(false);
@@ -102,10 +103,11 @@ export default function MacBlacklistPage() {
   const handleDelete = async (mac: string) => {
     const res = await fetch(`/api/mac-blacklist/${encodeURIComponent(mac)}`, { method: 'DELETE' });
     if (!res.ok) {
-      message.error(tc('error'));
+      const result = await res.json().catch(() => ({}));
+      notify.error(result.error);
       return;
     }
-    message.success(tc('deleteSuccess'));
+    notify.success(tc('deleteSuccess'));
     fetchData();
   };
 
@@ -116,7 +118,8 @@ export default function MacBlacklistPage() {
       body: JSON.stringify({ enabled: checked ? 1 : 0 }),
     });
     if (!res.ok) {
-      message.error(tc('error'));
+      const result = await res.json().catch(() => ({}));
+      notify.error(result.error);
       return;
     }
     fetchData();

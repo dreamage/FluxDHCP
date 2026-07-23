@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, InputNumber, Popconfirm, Select, message, Space } from 'antd';
+import { Typography, Table, Button, Modal, Form, Input, InputNumber, Popconfirm, Select, Space } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
-import { translateError } from '@/lib/error-map';
+import { useNotify } from '@/hooks/useNotify';
 import { useMacNotes } from '@/hooks/useMacNotes';
 
 const { Title } = Typography;
@@ -34,6 +34,7 @@ export default function OptionsPage() {
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const { macNotes, fetchMacNotes } = useMacNotes();
   const [form] = Form.useForm();
+  const notify = useNotify();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -72,9 +73,9 @@ export default function OptionsPage() {
       });
 
       const result = await res.json();
-      if (!res.ok) { message.error(translateError(result.error, tc) || tc('error')); return; }
+      if (!res.ok) { notify.error(result.error); return; }
 
-      message.success(editingRecord ? tc('updateSuccess') : tc('createSuccess'));
+      notify.success(editingRecord ? tc('updateSuccess') : tc('createSuccess'));
       setModalOpen(false);
       fetchData();
     } catch { /* validation */ }
@@ -82,8 +83,9 @@ export default function OptionsPage() {
 
   const handleDelete = async (id: number) => {
     const res = await fetch(`/api/options/${id}`, { method: 'DELETE' });
-    if (!res.ok) { message.error(tc('error')); return; }
-    message.success(tc('deleteSuccess'));
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) { notify.error(result.error); return; }
+    notify.success(tc('deleteSuccess'));
     fetchData();
   };
 

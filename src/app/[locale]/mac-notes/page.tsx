@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Popconfirm, message, Space, Tag } from 'antd';
+import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, TagOutlined } from '@ant-design/icons';
 import MacInput from '@/components/MacInput';
-import { translateError } from '@/lib/error-map';
+import { useNotify } from '@/hooks/useNotify';
 import { formatLocalTime } from '@/lib/format-time';
 
 const { Title, Text } = Typography;
@@ -25,6 +25,7 @@ export default function MacNotesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMac, setEditingMac] = useState<string | null>(null);
   const [form] = Form.useForm();
+  const notify = useNotify();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -74,10 +75,10 @@ export default function MacNotesPage() {
         });
         const result = await res.json();
         if (!res.ok) {
-          message.error(translateError(result.error, tc) || tc('error'));
+          notify.error(result.error);
           return;
         }
-        message.success(tc('updateSuccess'));
+        notify.success(tc('updateSuccess'));
       } else {
         // Create new
         const res = await fetch('/api/mac-notes', {
@@ -87,10 +88,10 @@ export default function MacNotesPage() {
         });
         const result = await res.json();
         if (!res.ok) {
-          message.error(translateError(result.error, tc) || tc('error'));
+          notify.error(result.error);
           return;
         }
-        message.success(tc('createSuccess'));
+        notify.success(tc('createSuccess'));
       }
 
       setModalOpen(false);
@@ -101,10 +102,11 @@ export default function MacNotesPage() {
   const handleDelete = async (mac: string) => {
     const res = await fetch(`/api/mac-notes/${encodeURIComponent(mac)}`, { method: 'DELETE' });
     if (!res.ok) {
-      message.error(tc('error'));
+      const result = await res.json().catch(() => ({}));
+      notify.error(result.error);
       return;
     }
-    message.success(tc('deleteSuccess'));
+    notify.success(tc('deleteSuccess'));
     fetchData();
   };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card, Row, Col, Typography, Progress, Tag, Space, Tooltip, Spin, Alert } from 'antd';
 import {
@@ -11,6 +11,7 @@ import MacAddress from '@/components/MacAddress';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
 import { translateServerResponse } from '@/lib/server-response';
 import { useMacNotes } from '@/hooks/useMacNotes';
+import { useNotify } from '@/hooks/useNotify';
 
 const { Title, Text } = Typography;
 
@@ -74,16 +75,21 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { macNotes, fetchMacNotes } = useMacNotes();
+  const notify = useNotify();
+  const hasNotified = useRef(false);
 
   useEffect(() => { fetchMacNotes(); }, [fetchMacNotes]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      setError('');
       try {
         const res = await fetch('/api/dashboard');
-        if (!res.ok) { setError(t('fetchError') || 'Failed to load'); return; }
+        if (!res.ok) {
+          setError(t('fetchError') || 'Failed to load');
+          if (!hasNotified.current) { notify.fatal(t('fetchError') || 'Failed to load'); hasNotified.current = true; }
+          return;
+        }
         const json = await res.json();
         setData({
           activeLeases: json.activeLeases ?? 0,
@@ -95,8 +101,11 @@ export default function DashboardPage() {
           poolUsage: json.poolUsage ?? [],
           recentEvents: json.recentEvents ?? [],
         });
+        setError('');
+        hasNotified.current = false;
       } catch (err) {
-        console.error('Failed to fetch dashboard data:', err);
+        setError(t('fetchError') || 'Failed to load');
+        if (!hasNotified.current) { notify.fatal(t('fetchError') || 'Failed to load', err); hasNotified.current = true; }
       } finally {
         setLoading(false);
       }

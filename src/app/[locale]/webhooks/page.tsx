@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Select, Switch, Popconfirm, message, Space, Tag, Divider } from 'antd';
+import { Typography, Table, Button, Modal, Form, Input, Select, Switch, Popconfirm, Space, Tag, Divider } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import { translateError } from '@/lib/error-map';
+import { useNotify } from '@/hooks/useNotify';
 import DeliveryLogs from './DeliveryLogs';
 
 const { Title } = Typography;
@@ -46,6 +46,7 @@ export default function WebhooksPage() {
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [form] = Form.useForm();
   const method = Form.useWatch('method', form) || 'POST';
+  const notify = useNotify();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -84,7 +85,7 @@ export default function WebhooksPage() {
       let parsedHeaders = values.headers;
       if (typeof parsedHeaders === 'string') {
         try { parsedHeaders = JSON.parse(parsedHeaders || '{}'); }
-        catch { message.error(tc('invalidJson')); return; }
+        catch { notify.warn(tc('invalidJson')); return; }
       }
       const fields = (values.fields || []).filter((f: any) => f && f.name);
       const url = editingRecord ? `/api/webhooks/${editingRecord.id}` : '/api/webhooks';
@@ -94,20 +95,24 @@ export default function WebhooksPage() {
         body: JSON.stringify({ ...values, fields, headers: parsedHeaders }),
       });
       const result = await res.json();
-      if (!res.ok) { message.error(translateError(result.error, tc) || tc('error')); return; }
-      message.success(editingRecord ? tc('updateSuccess') : tc('createSuccess'));
+      if (!res.ok) { notify.error(result.error); return; }
+      notify.success(editingRecord ? tc('updateSuccess') : tc('createSuccess'));
       setModalOpen(false);
       fetchData();
     } catch (err: any) {
       if (err?.errorFields) return;
-      message.error(err?.message || tc('error'));
+      notify.error(err?.message || null);
     }
   };
 
   const handleDelete = async (id: number) => {
     const res = await fetch(`/api/webhooks/${id}`, { method: 'DELETE' });
-    if (!res.ok) { message.error(tc('error')); return; }
-    message.success(tc('deleteSuccess'));
+    if (!res.ok) {
+      const result = await res.json().catch(() => ({}));
+      notify.error(result.error);
+      return;
+    }
+    notify.success(tc('deleteSuccess'));
     fetchData();
   };
 
@@ -117,10 +122,14 @@ export default function WebhooksPage() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled }),
       });
-      if (!res.ok) throw new Error('Failed');
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        notify.error(result.error);
+        return;
+      }
       fetchData();
     } catch {
-      message.error(tc('error'));
+      notify.error(null);
     }
   };
 
@@ -131,9 +140,11 @@ export default function WebhooksPage() {
         body: JSON.stringify({ id }),
       });
       const result = await res.json();
-      message[result.success ? 'success' : 'error'](`${t(result.success ? 'testSuccess' : 'testFail')}${result.message ? ': ' + result.message : ''}`);
+      const msg = `${t(result.success ? 'testSuccess' : 'testFail')}${result.message ? ': ' + result.message : ''}`;
+      if (result.success) notify.success(msg);
+      else notify.warn(msg);
     } catch (err: any) {
-      message.error(`${t('testFail')}: ${err?.message || tc('unknownError')}`);
+      notify.error(`${t('testFail')}: ${err?.message || tc('unknownError')}`);
     }
   };
 

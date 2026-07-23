@@ -48,6 +48,9 @@
     "gateway": "网关",
     "dns": "DNS服务器",
     "dnsPlaceholder": "如 8.8.8.8，按回车添加",
+    "dnsOrderHint": "DNS服务器顺序即为下发顺序，点击箭头调整优先级",
+    "moveUp": "上移",
+    "moveDown": "下移",
     "leaseTime": "租约时间（秒）",
     "status": "状态",
     "usage": "使用率",
@@ -232,7 +235,7 @@
     "importWebhooks": "Webhook",
     "importMacNotes": "MAC备注",
     "importClearLeases": "同时清空所有租约和 DECLINE 黑名单",
-    "importClearLogs": "同时清空所有日志"
+    "importClearLogs": "同时清空所有DHCP日志"
   },
   "common": {
     "confirm": "确认",
@@ -254,6 +257,9 @@
     "invalidJson": "JSON格式无效",
     "networkError": "网络错误",
     "unknownError": "未知错误",
+    "errNetwork": "网络连接失败，请检查服务状态",
+    "errServer": "服务器内部错误",
+    "errTimeout": "请求超时",
     "errMissingFields": "缺少必填字段",
     "errInvalidMac": "MAC地址格式无效，请使用 AA:BB:CC:DD:EE:FF",
     "errInvalidUrl": "URL格式无效",

@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Form, InputNumber, Input, Button, Badge, message, Popconfirm, Space, Alert, Card, Row, Col, Divider, Upload, Modal, Checkbox, Select, Switch } from 'antd';
+import { Typography, Form, InputNumber, Input, Button, Badge, Popconfirm, Space, Card, Row, Col, Divider, Upload, Modal, Checkbox, Select, Switch } from 'antd';
 import { CheckCircleFilled, CloseCircleFilled, DeleteOutlined, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined } from '@ant-design/icons';
-import { translateError } from '@/lib/error-map';
+import { useNotify } from '@/hooks/useNotify';
 import { isValidIPv4 } from '@/lib/ip-utils';
 
 const { Title, Text } = Typography;
@@ -17,12 +17,12 @@ export default function SettingsPage() {
   const [form] = Form.useForm();
   const [dhcpStatus, setDhcpStatus] = useState<'running' | 'stopped' | null>(null);
   const [loading, setLoading] = useState(false);
-  const [startError, setStartError] = useState('');
   const [saving, setSaving] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [pendingImportData, setPendingImportData] = useState<any>(null);
   const [clearLeases, setClearLeases] = useState(false);
   const [clearLogs, setClearLogs] = useState(false);
+  const notify = useNotify();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,14 +69,14 @@ export default function SettingsPage() {
         body: JSON.stringify(payload),
       });
       if (res.ok) {
-        message.success(t('saveSuccess'));
+        notify.success(t('saveSuccess'));
       } else {
         const result = await res.json().catch(() => ({}));
-        message.error(translateError(result.error, tc) || tc('error'));
+        notify.error(result.error);
       }
     } catch (err: any) {
       if (err?.errorFields) {
-        message.error(tc('requiredField'));
+        notify.warn(tc('requiredField'));
       }
     }
     finally { setSaving(false); }
@@ -85,7 +85,9 @@ export default function SettingsPage() {
   const handleClearLogs = async () => {
     const res = await fetch('/api/dhcp-logs', { method: 'DELETE' });
     if (res.ok) {
-      message.success(t('clearSuccess'));
+      notify.success(t('clearSuccess'));
+    } else {
+      notify.error(null);
     }
   };
 
@@ -100,9 +102,9 @@ export default function SettingsPage() {
       a.download = `fluxdhcp-config-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      message.success(t('exportSuccess'));
+      notify.success(t('exportSuccess'));
     } catch {
-      message.error(tc('error'));
+      notify.error(null);
     }
   };
 
@@ -111,14 +113,14 @@ export default function SettingsPage() {
       const text = await file.text();
       const data = JSON.parse(text);
       if (!data.version || !data.config) {
-        message.error(t('importInvalidFormat'));
+        notify.warn(t('importInvalidFormat'));
         return;
       }
       // Validate structure (#3)
       const arrayFields = ['pools', 'reservations', 'device_options', 'webhooks', 'mac_notes'] as const;
       for (const field of arrayFields) {
         if (data[field] && !Array.isArray(data[field])) {
-          message.error(t('importInvalidFormat'));
+          notify.warn(t('importInvalidFormat'));
           return;
         }
       }
@@ -127,7 +129,7 @@ export default function SettingsPage() {
       setClearLogs(false);
       setImportModalOpen(true);
     } catch {
-      message.error(t('importInvalidFormat'));
+      notify.warn(t('importInvalidFormat'));
     }
   };
 
@@ -141,7 +143,7 @@ export default function SettingsPage() {
       });
       const result = await res.json();
       if (res.ok) {
-        message.success(t('importSuccess'));
+        notify.success(t('importSuccess'));
         setImportModalOpen(false);
         setPendingImportData(null);
         // Reload form values
@@ -161,50 +163,40 @@ export default function SettingsPage() {
           honor_requested_ip: config.honor_requested_ip !== '0',
         });
       } else {
-        message.error(result.error || tc('error'));
+        notify.error(result.error);
       }
     } catch {
-      message.error(tc('error'));
+      notify.error(null);
     }
   };
 
   const handleStartDhcp = async () => {
     try {
-      setStartError('');
       const res = await fetch('/api/dhcp/start', { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
         setDhcpStatus('running');
-        message.success(t('dhcpStarted'));
+        notify.success(t('dhcpStarted'));
       } else {
-        const errMsg = translateError(data.error, tc) || tc('error');
-        setStartError(errMsg);
-        message.error(errMsg);
+        notify.fatal(t('dhcpService'), data.error);
       }
     } catch (err: any) {
-      const errMsg = err?.message || tc('networkError');
-      setStartError(errMsg);
-      message.error(errMsg);
+      notify.fatal(t('dhcpService'), err?.message || null);
     }
   };
 
   const handleStopDhcp = async () => {
     try {
-      setStartError('');
       const res = await fetch('/api/dhcp/stop', { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
         setDhcpStatus('stopped');
-        message.success(t('dhcpStopped'));
+        notify.success(t('dhcpStopped'));
       } else {
-        const errMsg = translateError(data.error, tc) || tc('error');
-        setStartError(errMsg);
-        message.error(errMsg);
+        notify.fatal(t('dhcpService'), data.error);
       }
     } catch (err: any) {
-      const errMsg = err?.message || tc('networkError');
-      setStartError(errMsg);
-      message.error(errMsg);
+      notify.fatal(t('dhcpService'), err?.message || null);
     }
   };
 
@@ -215,11 +207,6 @@ export default function SettingsPage() {
       <div className="page-title-bar">
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
       </div>
-
-      {startError && (
-        <Alert type="error" message={startError} closable
-          onClose={() => setStartError('')} style={{ marginBottom: 16 }} />
-      )}
 
       {/* DHCP Service */}
       <Card style={{ marginBottom: 16 }}>

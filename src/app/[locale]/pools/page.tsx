@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Select, message, Space, Row, Col, Spin, Segmented } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ColumnHeightOutlined, ExpandOutlined, ShrinkOutlined, AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons';
-import { translateError } from '@/lib/error-map';
+import { Typography, Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Select, Space, Row, Col, Spin, Segmented } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ColumnHeightOutlined, ExpandOutlined, ShrinkOutlined, AppstoreOutlined, UnorderedListOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import { isValidIPv4, ipToNum } from '@/lib/ip-utils';
+import { useNotify } from '@/hooks/useNotify';
 
 const { Title } = Typography;
 
@@ -35,6 +35,16 @@ export default function PoolsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFree, setShowFree] = useState(false);
   const [form] = Form.useForm();
+  const notify = useNotify();
+  const dnsServers = (Form.useWatch('dns_servers', form) as string[] | undefined) || [];
+
+  const moveDns = (index: number, direction: -1 | 1) => {
+    const list = [...dnsServers];
+    const target = index + direction;
+    if (target < 0 || target >= list.length) return;
+    [list[index], list[target]] = [list[target], list[index]];
+    form.setFieldValue('dns_servers', list);
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -85,11 +95,11 @@ export default function PoolsPage() {
 
       const result = await res.json();
       if (!res.ok) {
-        message.error(translateError(result.error, tc) || tc('error'));
+        notify.error(result.error);
         return;
       }
 
-      message.success(editingPool ? tc('updateSuccess') : tc('createSuccess'));
+      notify.success(editingPool ? tc('updateSuccess') : tc('createSuccess'));
       setModalOpen(false);
       fetchData();
     } catch { /* validation error */ }
@@ -97,12 +107,12 @@ export default function PoolsPage() {
 
   const handleDelete = async (id: number) => {
     const res = await fetch(`/api/pools/${id}`, { method: 'DELETE' });
-    const result = await res.json();
+    const result = await res.json().catch(() => ({}));
     if (!res.ok) {
-      message.error(translateError(result.error, tc) || tc('error'));
+      notify.error(result.error);
       return;
     }
-    message.success(tc('deleteSuccess'));
+    notify.success(tc('deleteSuccess'));
     fetchData();
   };
 
@@ -113,10 +123,14 @@ export default function PoolsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled }),
       });
-      if (!res.ok) throw new Error('Failed');
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        notify.error(result.error);
+        return;
+      }
       fetchData();
     } catch {
-      message.error(tc('error'));
+      notify.error(null);
     }
   };
 
@@ -344,6 +358,20 @@ export default function PoolsPage() {
           <Form.Item name="dns_servers" label={t('dns')} rules={[{ validator: (_: any, value: string[]) => { if (!value || value.length === 0) return Promise.resolve(); for (const v of value) { if (!isValidIPv4(v)) return Promise.reject(tc('invalidIpv4')); } return Promise.resolve(); } }]}>
             <Select mode="tags" placeholder={t('dnsPlaceholder')} />
           </Form.Item>
+          {dnsServers.length > 1 && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)', marginBottom: 4 }}>{t('dnsOrderHint')}</div>
+              {dnsServers.map((ip, idx) => (
+                <div key={ip + idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', borderBottom: '1px solid #f0f0f0' }}>
+                  <span><Tag color="blue" style={{ marginRight: 8 }}>{idx + 1}</Tag>{ip}</span>
+                  <Space size="small">
+                    <Button size="small" type="text" icon={<ArrowUpOutlined />} disabled={idx === 0} onClick={() => moveDns(idx, -1)} title={t('moveUp')} />
+                    <Button size="small" type="text" icon={<ArrowDownOutlined />} disabled={idx === dnsServers.length - 1} onClick={() => moveDns(idx, 1)} title={t('moveDown')} />
+                  </Space>
+                </div>
+              ))}
+            </div>
+          )}
           <Form.Item name="lease_time" label={t('leaseTime')} rules={[{ required: true }]}>
             <InputNumber style={{ width: '100%' }} min={60} placeholder={t('leaseTimePlaceholder')} />
           </Form.Item>
