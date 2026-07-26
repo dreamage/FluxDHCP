@@ -60,7 +60,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   }, []);
 
   const pageKey = useMemo(() => {
-    const match = pathname?.match(/\/(dashboard|pools|leases|reservations|options|mac-blacklist|mac-notes|webhooks|logs|settings)/);
+    const match = pathname?.match(/\/(dashboard|pools|leases|reservations|options|mac-blacklist|mac-notes|webhooks|dhcp-logs|settings)/);
     return match ? `/${match[1]}` : '/dashboard';
   }, [pathname]);
 

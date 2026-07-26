@@ -157,7 +157,7 @@ export default function OptionsPage() {
         <Card size="small" style={{ marginBottom: 12 }}>
           <Form form={filterForm} layout="inline" initialValues={{ mac: '', option_code: '', option_value: '' }}>
             <Form.Item name="mac" label={t('macAddress')}>
-              <Input size="small" placeholder={t('macPlaceholder')} style={{ width: 180 }} allowClear />
+              <Input size="small" placeholder={t('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
             </Form.Item>
             <Form.Item name="option_code" label={t('optionCode')}>
               <InputNumber size="small" min={1} max={254} placeholder={t('customCode')} style={{ width: 140 }} />

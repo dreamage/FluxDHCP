@@ -199,7 +199,7 @@ export default function MacBlacklistPage() {
         <Card size="small" style={{ marginBottom: 12 }}>
           <Form form={filterForm} layout="inline" initialValues={{ mac: '', reason: '', enabled: 'ALL' }}>
             <Form.Item name="mac" label={t('macAddress')}>
-              <Input size="small" placeholder={t('macPlaceholder')} style={{ width: 180 }} allowClear />
+              <Input size="small" placeholder={t('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
             </Form.Item>
             <Form.Item name="reason" label={t('reason')}>
               <Input size="small" placeholder={t('reasonPlaceholder')} style={{ width: 160 }} allowClear />
