@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { ipToNum, numToIp } from '@/lib/ip-utils';
+import { ipToNum, numToIp } from '../lib/ip-utils';
 
 // 租约数据类型
 export interface Lease {
