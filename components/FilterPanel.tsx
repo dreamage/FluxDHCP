@@ -13,10 +13,8 @@ interface FilterPanelProps {
   form: FormInstance;
   /** form initial values (should match hook defaults) */
   initialValues: Record<string, string>;
-  /** Form onFinish handler */
+  /** Form onFinish handler (also triggered by Enter in form fields) */
   onFinish: () => void;
-  /** search button handler */
-  onSearch: () => void;
   /** reset button handler */
   onReset: () => void;
   /** form field children (Form.Item elements) */
@@ -25,7 +23,7 @@ interface FilterPanelProps {
 
 /** Collapsible filter form card.  The toggle button is placed by the caller inside the title-bar. */
 export default function FilterPanel({
-  open, form, initialValues, onFinish, onSearch, onReset, children,
+  open, form, initialValues, onFinish, onReset, children,
 }: FilterPanelProps) {
   const tc = useTranslations('common');
 
@@ -37,7 +35,7 @@ export default function FilterPanel({
         {children}
         <Form.Item>
           <Space>
-            <Button type="primary" size="small" icon={<SearchOutlined />} onClick={onSearch}>
+            <Button type="primary" size="small" icon={<SearchOutlined />} htmlType="submit">
               {tc('search')}
             </Button>
             <Button size="small" icon={<ReloadOutlined />} onClick={onReset}>

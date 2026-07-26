@@ -146,7 +146,6 @@ export default function OptionsPage() {
         form={filterForm}
         initialValues={{ mac: '', option_code: '', option_value: '' }}
         onFinish={handleSearch}
-        onSearch={handleSearch}
         onReset={handleReset}
       >
         <Form.Item name="mac" label={t('macAddress')}>

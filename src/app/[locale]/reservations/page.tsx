@@ -205,7 +205,6 @@ export default function ReservationsPage() {
         form={filterForm}
         initialValues={{ poolId: 'ALL', enabled: 'ALL', ipStart: '', ipEnd: '', mac: '', hostname: '' }}
         onFinish={handleSearch}
-        onSearch={handleSearch}
         onReset={handleReset}
       >
             <Form.Item name="poolId" label={t('pool')}>

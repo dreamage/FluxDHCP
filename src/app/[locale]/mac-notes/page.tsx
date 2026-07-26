@@ -168,7 +168,6 @@ export default function MacNotesPage() {
         form={filterForm}
         initialValues={{ mac: '', note: '' }}
         onFinish={handleSearch}
-        onSearch={handleSearch}
         onReset={handleReset}
       >
         <Form.Item name="mac" label={t('macAddress')}>

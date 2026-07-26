@@ -189,7 +189,6 @@ export default function MacBlacklistPage() {
         form={filterForm}
         initialValues={{ mac: '', reason: '', enabled: 'ALL' }}
         onFinish={handleSearch}
-        onSearch={handleSearch}
         onReset={handleReset}
       >
         <Form.Item name="mac" label={t('macAddress')}>

@@ -213,7 +213,6 @@ export default function LeasesPage() {
           mac: defaultFilters.mac, hostname: defaultFilters.hostname,
         }}
         onFinish={handleSearch}
-        onSearch={handleSearch}
         onReset={handleReset}
       >
         <Form.Item name="poolId" label={t('pool')}>
