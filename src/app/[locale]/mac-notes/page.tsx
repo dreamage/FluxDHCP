@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Alert } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacInput from '@/components/MacInput';
 import { useNotify } from '@/hooks/useNotify';
 import { formatLocalTime } from '@/lib/format-time';
@@ -153,26 +153,31 @@ export default function MacNotesPage() {
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addNote')}</Button>
-          <FilterPanel
-            open={filterOpen}
-            onToggle={() => setFilterOpen(!filterOpen)}
-            label={tc('filter')}
-            form={filterForm}
-            initialValues={{ mac: '', note: '' }}
-            onFinish={handleSearch}
-            onSearch={handleSearch}
-            onReset={handleReset}
+          <Button
+            size="small"
+            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => setFilterOpen(!filterOpen)}
           >
-            <Form.Item name="mac" label={t('macAddress')}>
-              <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
-            </Form.Item>
-            <Form.Item name="note" label={t('note')}>
-              <Input size="small" placeholder={t('placeholder')} style={{ width: 200 }} allowClear />
-            </Form.Item>
-          </FilterPanel>
+            {tc('filter')}
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addNote')}</Button>
         </Space>
       </div>
+      <FilterPanel
+        open={filterOpen}
+        form={filterForm}
+        initialValues={{ mac: '', note: '' }}
+        onFinish={handleSearch}
+        onSearch={handleSearch}
+        onReset={handleReset}
+      >
+        <Form.Item name="mac" label={t('macAddress')}>
+          <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+        </Form.Item>
+        <Form.Item name="note" label={t('note')}>
+          <Input size="small" placeholder={t('placeholder')} style={{ width: 200 }} allowClear />
+        </Form.Item>
+      </FilterPanel>
 
       {error && <Alert type="error" message={error} closable onClose={() => setError('')} style={{ marginBottom: 12 }} />}
       <Table columns={columns} dataSource={data} rowKey="mac_address" loading={loading}

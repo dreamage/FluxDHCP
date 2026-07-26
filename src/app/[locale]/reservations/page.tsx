@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Button, Modal, Form, Input, Switch, Popconfirm, Select, Space, Alert } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { translateError } from '@/lib/error-map';
@@ -190,17 +190,24 @@ export default function ReservationsPage() {
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addReservation')}</Button>
-          <FilterPanel
-            open={filterOpen}
-            onToggle={() => setFilterOpen(!filterOpen)}
-            label={t('filter')}
-            form={filterForm}
-            initialValues={{ poolId: 'ALL', enabled: 'ALL', ipStart: '', ipEnd: '', mac: '', hostname: '' }}
-            onFinish={handleSearch}
-            onSearch={handleSearch}
-            onReset={handleReset}
+          <Button
+            size="small"
+            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => setFilterOpen(!filterOpen)}
           >
+            {t('filter')}
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addReservation')}</Button>
+        </Space>
+      </div>
+      <FilterPanel
+        open={filterOpen}
+        form={filterForm}
+        initialValues={{ poolId: 'ALL', enabled: 'ALL', ipStart: '', ipEnd: '', mac: '', hostname: '' }}
+        onFinish={handleSearch}
+        onSearch={handleSearch}
+        onReset={handleReset}
+      >
             <Form.Item name="poolId" label={t('pool')}>
               <Select style={{ width: 160 }} size="small" allowClear>
                 <Select.Option value="ALL">{t('allPools')}</Select.Option>
@@ -232,8 +239,6 @@ export default function ReservationsPage() {
               <Input size="small" placeholder={t('hostnamePlaceholder')} style={{ width: 150 }} allowClear />
             </Form.Item>
           </FilterPanel>
-        </Space>
-      </div>
 
       {error && <Alert type="error" message={error} closable onClose={() => setError('')} style={{ marginBottom: 12 }} />}
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"

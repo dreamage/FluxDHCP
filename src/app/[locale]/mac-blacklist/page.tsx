@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Switch, Select, Alert } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacInput from '@/components/MacInput';
 import MacAddress from '@/components/MacAddress';
 import { useMacNotes } from '@/hooks/useMacNotes';
@@ -174,33 +174,38 @@ export default function MacBlacklistPage() {
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addEntry')}</Button>
-          <FilterPanel
-            open={filterOpen}
-            onToggle={() => setFilterOpen(!filterOpen)}
-            label={tc('filter')}
-            form={filterForm}
-            initialValues={{ mac: '', reason: '', enabled: 'ALL' }}
-            onFinish={handleSearch}
-            onSearch={handleSearch}
-            onReset={handleReset}
+          <Button
+            size="small"
+            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => setFilterOpen(!filterOpen)}
           >
-            <Form.Item name="mac" label={t('macAddress')}>
-              <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
-            </Form.Item>
-            <Form.Item name="reason" label={t('reason')}>
-              <Input size="small" placeholder={t('reasonPlaceholder')} style={{ width: 160 }} allowClear />
-            </Form.Item>
-            <Form.Item name="enabled" label={t('status')}>
-              <Select style={{ width: 130 }} size="small" allowClear>
-                <Select.Option value="ALL">{tc('allStates')}</Select.Option>
-                <Select.Option value="1">{t('enabled')}</Select.Option>
-                <Select.Option value="0">{t('disabled')}</Select.Option>
-              </Select>
-            </Form.Item>
-          </FilterPanel>
+            {tc('filter')}
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addEntry')}</Button>
         </Space>
       </div>
+      <FilterPanel
+        open={filterOpen}
+        form={filterForm}
+        initialValues={{ mac: '', reason: '', enabled: 'ALL' }}
+        onFinish={handleSearch}
+        onSearch={handleSearch}
+        onReset={handleReset}
+      >
+        <Form.Item name="mac" label={t('macAddress')}>
+          <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+        </Form.Item>
+        <Form.Item name="reason" label={t('reason')}>
+          <Input size="small" placeholder={t('reasonPlaceholder')} style={{ width: 160 }} allowClear />
+        </Form.Item>
+        <Form.Item name="enabled" label={t('status')}>
+          <Select style={{ width: 130 }} size="small" allowClear>
+            <Select.Option value="ALL">{tc('allStates')}</Select.Option>
+            <Select.Option value="1">{t('enabled')}</Select.Option>
+            <Select.Option value="0">{t('disabled')}</Select.Option>
+          </Select>
+        </Form.Item>
+      </FilterPanel>
 
       {error && <Alert type="error" message={error} closable onClose={() => setError('')} style={{ marginBottom: 12 }} />}
       <Table columns={columns} dataSource={data} rowKey="mac_address" loading={loading}

@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Button, Modal, Form, Input, InputNumber, Popconfirm, Select, Space, Alert } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { useNotify } from '@/hooks/useNotify';
@@ -131,29 +131,34 @@ export default function OptionsPage() {
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addOption')}</Button>
-          <FilterPanel
-            open={filterOpen}
-            onToggle={() => setFilterOpen(!filterOpen)}
-            label={tc('filter')}
-            form={filterForm}
-            initialValues={{ mac: '', option_code: '', option_value: '' }}
-            onFinish={handleSearch}
-            onSearch={handleSearch}
-            onReset={handleReset}
+          <Button
+            size="small"
+            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => setFilterOpen(!filterOpen)}
           >
-            <Form.Item name="mac" label={t('macAddress')}>
-              <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
-            </Form.Item>
-            <Form.Item name="option_code" label={t('optionCode')}>
-              <InputNumber size="small" min={1} max={254} placeholder={t('customCode')} style={{ width: 140 }} />
-            </Form.Item>
-            <Form.Item name="option_value" label={t('optionValue')}>
-              <Input size="small" placeholder={t('valuePlaceholder')} style={{ width: 160 }} allowClear />
-            </Form.Item>
-          </FilterPanel>
+            {tc('filter')}
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addOption')}</Button>
         </Space>
       </div>
+      <FilterPanel
+        open={filterOpen}
+        form={filterForm}
+        initialValues={{ mac: '', option_code: '', option_value: '' }}
+        onFinish={handleSearch}
+        onSearch={handleSearch}
+        onReset={handleReset}
+      >
+        <Form.Item name="mac" label={t('macAddress')}>
+          <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+        </Form.Item>
+        <Form.Item name="option_code" label={t('optionCode')}>
+          <InputNumber size="small" min={1} max={254} placeholder={t('customCode')} style={{ width: 140 }} />
+        </Form.Item>
+        <Form.Item name="option_value" label={t('optionValue')}>
+          <Input size="small" placeholder={t('valuePlaceholder')} style={{ width: 160 }} allowClear />
+        </Form.Item>
+      </FilterPanel>
 
       {error && <Alert type="error" message={error} closable onClose={() => setError('')} style={{ marginBottom: 12 }} />}
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"

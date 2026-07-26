@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Table, Tag, Select, Popconfirm, Button, Modal, Form, Input, Space, Alert } from 'antd';
-import { DeleteOutlined, UndoOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, UndoOutlined, PlusOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
@@ -194,21 +194,29 @@ export default function LeasesPage() {
     <>
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
-        <FilterPanel
-          open={filterOpen}
-          onToggle={() => setFilterOpen(!filterOpen)}
-          label={t('advancedSearch')}
-          form={filterForm}
-          initialValues={{
-            poolId: defaultFilters.poolId, state: defaultFilters.state,
-            ipStart: defaultFilters.ipStart, ipEnd: defaultFilters.ipEnd,
-            mac: defaultFilters.mac, hostname: defaultFilters.hostname,
-          }}
-          onFinish={handleSearch}
-          onSearch={handleSearch}
-          onReset={handleReset}
-        >
-          <Form.Item name="poolId" label={t('pool')}>
+        <Space>
+          <Button
+            size="small"
+            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => setFilterOpen(!filterOpen)}
+          >
+            {t('advancedSearch')}
+          </Button>
+        </Space>
+      </div>
+      <FilterPanel
+        open={filterOpen}
+        form={filterForm}
+        initialValues={{
+          poolId: defaultFilters.poolId, state: defaultFilters.state,
+          ipStart: defaultFilters.ipStart, ipEnd: defaultFilters.ipEnd,
+          mac: defaultFilters.mac, hostname: defaultFilters.hostname,
+        }}
+        onFinish={handleSearch}
+        onSearch={handleSearch}
+        onReset={handleReset}
+      >
+        <Form.Item name="poolId" label={t('pool')}>
             <Select style={{ width: 160 }} size="small" allowClear>
               <Select.Option value="ALL">{t('allPools')}</Select.Option>
               {pools.map((p: any) => (
@@ -240,7 +248,6 @@ export default function LeasesPage() {
             <Input size="small" placeholder={t('hostnamePlaceholder')} style={{ width: 150 }} allowClear />
           </Form.Item>
         </FilterPanel>
-      </div>
 
       {error && <Alert type="error" message={error} closable onClose={() => setError('')} style={{ marginBottom: 12 }} />}
       <Table columns={columns} dataSource={data} rowKey="ip_address" loading={loading} size="small"
