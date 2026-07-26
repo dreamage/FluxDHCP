@@ -2,15 +2,18 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Tag, Select, Popconfirm, Button, Modal, Form, Input, Space, Alert, Card } from 'antd';
-import { DeleteOutlined, UndoOutlined, PlusOutlined, SearchOutlined, ReloadOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
+import { Typography, Table, Tag, Select, Popconfirm, Button, Modal, Form, Input, Space, Alert } from 'antd';
+import { DeleteOutlined, UndoOutlined, PlusOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
 import { translateError } from '@/lib/error-map';
 import { useMacNotes } from '@/hooks/useMacNotes';
 import { useNotify } from '@/hooks/useNotify';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import FilterPanel from '@/components/FilterPanel';
 import { isValidIPv4, ipToNum } from '@/lib/ip-utils';
+import { ipRule, ipRangeRules } from '@/lib/validators';
 
 const { Title } = Typography;
 
@@ -27,13 +30,15 @@ export default function LeasesPage() {
   const t = useTranslations('leases');
   const tc = useTranslations('common');
   const tr = useTranslations('reservations');
-  const ipRule = { validator: (_: any, value: string) => (value && !isValidIPv4(value) ? Promise.reject(tc('invalidIpv4')) : Promise.resolve()) };
+  const ruleSet = ipRangeRules(t, tc);
+
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [activeFilters, setActiveFilters] = useState({ poolId: 'ALL', state: 'ALL', ipStart: '', ipEnd: '', mac: '', hostname: '' });
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [filterForm] = Form.useForm();
+  const [error, setError] = useState('');
+  const defaultFilters = { poolId: 'ALL', state: 'ALL', ipStart: '', ipEnd: '', mac: '', hostname: '' };
+  const { activeFilters, filterOpen, setFilterOpen, filterForm, handleSearch, handleReset } =
+    useTableFilters(defaultFilters, () => setPage(1));
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortField, setSortField] = useState('lease_end');
@@ -74,34 +79,15 @@ export default function LeasesPage() {
       setReservedMacs(new Set(resList.map((r: any) => (r.mac_address || '').toUpperCase())));
       const poolData = await poolRes.json();
       setPools(Array.isArray(poolData) ? poolData : []);
+      setError('');
+    } catch {
+      setError(tc('errFailedFetch'));
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, activeFilters, sortField, sortOrder]);
+  }, [page, pageSize, activeFilters, sortField, sortOrder, tc]);
 
   useEffect(() => { fetchData(); fetchMacNotes(); }, [fetchData, fetchMacNotes]);
-
-  const handleSearch = async () => {
-    try {
-      const values = await filterForm.validateFields();
-      setActiveFilters({
-        poolId: values.pool_id || 'ALL',
-        state: values.state || 'ALL',
-        ipStart: values.ip_start || '',
-        ipEnd: values.ip_end || '',
-        mac: values.mac || '',
-        hostname: values.hostname || '',
-      });
-      setPage(1);
-    } catch { /* validation */ }
-  };
-
-  const handleReset = () => {
-    filterForm.resetFields();
-    filterForm.setFieldsValue({ pool_id: 'ALL', state: 'ALL', ip_start: '', ip_end: '', mac: '', hostname: '' });
-    setActiveFilters({ poolId: 'ALL', state: 'ALL', ipStart: '', ipEnd: '', mac: '', hostname: '' });
-    setPage(1);
-  };
 
   const handleRelease = async (ip: string) => {
     const res = await fetch(`/api/leases/${ip}`, { method: 'DELETE' });
@@ -208,78 +194,57 @@ export default function LeasesPage() {
     <>
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
-        <Button
-          size="small"
-          icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
-          onClick={() => setFilterOpen(!filterOpen)}
+        <FilterPanel
+          open={filterOpen}
+          onToggle={() => setFilterOpen(!filterOpen)}
+          label={t('advancedSearch')}
+          form={filterForm}
+          initialValues={{
+            poolId: defaultFilters.poolId, state: defaultFilters.state,
+            ipStart: defaultFilters.ipStart, ipEnd: defaultFilters.ipEnd,
+            mac: defaultFilters.mac, hostname: defaultFilters.hostname,
+          }}
+          onFinish={handleSearch}
+          onSearch={handleSearch}
+          onReset={handleReset}
         >
-          {t('advancedSearch')}
-        </Button>
+          <Form.Item name="poolId" label={t('pool')}>
+            <Select style={{ width: 160 }} size="small" allowClear>
+              <Select.Option value="ALL">{t('allPools')}</Select.Option>
+              {pools.map((p: any) => (
+                <Select.Option key={p.id} value={String(p.id)}>{p.name}</Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="state" label={t('state')}>
+            <Select style={{ width: 130 }} size="small" allowClear>
+              <Select.Option value="ALL">{t('allStates')}</Select.Option>
+              {STATE_OPTIONS.map(s => (
+                <Select.Option key={s} value={s}>{t(s.toLowerCase())}</Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="ipStart" label={t('ipRange')} dependencies={['ipEnd']}
+            rules={ruleSet.start}>
+            <Input size="small" placeholder={t('ipStartPlaceholder')} style={{ width: 150 }} />
+          </Form.Item>
+          <span style={{ alignSelf: 'center', color: 'var(--color-text-secondary)' }}>~</span>
+          <Form.Item name="ipEnd" dependencies={['ipStart']}
+            rules={ruleSet.end}>
+            <Input size="small" placeholder={t('ipEndPlaceholder')} style={{ width: 150 }} />
+          </Form.Item>
+          <Form.Item name="mac" label={t('macAddress')}>
+            <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+          </Form.Item>
+          <Form.Item name="hostname" label={t('hostname')}>
+            <Input size="small" placeholder={t('hostnamePlaceholder')} style={{ width: 150 }} allowClear />
+          </Form.Item>
+        </FilterPanel>
       </div>
 
-      {filterOpen && (
-        <Card size="small" style={{ marginBottom: 12 }}>
-          <Form form={filterForm} layout="inline" initialValues={{ pool_id: 'ALL', state: 'ALL', ip_start: '', ip_end: '', mac: '', hostname: '' }}>
-            <Form.Item name="pool_id" label={t('pool')}>
-              <Select style={{ width: 160 }} size="small" allowClear>
-                <Select.Option value="ALL">{t('allPools')}</Select.Option>
-                {pools.map((p: any) => (
-                  <Select.Option key={p.id} value={String(p.id)}>{p.name}</Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item name="state" label={t('state')}>
-              <Select style={{ width: 130 }} size="small" allowClear>
-                <Select.Option value="ALL">{t('allStates')}</Select.Option>
-                {STATE_OPTIONS.map(s => (
-                  <Select.Option key={s} value={s}>{t(s.toLowerCase())}</Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item name="ip_start" label={t('ipRange')} dependencies={['ip_end']}
-              rules={[ipRule, ({ getFieldValue }) => ({
-                validator(_: any, value: string) {
-                  const end = getFieldValue('ip_end');
-                  if ((value && !end) || (!value && end)) return Promise.reject(t('ipRangeBothRequired'));
-                  if (value && end && isValidIPv4(value) && isValidIPv4(end) && ipToNum(value) > ipToNum(end)) return Promise.reject(tc('errStartIpGreaterThanEnd'));
-                  return Promise.resolve();
-                },
-              })]}>
-              <Input size="small" placeholder={t('ipStartPlaceholder')} style={{ width: 150 }} />
-            </Form.Item>
-            <span style={{ alignSelf: 'center', color: 'var(--color-text-secondary)' }}>~</span>
-            <Form.Item name="ip_end" dependencies={['ip_start']}
-              rules={[ipRule, ({ getFieldValue }) => ({
-                validator(_: any, value: string) {
-                  const start = getFieldValue('ip_start');
-                  if ((value && !start) || (!value && start)) return Promise.reject(t('ipRangeBothRequired'));
-                  if (value && start && isValidIPv4(value) && isValidIPv4(start) && ipToNum(start) > ipToNum(value)) return Promise.reject(tc('errStartIpGreaterThanEnd'));
-                  return Promise.resolve();
-                },
-              })]}>
-              <Input size="small" placeholder={t('ipEndPlaceholder')} style={{ width: 150 }} />
-            </Form.Item>
-            <Form.Item name="mac" label={t('macAddress')}>
-              <Input size="small" placeholder={t('macPlaceholder')} style={{ width: 180 }} allowClear />
-            </Form.Item>
-            <Form.Item name="hostname" label={t('hostname')}>
-              <Input size="small" placeholder={t('hostnamePlaceholder')} style={{ width: 150 }} allowClear />
-            </Form.Item>
-            <Form.Item>
-              <Space>
-                <Button type="primary" size="small" icon={<SearchOutlined />} onClick={handleSearch}>
-                  {tc('search')}
-                </Button>
-                <Button size="small" icon={<ReloadOutlined />} onClick={handleReset}>
-                  {t('reset')}
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Card>
-      )}
-
+      {error && <Alert type="error" message={error} closable onClose={() => setError('')} style={{ marginBottom: 12 }} />}
       <Table columns={columns} dataSource={data} rowKey="ip_address" loading={loading} size="small"
+        locale={{ emptyText: (activeFilters.state !== 'ALL' || activeFilters.poolId !== 'ALL' || activeFilters.mac || activeFilters.hostname || activeFilters.ipStart) ? tc('noFilterResults') : tc('noData') }}
         scroll={{ x: 'max-content' }}
         onChange={(_pagination, _filters, sorter: any) => {
           if (sorter.field) {
@@ -300,7 +265,7 @@ export default function LeasesPage() {
           <Form.Item name="mac_address" label={tr('macAddress')} rules={[{ required: true, message: tc('requiredField') }]}>
             <MacInput placeholder={tr('macPlaceholder')} knownMacs={data.map((r: any) => r.mac_address).filter(Boolean)} />
           </Form.Item>
-          <Form.Item name="ip_address" label={tr('ipAddress')} rules={[{ required: true }, ipRule]}>
+          <Form.Item name="ip_address" label={tr('ipAddress')} rules={[{ required: true }, ipRule(tc)]}>
             <Input />
           </Form.Item>
           <Form.Item name="pool_id" label={tr('pool')} rules={[{ required: true }]}>

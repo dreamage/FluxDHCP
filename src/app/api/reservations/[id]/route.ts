@@ -18,6 +18,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
     return NextResponse.json(reservation);
   } catch (error) {
+    console.error('[API] GET /reservations/:id:', error);
     return NextResponse.json({ error: 'Failed to fetch reservation' }, { status: 500 });
   }
 }
@@ -88,6 +89,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ message: 'Reservation updated' });
   } catch (error) {
+    console.error('[API] PUT /reservations/:id:', error);
     return NextResponse.json({ error: 'Failed to update reservation' }, { status: 500 });
   }
 }
@@ -102,6 +104,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
     return NextResponse.json({ message: 'Reservation deleted' });
   } catch (error) {
+    console.error('[API] DELETE /reservations/:id:', error);
     return NextResponse.json({ error: 'Failed to delete reservation' }, { status: 500 });
   }
 }

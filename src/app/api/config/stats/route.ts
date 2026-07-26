@@ -12,6 +12,7 @@ export async function GET() {
     }
     return NextResponse.json(counts);
   } catch (error) {
+    console.error('[API] GET /config/stats:', error);
     return NextResponse.json({ error: 'Failed to fetch config stats' }, { status: 500 });
   }
 }

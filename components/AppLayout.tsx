@@ -297,9 +297,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
               <Select value={themeMode} onChange={setThemeMode}
-                style={{ width: 130 }} size="small" bordered={false}
+                style={{ width: 130 }} size="small" variant="borderless"
                 options={themeOptions} popupMatchSelectWidth={false} />
-              <Select value={locale} onChange={handleLocaleChange} style={{ width: 110 }} size="small" bordered={false}
+              <Select value={locale} onChange={handleLocaleChange} style={{ width: 110 }} size="small" variant="borderless"
                 options={[{ value: 'en', label: 'English' }, { value: 'zh', label: '中文' }]} />
             </div>
           </div>

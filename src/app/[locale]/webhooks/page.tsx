@@ -2,34 +2,13 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Select, Switch, Popconfirm, Space, Tag, Divider } from 'antd';
+import { Typography, Table, Button, Modal, Form, Input, Select, Switch, Popconfirm, Space, Tag, Divider, Alert } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
+import { EVENT_COLORS, EVENT_OPTIONS } from '@/lib/webhook-constants';
 import DeliveryLogs from './DeliveryLogs';
 
 const { Title } = Typography;
-
-const EVENT_COLORS: Record<string, string> = {
-  dhcp_discover: 'blue',
-  dhcp_offer: 'cyan',
-  dhcp_request: 'orange',
-  dhcp_ack: 'green',
-  dhcp_nak: 'volcano',
-  dhcp_release: 'default',
-  dhcp_inform: 'purple',
-  dhcp_decline: 'red',
-};
-
-const EVENT_OPTIONS = [
-  { value: 'dhcp_discover', labelKey: 'dhcpDiscover' },
-  { value: 'dhcp_offer', labelKey: 'dhcpOffer' },
-  { value: 'dhcp_request', labelKey: 'dhcpRequest' },
-  { value: 'dhcp_ack', labelKey: 'dhcpAck' },
-  { value: 'dhcp_nak', labelKey: 'dhcpNak' },
-  { value: 'dhcp_release', labelKey: 'dhcpRelease' },
-  { value: 'dhcp_inform', labelKey: 'dhcpInform' },
-  { value: 'dhcp_decline', labelKey: 'dhcpDecline' },
-];
 
 const TEMPLATE_HINTS = [
   '{{mac_address}}', '{{ip_address}}', '{{hostname}}',
@@ -43,6 +22,7 @@ export default function WebhooksPage() {
 
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [form] = Form.useForm();
@@ -55,8 +35,11 @@ export default function WebhooksPage() {
       const res = await fetch('/api/webhooks');
       const result = await res.json();
       setData(Array.isArray(result) ? result : []);
+      setError('');
+    } catch {
+      setError(tc('errFailedFetch'));
     } finally { setLoading(false); }
-  }, []);
+  }, [tc]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -186,7 +169,9 @@ export default function WebhooksPage() {
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addWebhook')}</Button>
       </div>
+      {error && <Alert type="error" message={error} closable onClose={() => setError('')} style={{ marginBottom: 12 }} />}
       <Table columns={webhookColumns} dataSource={data} rowKey="id" loading={loading} size="small"
+        locale={{ emptyText: tc('noData') }}
         scroll={{ x: 'max-content' }}
         pagination={{ showSizeChanger: true, pageSizeOptions: [20, 50, 100], defaultPageSize: 20 }} />
 
@@ -209,7 +194,7 @@ export default function WebhooksPage() {
               <Form.Item name="body_mode" label={t('bodyMode')} style={{ width: 160 }}>
                 <Select>
                   <Select.Option value="json">JSON</Select.Option>
-                  <Select.Option value="form">Form</Select.Option>
+                  <Select.Option value="form">{t('bodyModeForm')}</Select.Option>
                 </Select>
               </Form.Item>
             )}

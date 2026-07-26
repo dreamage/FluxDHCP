@@ -47,7 +47,7 @@ interface StatCardProps {
 
 function StatCard({ icon, color, title, value, suffix, bgColor }: StatCardProps) {
   return (
-    <Card bordered={false} className="stat-card" style={{ borderRadius: 12, height: '100%', padding: 0, overflow: 'hidden' }}>
+    <Card variant="borderless" className="stat-card" style={{ borderRadius: 12, height: '100%', padding: 0, overflow: 'hidden' }}>
       <div className="stat-card-top-bar" style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0 0' }}>
         <div style={{
@@ -77,6 +77,9 @@ export default function DashboardPage() {
   const { macNotes, fetchMacNotes } = useMacNotes();
   const notify = useNotify();
   const hasNotified = useRef(false);
+  const tRef = useRef(t);
+  const notifyRef = useRef(notify);
+  useEffect(() => { tRef.current = t; notifyRef.current = notify; });
 
   useEffect(() => { fetchMacNotes(); }, [fetchMacNotes]);
 
@@ -86,8 +89,8 @@ export default function DashboardPage() {
       try {
         const res = await fetch('/api/dashboard');
         if (!res.ok) {
-          setError(t('fetchError') || 'Failed to load');
-          if (!hasNotified.current) { notify.fatal(t('fetchError') || 'Failed to load'); hasNotified.current = true; }
+          setError(tRef.current('fetchError') || 'Failed to load');
+          if (!hasNotified.current) { notifyRef.current.fatal(tRef.current('fetchError') || 'Failed to load'); hasNotified.current = true; }
           return;
         }
         const json = await res.json();
@@ -104,8 +107,8 @@ export default function DashboardPage() {
         setError('');
         hasNotified.current = false;
       } catch (err) {
-        setError(t('fetchError') || 'Failed to load');
-        if (!hasNotified.current) { notify.fatal(t('fetchError') || 'Failed to load', err); hasNotified.current = true; }
+        setError(tRef.current('fetchError') || 'Failed to load');
+        if (!hasNotified.current) { notifyRef.current.fatal(tRef.current('fetchError') || 'Failed to load', err); hasNotified.current = true; }
       } finally {
         setLoading(false);
       }
@@ -149,7 +152,7 @@ export default function DashboardPage() {
 
           {/* Overall usage — circular gauge */}
           {data.totalIPs > 0 && (
-            <Card bordered={false} style={{ marginTop: 16, borderRadius: 12 }}>
+            <Card variant="borderless" style={{ marginTop: 16, borderRadius: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative', flexShrink: 0 }}>
                   <Progress
@@ -196,7 +199,7 @@ export default function DashboardPage() {
               const color = pool.percentage > 90 ? '#ef4444' : pool.percentage > 70 ? '#f59e0b' : '#4a90d9';
               return (
                 <Col xs={12} sm={8} md={6} key={pool.poolId}>
-                  <Card bordered={false} size="small" className="stat-card" style={{ borderRadius: 10, textAlign: 'center', height: '100%' }}>
+                  <Card variant="borderless" size="small" className="stat-card" style={{ borderRadius: 10, textAlign: 'center', height: '100%' }}>
                     <Progress
                       type="circle"
                       percent={pool.percentage}
@@ -226,7 +229,7 @@ export default function DashboardPage() {
           <div className="page-title-bar" style={{ marginTop: 24, marginBottom: 12 }}>
             <Title level={5} style={{ margin: 0, color: 'var(--color-text-secondary)' }}>{t('recentEvents')}</Title>
           </div>
-          <Card bordered={false} style={{ borderRadius: 12 }}>
+          <Card variant="borderless" style={{ borderRadius: 12 }}>
             {data.recentEvents.length === 0 ? (
               <Text type="secondary">{t('noEvents')}</Text>
             ) : (

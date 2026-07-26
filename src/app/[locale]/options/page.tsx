@@ -2,12 +2,15 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, InputNumber, Popconfirm, Select, Space, Card } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Modal, Form, Input, InputNumber, Popconfirm, Select, Space, Alert } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { useNotify } from '@/hooks/useNotify';
+import { translateError } from '@/lib/error-map';
 import { useMacNotes } from '@/hooks/useMacNotes';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import FilterPanel from '@/components/FilterPanel';
 
 const { Title } = Typography;
 
@@ -30,9 +33,9 @@ export default function OptionsPage() {
   const tOpt = useTranslations('dhcpOptionCodes');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeFilters, setActiveFilters] = useState({ mac: '', option_code: '', option_value: '' });
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [filterForm] = Form.useForm();
+  const [error, setError] = useState('');
+  const { activeFilters, filterOpen, setFilterOpen, filterForm, handleSearch, handleReset } =
+    useTableFilters({ mac: '', option_code: '', option_value: '' });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const { macNotes, fetchMacNotes } = useMacNotes();
@@ -49,29 +52,15 @@ export default function OptionsPage() {
       const res = await fetch(`/api/options?${searchParams}`);
       const result = await res.json();
       setData(Array.isArray(result) ? result : []);
+      setError('');
+    } catch {
+      setError(tc('errFailedFetch'));
     } finally {
       setLoading(false);
     }
-  }, [activeFilters]);
+  }, [activeFilters, tc]);
 
   useEffect(() => { fetchData(); fetchMacNotes(); }, [fetchData, fetchMacNotes]);
-
-  const handleSearch = async () => {
-    try {
-      const values = await filterForm.validateFields();
-      setActiveFilters({
-        mac: values.mac || '',
-        option_code: values.option_code ? String(values.option_code) : '',
-        option_value: values.option_value || '',
-      });
-    } catch { /* validation */ }
-  };
-
-  const handleReset = () => {
-    filterForm.resetFields();
-    filterForm.setFieldsValue({ mac: '', option_code: '', option_value: '' });
-    setActiveFilters({ mac: '', option_code: '', option_value: '' });
-  };
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -97,7 +86,7 @@ export default function OptionsPage() {
       });
 
       const result = await res.json();
-      if (!res.ok) { notify.error(result.error); return; }
+      if (!res.ok) { notify.error(translateError(result.error, tc)); return; }
 
       notify.success(editingRecord ? tc('updateSuccess') : tc('createSuccess'));
       setModalOpen(false);
@@ -108,7 +97,7 @@ export default function OptionsPage() {
   const handleDelete = async (id: number) => {
     const res = await fetch(`/api/options/${id}`, { method: 'DELETE' });
     const result = await res.json().catch(() => ({}));
-    if (!res.ok) { notify.error(result.error); return; }
+    if (!res.ok) { notify.error(translateError(result.error, tc)); return; }
     notify.success(tc('deleteSuccess'));
     fetchData();
   };
@@ -142,22 +131,19 @@ export default function OptionsPage() {
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
-          <Button
-            size="small"
-            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
-            onClick={() => setFilterOpen(!filterOpen)}
-          >
-            {t('filter')}
-          </Button>
           <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addOption')}</Button>
-        </Space>
-      </div>
-
-      {filterOpen && (
-        <Card size="small" style={{ marginBottom: 12 }}>
-          <Form form={filterForm} layout="inline" initialValues={{ mac: '', option_code: '', option_value: '' }}>
+          <FilterPanel
+            open={filterOpen}
+            onToggle={() => setFilterOpen(!filterOpen)}
+            label={tc('filter')}
+            form={filterForm}
+            initialValues={{ mac: '', option_code: '', option_value: '' }}
+            onFinish={handleSearch}
+            onSearch={handleSearch}
+            onReset={handleReset}
+          >
             <Form.Item name="mac" label={t('macAddress')}>
-              <Input size="small" placeholder={t('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+              <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
             </Form.Item>
             <Form.Item name="option_code" label={t('optionCode')}>
               <InputNumber size="small" min={1} max={254} placeholder={t('customCode')} style={{ width: 140 }} />
@@ -165,20 +151,13 @@ export default function OptionsPage() {
             <Form.Item name="option_value" label={t('optionValue')}>
               <Input size="small" placeholder={t('valuePlaceholder')} style={{ width: 160 }} allowClear />
             </Form.Item>
-            <Form.Item>
-              <Space>
-                <Button type="primary" size="small" icon={<SearchOutlined />} onClick={handleSearch}>
-                  {tc('search')}
-                </Button>
-                <Button size="small" icon={<ReloadOutlined />} onClick={handleReset}>
-                  {t('reset')}
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Card>
-      )}
+          </FilterPanel>
+        </Space>
+      </div>
+
+      {error && <Alert type="error" message={error} closable onClose={() => setError('')} style={{ marginBottom: 12 }} />}
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"
+        locale={{ emptyText: (activeFilters.mac || activeFilters.option_code || activeFilters.option_value) ? tc('noFilterResults') : tc('noData') }}
         scroll={{ x: 'max-content' }}
         pagination={{ showSizeChanger: true, pageSizeOptions: [20, 50, 100], defaultPageSize: 20 }} />
 

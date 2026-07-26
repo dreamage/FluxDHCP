@@ -12,6 +12,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
     return NextResponse.json({ ...(pool as any), dns_servers: (pool as any).dns_servers ? JSON.parse((pool as any).dns_servers) : [] });
   } catch (error) {
+    console.error('[API] GET /pools/:id:', error);
     return NextResponse.json({ error: 'Failed to fetch pool' }, { status: 500 });
   }
 }
@@ -92,6 +93,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ message: 'Pool updated' });
   } catch (error) {
+    console.error('[API] PUT /pools/:id:', error);
     return NextResponse.json({ error: 'Failed to update pool' }, { status: 500 });
   }
 }
@@ -131,6 +133,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
     return NextResponse.json({ message: 'Pool deleted' });
   } catch (error) {
+    console.error('[API] DELETE /pools/:id:', error);
     return NextResponse.json({ error: 'Failed to delete pool' }, { status: 500 });
   }
 }

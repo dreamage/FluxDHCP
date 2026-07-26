@@ -8,6 +8,7 @@ export async function GET() {
     const webhooks = db.prepare('SELECT * FROM webhooks ORDER BY id').all();
     return NextResponse.json(webhooks);
   } catch (error) {
+    console.error('[API] GET /webhooks:', error);
     return NextResponse.json({ error: 'Failed to fetch webhooks' }, { status: 500 });
   }
 }
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id: result.lastInsertRowid, message: 'Webhook created' }, { status: 201 });
   } catch (error) {
+    console.error('[API] POST /webhooks:', error);
     return NextResponse.json({ error: 'Failed to create webhook' }, { status: 500 });
   }
 }

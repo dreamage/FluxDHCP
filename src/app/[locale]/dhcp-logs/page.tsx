@@ -76,7 +76,7 @@ export default function LogsPage() {
   const [mac, setMac] = useState('');
   const [ip, setIp] = useState('');
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(10000);
+  const [refreshInterval, setRefreshInterval] = useState(30000);
   const { macNotes, knownMacs, fetchMacNotes } = useMacNotes();
   const [knownIps, setKnownIps] = useState<string[]>([]);
   const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -140,7 +140,7 @@ export default function LogsPage() {
     };
   }, [autoRefresh, refreshInterval, fetchData]);
 
-  const allColumns: ColumnsType<any> = [
+  const allColumns: ColumnsType<any> = useMemo(() => [
     {
       title: t('timestamp'), dataIndex: 'timestamp', key: 'timestamp', width: 170,
       render: (v: string) => formatLocalTime(v),
@@ -161,7 +161,7 @@ export default function LogsPage() {
     { title: t('siaddr'), dataIndex: 'siaddr', key: 'siaddr', width: 130 },
     { title: t('giaddr'), dataIndex: 'giaddr', key: 'giaddr', width: 130 },
     { title: t('hostname'), dataIndex: 'hostname', key: 'hostname', width: 120 },
-  ];
+  ], [t, macNotes, fetchMacNotes]);
 
   const columnOptions = allColumns.map(c => ({ value: c.key as string, label: c.title as string }));
   const columns = useMemo(() => allColumns.filter(c => visibleKeys.includes(c.key as string)), [allColumns, visibleKeys, macNotes]);
@@ -247,8 +247,6 @@ export default function LogsPage() {
         </span>
         {autoRefresh && (
           <Select value={refreshInterval} onChange={setRefreshInterval} style={{ width: 90 }} size="small">
-            <Select.Option value={3000}>3{t('seconds')}</Select.Option>
-            <Select.Option value={5000}>5{t('seconds')}</Select.Option>
             <Select.Option value={10000}>10{t('seconds')}</Select.Option>
             <Select.Option value={30000}>30{t('seconds')}</Select.Option>
             <Select.Option value={60000}>60{t('seconds')}</Select.Option>
@@ -264,6 +262,7 @@ export default function LogsPage() {
       </Space>
 
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"
+        locale={{ emptyText: tc('noData') }}
         scroll={{ x: 'max-content' }}
         rowClassName={(_, index) => rowClassMap[index] || 'log-row-even'}
         pagination={{ current: page, pageSize, total, showSizeChanger: true, pageSizeOptions: [20, 50, 100], onChange: (p, ps) => { setPage(p); setPageSize(ps); } }}

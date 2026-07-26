@@ -6,8 +6,8 @@ export async function GET(request: Request) {
   try {
     const db = getDb();
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const pageSize = parseInt(searchParams.get('pageSize') || '20', 10);
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
+    const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '20', 10) || 20, 500);
     const messageType = searchParams.get('messageType');
     const mac = searchParams.get('mac');
     const ip = searchParams.get('ip');
@@ -56,6 +56,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ total: total.count, page, pageSize, data });
   } catch (error) {
+    console.error('[API] GET /dhcp-logs:', error);
     return NextResponse.json({ error: 'Failed to fetch logs' }, { status: 500 });
   }
 }
@@ -66,6 +67,7 @@ export async function DELETE() {
     const result = db.prepare('DELETE FROM dhcp_logs').run();
     return NextResponse.json({ message: 'All logs cleared', deleted: result.changes });
   } catch (error) {
+    console.error('[API] DELETE /dhcp-logs:', error);
     return NextResponse.json({ error: 'Failed to clear logs' }, { status: 500 });
   }
 }

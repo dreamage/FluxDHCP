@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import { ipToNum, numToIp } from '@/lib/ip-utils';
 
 // 租约数据类型
 export interface Lease {
@@ -143,19 +144,11 @@ export class LeaseManager {
         if (honorRow) honorRequested = honorRow.value !== '0';
       } catch { /* ignore */ }
 
-      // Convert IPs to numbers
-      const ipToNumLocal = (ip: string) => {
-        const parts = ip.split('.').map(Number);
-        return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
-      };
-      const numToIpLocal = (num: number) =>
-        `${(num >>> 24) & 0xFF}.${(num >>> 16) & 0xFF}.${(num >>> 8) & 0xFF}.${num & 0xFF}`;
-
       // 如果遵循客户端请求IP 且 客户端有请求 且 IP 可用，直接分配
       if (honorRequested && requestedIp && requestedIp !== '0.0.0.0' && !occupied.has(requestedIp)) {
-        const ipNum = ipToNumLocal(requestedIp);
-        const startNum = ipToNumLocal(startIp);
-        const endNum = ipToNumLocal(endIp);
+        const ipNum = ipToNum(requestedIp);
+        const startNum = ipToNum(startIp);
+        const endNum = ipToNum(endIp);
         if (ipNum >= startNum && ipNum <= endNum) {
           // 请求的 IP 在池范围内且未被占用，直接使用
           const now = new Date();
@@ -171,8 +164,8 @@ export class LeaseManager {
 
       // 顺序/随机分配
       let ip: string | null = null;
-      const startNum = ipToNumLocal(startIp);
-      const endNum = ipToNumLocal(endIp);
+      const startNum = ipToNum(startIp);
+      const endNum = ipToNum(endIp);
       const count = endNum - startNum + 1;
 
       if (order === 'random') {
@@ -183,7 +176,7 @@ export class LeaseManager {
           [offsets[i], offsets[j]] = [offsets[j], offsets[i]];
         }
         for (const offset of offsets) {
-          const candidate = numToIpLocal(startNum + offset);
+          const candidate = numToIp(startNum + offset);
           if (!occupied.has(candidate)) {
             ip = candidate;
             break;
@@ -192,7 +185,7 @@ export class LeaseManager {
       } else {
         // 顺序分配
         for (let num = startNum; num <= endNum; num++) {
-          const candidate = numToIpLocal(num);
+          const candidate = numToIp(num);
           if (!occupied.has(candidate)) {
             ip = candidate;
             break;

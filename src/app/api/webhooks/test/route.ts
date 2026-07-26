@@ -83,6 +83,7 @@ export async function POST(request: Request) {
       message: res.ok ? 'Test sent successfully' : `HTTP ${res.status}: ${res.statusText}`,
     });
   } catch (error) {
+    console.error('[API] POST /webhooks/test:', error);
     return NextResponse.json({
       success: false,
       message: error instanceof Error ? error.message : 'Test failed',

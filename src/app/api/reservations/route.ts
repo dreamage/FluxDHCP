@@ -49,6 +49,7 @@ export async function GET(request: Request) {
     `).all(...params);
     return NextResponse.json(reservations);
   } catch (error) {
+    console.error('[API] GET /reservations:', error);
     return NextResponse.json({ error: 'Failed to fetch reservations' }, { status: 500 });
   }
 }
@@ -110,6 +111,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id: result.lastInsertRowid, message: 'Reservation created' }, { status: 201 });
   } catch (error) {
+    console.error('[API] POST /reservations:', error);
     return NextResponse.json({ error: 'Failed to create reservation' }, { status: 500 });
   }
 }

@@ -30,6 +30,7 @@ export async function GET(request: Request) {
     const rows = db.prepare(`SELECT * FROM mac_blacklist ${where} ORDER BY created_at DESC`).all(...params);
     return NextResponse.json(rows);
   } catch (error) {
+    console.error('[API] GET /mac-blacklist:', error);
     return NextResponse.json({ error: 'Failed to fetch MAC blacklist' }, { status: 500 });
   }
 }
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
   try {
     const db = getDb();
     const body = await request.json();
-    const { mac_address, reason } = body;
+    const { mac_address, reason, enabled } = body;
 
     if (!mac_address) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -50,13 +51,14 @@ export async function POST(request: Request) {
     }
 
     db.prepare(`
-      INSERT INTO mac_blacklist (mac_address, reason, updated_at)
-      VALUES (?, ?, datetime('now'))
-      ON CONFLICT(mac_address) DO UPDATE SET reason = excluded.reason, updated_at = datetime('now')
-    `).run(mac, reason?.trim() || '');
+      INSERT INTO mac_blacklist (mac_address, reason, enabled, updated_at)
+      VALUES (?, ?, ?, datetime('now'))
+      ON CONFLICT(mac_address) DO UPDATE SET reason = excluded.reason, enabled = excluded.enabled, updated_at = datetime('now')
+    `).run(mac, reason?.trim() || '', enabled !== undefined ? (enabled ? 1 : 0) : 1);
 
     return NextResponse.json({ message: 'Blacklist entry saved' });
   } catch (error) {
+    console.error('[API] POST /mac-blacklist:', error);
     return NextResponse.json({ error: 'Failed to save MAC blacklist entry' }, { status: 500 });
   }
 }

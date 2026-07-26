@@ -23,13 +23,20 @@ export async function GET(request: Request) {
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     const rows = db.prepare(`SELECT * FROM mac_notes ${where} ORDER BY updated_at DESC`).all(...params) as any[];
-    // Return as object keyed by MAC for easy frontend lookup
+
+    // ?format=full returns complete rows including timestamps (for management page)
+    if (searchParams.get('format') === 'full') {
+      return NextResponse.json(rows);
+    }
+
+    // Default: return as object keyed by MAC for easy frontend lookup (backward compat)
     const map: Record<string, string> = {};
     for (const row of rows) {
       map[row.mac_address] = row.note;
     }
     return NextResponse.json(map);
   } catch (error) {
+    console.error('[API] GET /mac-notes:', error);
     return NextResponse.json({ error: 'Failed to fetch MAC notes' }, { status: 500 });
   }
 }
@@ -57,6 +64,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: 'Note saved' });
   } catch (error) {
+    console.error('[API] POST /mac-notes:', error);
     return NextResponse.json({ error: 'Failed to save MAC note' }, { status: 500 });
   }
 }

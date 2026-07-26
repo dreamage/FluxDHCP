@@ -24,11 +24,14 @@ const ERROR_MAP: Record<string, string> = {
   'No active lease found for this IP': 'errNoActiveLease',
   'No released/expired lease found for this IP': 'errNoLeaseToRelease',
   'No valid config keys provided': 'errNoValidConfigKeys',
+  'Invalid config value': 'errInvalidConfigValue',
 
   // Duplicate / conflict
   'MAC address already reserved': 'errMacAlreadyReserved',
   'IP address already reserved': 'errIpAlreadyReserved',
   'Option already exists for this MAC address': 'errOptionAlreadyExists',
+  'Option code must be an integer between 1 and 254': 'errOptionCodeRange',
+  'Option value exceeds 255 bytes': 'errOptionValueTooLong',
   'IP address is currently leased to another device': 'errIpLeasedToOther',
 
   // Range / format

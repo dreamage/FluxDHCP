@@ -2,12 +2,14 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Switch, Select, Card } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Switch, Select, Alert } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import MacInput from '@/components/MacInput';
 import MacAddress from '@/components/MacAddress';
 import { useMacNotes } from '@/hooks/useMacNotes';
 import { useNotify } from '@/hooks/useNotify';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import FilterPanel from '@/components/FilterPanel';
 
 const { Title } = Typography;
 
@@ -24,9 +26,9 @@ export default function MacBlacklistPage() {
   const tc = useTranslations('common');
   const [data, setData] = useState<MacBlacklistRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeFilters, setActiveFilters] = useState({ mac: '', reason: '', enabled: 'ALL' });
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [filterForm] = Form.useForm();
+  const [error, setError] = useState('');
+  const { activeFilters, filterOpen, setFilterOpen, filterForm, handleSearch, handleReset } =
+    useTableFilters({ mac: '', reason: '', enabled: 'ALL' });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMac, setEditingMac] = useState<string | null>(null);
   const [form] = Form.useForm();
@@ -45,29 +47,15 @@ export default function MacBlacklistPage() {
         const rows = await res.json();
         setData(rows);
       }
+      setError('');
+    } catch {
+      setError(tc('errFailedFetch'));
     } finally {
       setLoading(false);
     }
-  }, [activeFilters]);
+  }, [activeFilters, tc]);
 
   useEffect(() => { fetchData(); fetchMacNotes(); }, [fetchData, fetchMacNotes]);
-
-  const handleSearch = async () => {
-    try {
-      const values = await filterForm.validateFields();
-      setActiveFilters({
-        mac: values.mac || '',
-        reason: values.reason || '',
-        enabled: values.enabled || 'ALL',
-      });
-    } catch { /* validation */ }
-  };
-
-  const handleReset = () => {
-    filterForm.resetFields();
-    filterForm.setFieldsValue({ mac: '', reason: '', enabled: 'ALL' });
-    setActiveFilters({ mac: '', reason: '', enabled: 'ALL' });
-  };
 
   const handleAdd = () => {
     setEditingMac(null);
@@ -161,9 +149,11 @@ export default function MacBlacklistPage() {
       sorter: (a: MacBlacklistRow, b: MacBlacklistRow) => (a.reason || '').localeCompare(b.reason || ''),
     },
     {
-      title: t('enabled'), dataIndex: 'enabled', key: 'enabled', width: 100, align: 'center' as const,
+      title: t('status'), dataIndex: 'enabled', key: 'enabled', width: 100, align: 'center' as const,
       render: (enabled: number, record: MacBlacklistRow) => (
-        <Switch size="small" checked={!!enabled} onChange={(checked) => handleToggleEnabled(record, checked)} />
+        <Switch size="small" checked={!!enabled}
+          checkedChildren={t('enabled')} unCheckedChildren={t('disabled')}
+          onChange={(checked) => handleToggleEnabled(record, checked)} />
       ),
     },
     {
@@ -184,48 +174,37 @@ export default function MacBlacklistPage() {
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
-          <Button
-            size="small"
-            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
-            onClick={() => setFilterOpen(!filterOpen)}
-          >
-            {t('filter')}
-          </Button>
           <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addEntry')}</Button>
-        </Space>
-      </div>
-
-      {filterOpen && (
-        <Card size="small" style={{ marginBottom: 12 }}>
-          <Form form={filterForm} layout="inline" initialValues={{ mac: '', reason: '', enabled: 'ALL' }}>
+          <FilterPanel
+            open={filterOpen}
+            onToggle={() => setFilterOpen(!filterOpen)}
+            label={tc('filter')}
+            form={filterForm}
+            initialValues={{ mac: '', reason: '', enabled: 'ALL' }}
+            onFinish={handleSearch}
+            onSearch={handleSearch}
+            onReset={handleReset}
+          >
             <Form.Item name="mac" label={t('macAddress')}>
-              <Input size="small" placeholder={t('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+              <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
             </Form.Item>
             <Form.Item name="reason" label={t('reason')}>
               <Input size="small" placeholder={t('reasonPlaceholder')} style={{ width: 160 }} allowClear />
             </Form.Item>
-            <Form.Item name="enabled" label={t('enabled')}>
+            <Form.Item name="enabled" label={t('status')}>
               <Select style={{ width: 130 }} size="small" allowClear>
-                <Select.Option value="ALL">{t('allStates')}</Select.Option>
+                <Select.Option value="ALL">{tc('allStates')}</Select.Option>
                 <Select.Option value="1">{t('enabled')}</Select.Option>
                 <Select.Option value="0">{t('disabled')}</Select.Option>
               </Select>
             </Form.Item>
-            <Form.Item>
-              <Space>
-                <Button type="primary" size="small" icon={<SearchOutlined />} onClick={handleSearch}>
-                  {tc('search')}
-                </Button>
-                <Button size="small" icon={<ReloadOutlined />} onClick={handleReset}>
-                  {t('reset')}
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Card>
-      )}
+          </FilterPanel>
+        </Space>
+      </div>
 
+      {error && <Alert type="error" message={error} closable onClose={() => setError('')} style={{ marginBottom: 12 }} />}
       <Table columns={columns} dataSource={data} rowKey="mac_address" loading={loading}
+        locale={{ emptyText: (activeFilters.mac || activeFilters.reason || activeFilters.enabled !== 'ALL') ? tc('noFilterResults') : tc('noData') }}
         size="small" scroll={{ x: 'max-content' }}
         pagination={{ showSizeChanger: true, pageSizeOptions: [20, 50, 100], defaultPageSize: 20 }} />
 
@@ -239,8 +218,8 @@ export default function MacBlacklistPage() {
           <Form.Item name="reason" label={t('reason')}>
             <Input.TextArea rows={3} placeholder={t('reasonPlaceholder')} />
           </Form.Item>
-          <Form.Item name="enabled" label={t('enabled')} valuePropName="checked">
-            <Switch />
+          <Form.Item name="enabled" label={t('status')} valuePropName="checked">
+            <Switch checkedChildren={t('enabled')} unCheckedChildren={t('disabled')} />
           </Form.Item>
         </Form>
       </Modal>

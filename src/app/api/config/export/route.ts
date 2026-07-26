@@ -40,6 +40,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
+    console.error('[API] GET /config/export:', error);
     return NextResponse.json({ error: 'Failed to export config' }, { status: 500 });
   }
 }

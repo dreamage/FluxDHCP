@@ -6,36 +6,15 @@ import { Typography, Table, Button, Select, Popconfirm, Space, Tag, Tooltip } fr
 import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNotify } from '@/hooks/useNotify';
+import { EVENT_COLORS, EVENT_OPTIONS } from '@/lib/webhook-constants';
 
 const { Text } = Typography;
-
-const EVENT_OPTIONS = [
-  { value: 'dhcp_discover', labelKey: 'dhcpDiscover' },
-  { value: 'dhcp_offer', labelKey: 'dhcpOffer' },
-  { value: 'dhcp_request', labelKey: 'dhcpRequest' },
-  { value: 'dhcp_ack', labelKey: 'dhcpAck' },
-  { value: 'dhcp_nak', labelKey: 'dhcpNak' },
-  { value: 'dhcp_release', labelKey: 'dhcpRelease' },
-  { value: 'dhcp_inform', labelKey: 'dhcpInform' },
-  { value: 'dhcp_decline', labelKey: 'dhcpDecline' },
-];
 
 const DELIVERY_STATUS_COLORS: Record<string, string> = {
   success: 'green',
   failed: 'orange',
   error: 'red',
   pending: 'blue',
-};
-
-const EVENT_COLORS: Record<string, string> = {
-  dhcp_discover: 'blue',
-  dhcp_offer: 'cyan',
-  dhcp_request: 'orange',
-  dhcp_ack: 'green',
-  dhcp_nak: 'volcano',
-  dhcp_release: 'default',
-  dhcp_inform: 'purple',
-  dhcp_decline: 'red',
 };
 
 function formatTimeShort(v: string | null | undefined): string {
@@ -121,13 +100,13 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
       render: (status: string) => <Tag color={DELIVERY_STATUS_COLORS[status] || 'default'}>{tLogs(status) || status}</Tag>,
     },
     {
-      title: 'HTTP', dataIndex: 'http_status', key: 'http_status', width: 60,
+      title: tLogs('httpStatus'), dataIndex: 'http_status', key: 'http_status', width: 60,
       render: (code: number | null) => code ? <Text code style={{ fontSize: 12 }}>{code}</Text> : <Text type="secondary">-</Text>,
     },
     {
       title: tLogs('attempt'), key: 'attempt', width: 60,
       render: (_: any, r: any) => {
-        if (r.status === 'success' && r.attempt === 1) return <Tag color="green" style={{ fontSize: 11 }}>1st</Tag>;
+        if (r.status === 'success' && r.attempt === 1) return <Tag color="green" style={{ fontSize: 11 }}>{tLogs('firstAttempt')}</Tag>;
         return <Text type="secondary" style={{ fontSize: 12 }}>{r.attempt}/{r.max_attempts}</Text>;
       },
     },
@@ -136,7 +115,7 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
       render: (m: string) => <Tag color={m === 'POST' ? 'blue' : 'green'}>{m}</Tag>,
     },
     {
-      title: 'URL', dataIndex: 'url', key: 'url', ellipsis: true,
+      title: tLogs('url'), dataIndex: 'url', key: 'url', ellipsis: true,
       render: (url: string) => <Text style={{ fontSize: 12 }} ellipsis>{url}</Text>,
     },
     {
@@ -177,6 +156,7 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
       </Space>
 
       <Table columns={logColumns} dataSource={logs} rowKey="id" loading={logsLoading} size="small"
+        locale={{ emptyText: tc('noData') }}
         scroll={{ x: 900 }}
         pagination={{ current: logsPage, pageSize: logsPageSize, total: logsTotal, showSizeChanger: true, pageSizeOptions: [20, 50, 100], onChange: (p, ps) => { setLogsPage(p); setLogsPageSize(ps); } }} />
     </>

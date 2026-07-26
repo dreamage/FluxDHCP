@@ -33,6 +33,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     return NextResponse.json({ message: 'Lease released' });
   } catch (error) {
+    console.error('[API] POST /leases/:ip:', error);
     return NextResponse.json({ error: 'Failed to process lease' }, { status: 500 });
   }
 }

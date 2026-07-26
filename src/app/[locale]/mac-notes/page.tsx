@@ -2,11 +2,13 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Card } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Alert } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import MacInput from '@/components/MacInput';
 import { useNotify } from '@/hooks/useNotify';
 import { formatLocalTime } from '@/lib/format-time';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import FilterPanel from '@/components/FilterPanel';
 
 const { Title, Text } = Typography;
 
@@ -22,9 +24,9 @@ export default function MacNotesPage() {
   const tc = useTranslations('common');
   const [data, setData] = useState<MacNoteRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeFilters, setActiveFilters] = useState({ mac: '', note: '' });
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [filterForm] = Form.useForm();
+  const [error, setError] = useState('');
+  const { activeFilters, filterOpen, setFilterOpen, filterForm, handleSearch, handleReset } =
+    useTableFilters({ mac: '', note: '' });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMac, setEditingMac] = useState<string | null>(null);
   const [form] = Form.useForm();
@@ -36,39 +38,21 @@ export default function MacNotesPage() {
       const searchParams = new URLSearchParams();
       if (activeFilters.mac) searchParams.set('mac', activeFilters.mac);
       if (activeFilters.note) searchParams.set('note', activeFilters.note);
+      searchParams.set('format', 'full');
       const res = await fetch(`/api/mac-notes?${searchParams}`);
       if (res.ok) {
-        const map = await res.json();
-        const rows: MacNoteRow[] = Object.entries(map).map(([mac_address, note]) => ({
-          mac_address,
-          note: note as string,
-          created_at: '',
-          updated_at: '',
-        }));
-        setData(rows);
+        const rows = await res.json();
+        setData(Array.isArray(rows) ? rows : []);
       }
+      setError('');
+    } catch {
+      setError(tc('errFailedFetch'));
     } finally {
       setLoading(false);
     }
-  }, [activeFilters]);
+  }, [activeFilters, tc]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-
-  const handleSearch = async () => {
-    try {
-      const values = await filterForm.validateFields();
-      setActiveFilters({
-        mac: values.mac || '',
-        note: values.note || '',
-      });
-    } catch { /* validation */ }
-  };
-
-  const handleReset = () => {
-    filterForm.resetFields();
-    filterForm.setFieldsValue({ mac: '', note: '' });
-    setActiveFilters({ mac: '', note: '' });
-  };
 
   const handleAdd = () => {
     setEditingMac(null);
@@ -144,6 +128,14 @@ export default function MacNotesPage() {
       render: (note: string) => <Text>{note}</Text>,
     },
     {
+      title: t('updatedAt'), dataIndex: 'updated_at', key: 'updated_at', width: 170,
+      sorter: (a: MacNoteRow, b: MacNoteRow) => (a.updated_at || '').localeCompare(b.updated_at || ''),
+      render: (v: string) => v ? formatLocalTime(v) : '',
+    },
+    { title: t('createdAt'), dataIndex: 'created_at', key: 'created_at', width: 170,
+      render: (v: string) => v ? formatLocalTime(v) : '',
+    },
+    {
       title: tc('actions'), key: 'actions', width: 100, fixed: 'right' as const,
       render: (_: any, r: MacNoteRow) => (
         <Space>
@@ -161,41 +153,30 @@ export default function MacNotesPage() {
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
         <Space>
-          <Button
-            size="small"
-            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
-            onClick={() => setFilterOpen(!filterOpen)}
-          >
-            {t('filter')}
-          </Button>
           <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addNote')}</Button>
-        </Space>
-      </div>
-
-      {filterOpen && (
-        <Card size="small" style={{ marginBottom: 12 }}>
-          <Form form={filterForm} layout="inline" initialValues={{ mac: '', note: '' }}>
+          <FilterPanel
+            open={filterOpen}
+            onToggle={() => setFilterOpen(!filterOpen)}
+            label={tc('filter')}
+            form={filterForm}
+            initialValues={{ mac: '', note: '' }}
+            onFinish={handleSearch}
+            onSearch={handleSearch}
+            onReset={handleReset}
+          >
             <Form.Item name="mac" label={t('macAddress')}>
-              <Input size="small" placeholder={t('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+              <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
             </Form.Item>
             <Form.Item name="note" label={t('note')}>
               <Input size="small" placeholder={t('placeholder')} style={{ width: 200 }} allowClear />
             </Form.Item>
-            <Form.Item>
-              <Space>
-                <Button type="primary" size="small" icon={<SearchOutlined />} onClick={handleSearch}>
-                  {tc('search')}
-                </Button>
-                <Button size="small" icon={<ReloadOutlined />} onClick={handleReset}>
-                  {t('reset')}
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Card>
-      )}
+          </FilterPanel>
+        </Space>
+      </div>
 
+      {error && <Alert type="error" message={error} closable onClose={() => setError('')} style={{ marginBottom: 12 }} />}
       <Table columns={columns} dataSource={data} rowKey="mac_address" loading={loading}
+        locale={{ emptyText: (activeFilters.mac || activeFilters.note) ? tc('noFilterResults') : tc('noData') }}
         size="small" scroll={{ x: 'max-content' }}
         pagination={{ showSizeChanger: true, pageSizeOptions: [20, 50, 100], defaultPageSize: 20 }} />
 

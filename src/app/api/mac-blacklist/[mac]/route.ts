@@ -13,6 +13,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ mac
     const row = db.prepare('SELECT * FROM mac_blacklist WHERE mac_address = ?').get(mac);
     return NextResponse.json(row || null);
   } catch (error) {
+    console.error('[API] GET /mac-blacklist/:mac:', error);
     return NextResponse.json({ error: 'Failed to fetch MAC blacklist entry' }, { status: 500 });
   }
 }
@@ -57,6 +58,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ mac:
 
     return NextResponse.json({ message: 'Blacklist entry updated' });
   } catch (error) {
+    console.error('[API] PUT /mac-blacklist/:mac:', error);
     return NextResponse.json({ error: 'Failed to update MAC blacklist entry' }, { status: 500 });
   }
 }
@@ -72,6 +74,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     db.prepare('DELETE FROM mac_blacklist WHERE mac_address = ?').run(mac);
     return NextResponse.json({ message: 'Blacklist entry deleted' });
   } catch (error) {
+    console.error('[API] DELETE /mac-blacklist/:mac:', error);
     return NextResponse.json({ error: 'Failed to delete MAC blacklist entry' }, { status: 500 });
   }
 }

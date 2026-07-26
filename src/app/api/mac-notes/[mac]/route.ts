@@ -13,6 +13,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ mac
     const row = db.prepare('SELECT * FROM mac_notes WHERE mac_address = ?').get(mac);
     return NextResponse.json(row || null);
   } catch (error) {
+    console.error('[API] GET /mac-notes/:mac:', error);
     return NextResponse.json({ error: 'Failed to fetch MAC note' }, { status: 500 });
   }
 }
@@ -42,6 +43,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ mac:
 
     return NextResponse.json({ message: 'Note updated' });
   } catch (error) {
+    console.error('[API] PUT /mac-notes/:mac:', error);
     return NextResponse.json({ error: 'Failed to update MAC note' }, { status: 500 });
   }
 }
@@ -57,6 +59,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     db.prepare('DELETE FROM mac_notes WHERE mac_address = ?').run(mac);
     return NextResponse.json({ message: 'Note deleted' });
   } catch (error) {
+    console.error('[API] DELETE /mac-notes/:mac:', error);
     return NextResponse.json({ error: 'Failed to delete MAC note' }, { status: 500 });
   }
 }

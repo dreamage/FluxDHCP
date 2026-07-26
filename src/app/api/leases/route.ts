@@ -22,8 +22,8 @@ export async function GET(request: Request) {
     const ipEnd = searchParams.get('ip_end');
     const mac = searchParams.get('mac');
     const hostname = searchParams.get('hostname');
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '20', 10), 500);
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1);
+    const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '20', 10) || 20, 500);
     const sortField = searchParams.get('sort') || 'lease_end';
     const sortOrder = searchParams.get('order') === 'asc' ? 'ASC' : 'DESC';
 
@@ -74,6 +74,7 @@ export async function GET(request: Request) {
       data: leases,
     });
   } catch (error) {
+    console.error('[API] GET /leases:', error);
     return NextResponse.json({ error: 'Failed to fetch leases' }, { status: 500 });
   }
 }

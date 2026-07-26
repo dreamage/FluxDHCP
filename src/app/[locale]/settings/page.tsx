@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Typography, Form, InputNumber, Input, Button, Popconfirm, Space, Card, Row, Col, Upload, Modal, Checkbox, Select, Switch } from 'antd';
 import { CheckCircleFilled, CloseCircleFilled, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined, AppstoreOutlined, EnvironmentOutlined, ControlOutlined, StopOutlined, FileTextOutlined, BellOutlined, ToolOutlined, FieldTimeOutlined, ProfileOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
-import { isValidIPv4 } from '@/lib/ip-utils';
+import { ipRule } from '@/lib/validators';
+import { translateError } from '@/lib/error-map';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
 import { CONFIG_CATEGORIES, DEFAULT_EXPORT_KEYS } from '@/lib/config-categories';
 
@@ -24,6 +25,23 @@ const CATEGORY_META: Record<string, { icon: React.ReactNode; color: string }> = 
   dhcp_logs: { icon: <ProfileOutlined />, color: '#84cc16' },
 };
 
+/** 将 config 对象回填到表单 */
+function applyConfig(form: ReturnType<typeof Form.useForm>[0], config: Record<string, string>) {
+  form.setFieldsValue({
+    server_ip: config.server_ip,
+    listen_interface: config.listen_interface,
+    default_lease_time: parseInt(config.default_lease_time, 10),
+    t1_ratio: parseFloat(config.t1_ratio),
+    t2_ratio: parseFloat(config.t2_ratio),
+    web_port: parseInt(config.web_port, 10),
+    dhcp_log_retention_days: parseInt(config.dhcp_log_retention_days, 10) || 90,
+    decline_blacklist_duration: parseInt(config.decline_blacklist_duration, 10) || 3600,
+    webhook_timeout: parseInt(config.webhook_timeout, 10) || 10,
+    ip_allocation_order: config.ip_allocation_order || 'sequential',
+    honor_requested_ip: config.honor_requested_ip !== '0',
+  });
+}
+
 // Categories that overwrite live data — flagged as dangerous on import
 const DANGEROUS_CATS = ['leases', 'dhcp_logs'];
 
@@ -31,9 +49,10 @@ export default function SettingsPage() {
   const t = useTranslations('settings');
   const tc = useTranslations('common');
   const tl = useTranslations('layout');
-  const ipRule = { validator: (_: any, value: string) => (value && !isValidIPv4(value) ? Promise.reject(tc('invalidIpv4')) : Promise.resolve()) };
+
   const [form] = Form.useForm();
   const [dhcpStatus, setDhcpStatus] = useState<'running' | 'stopped' | null>(null);
+  const [dbPath, setDbPath] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -54,21 +73,10 @@ export default function SettingsPage() {
         const config = await configRes.json();
         const status = await statusRes.json();
 
-        form.setFieldsValue({
-          server_ip: config.server_ip,
-          listen_interface: config.listen_interface,
-          default_lease_time: parseInt(config.default_lease_time, 10),
-          t1_ratio: parseFloat(config.t1_ratio),
-          t2_ratio: parseFloat(config.t2_ratio),
-          web_port: parseInt(config.web_port, 10),
-          dhcp_log_retention_days: parseInt(config.dhcp_log_retention_days, 10) || 90,
-          decline_blacklist_duration: parseInt(config.decline_blacklist_duration, 10) || 3600,
-          webhook_timeout: parseInt(config.webhook_timeout, 10) || 10,
-          ip_allocation_order: config.ip_allocation_order || 'sequential',
-          honor_requested_ip: config.honor_requested_ip !== '0',
-        });
+        applyConfig(form, config);
 
         setDhcpStatus(status.status);
+        setDbPath(config.db_path || '');
       } finally {
         setLoading(false);
       }
@@ -94,7 +102,7 @@ export default function SettingsPage() {
         notify.success(t('saveSuccess'));
       } else {
         const result = await res.json().catch(() => ({}));
-        notify.error(result.error);
+        notify.error(translateError(result.error, tc));
       }
     } catch (err: any) {
       if (err?.errorFields) {
@@ -191,21 +199,9 @@ export default function SettingsPage() {
         // Reload form values
         const configRes = await fetch('/api/config');
         const config = await configRes.json();
-        form.setFieldsValue({
-          server_ip: config.server_ip,
-          listen_interface: config.listen_interface,
-          default_lease_time: parseInt(config.default_lease_time, 10),
-          t1_ratio: parseFloat(config.t1_ratio),
-          t2_ratio: parseFloat(config.t2_ratio),
-          web_port: parseInt(config.web_port, 10),
-          dhcp_log_retention_days: parseInt(config.dhcp_log_retention_days, 10) || 90,
-          decline_blacklist_duration: parseInt(config.decline_blacklist_duration, 10) || 3600,
-          webhook_timeout: parseInt(config.webhook_timeout, 10) || 10,
-          ip_allocation_order: config.ip_allocation_order || 'sequential',
-          honor_requested_ip: config.honor_requested_ip !== '0',
-        });
+        applyConfig(form, config);
       } else {
-        notify.error(result.error);
+        notify.error(translateError(result.error, tc));
       }
     } catch {
       notify.error(null);
@@ -326,7 +322,7 @@ export default function SettingsPage() {
       <Card title={t('serverConfig')} style={{ marginBottom: 16 }}>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <Form.Item name="server_ip" label={t('serverIp')} rules={[ipRule]}>
+              <Form.Item name="server_ip" label={t('serverIp')} rules={[ipRule(tc)]}>
                 <Input placeholder="0.0.0.0" />
               </Form.Item>
             </Col>
@@ -394,7 +390,7 @@ export default function SettingsPage() {
       </Form>
 
       {/* Import / Export */}
-      <Card title={t('importExport') || 'Import / Export'} style={{ marginBottom: 16 }}>
+      <Card title={t('importExport')} style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
           <Button icon={<ExportOutlined />} size="small" onClick={handleExportClick}>{t('exportConfig')}</Button>
           <Upload accept=".json" showUploadList={false}
@@ -412,7 +408,7 @@ export default function SettingsPage() {
             {tc('save')}
           </Button>
           <Text type="secondary" style={{ fontSize: 13 }}>
-            {t('dbPath')}: {process.env.DB_PATH || './data/fluxdhcp.db'}
+            {t('dbPath')}: {dbPath}
           </Text>
         </div>
       </Card>
@@ -481,8 +477,3 @@ export default function SettingsPage() {
               })}
             </div>
           </div>
-        )}
-      </Modal>
-    </>
-  );
-}

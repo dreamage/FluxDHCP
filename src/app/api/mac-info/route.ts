@@ -45,6 +45,7 @@ export async function GET(request: Request) {
       source: reservation ? 'reservation' : lease ? 'lease' : null,
     });
   } catch (error) {
+    console.error('[API] GET /mac-info:', error);
     return NextResponse.json({ error: 'Failed to fetch MAC info' }, { status: 500 });
   }
 }

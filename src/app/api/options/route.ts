@@ -30,6 +30,7 @@ export async function GET(request: Request) {
     const options = db.prepare(`SELECT * FROM device_options ${where} ORDER BY mac_address, option_code`).all(...params);
     return NextResponse.json(options);
   } catch (error) {
+    console.error('[API] GET /options:', error);
     return NextResponse.json({ error: 'Failed to fetch options' }, { status: 500 });
   }
 }
@@ -44,6 +45,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Validate option_code range (DHCP option code is 1 byte, 255 is reserved for END)
+    const code = Number(option_code);
+    if (!Number.isSafeInteger(code) || code < 1 || code > 254) {
+      return NextResponse.json({ error: 'Option code must be an integer between 1 and 254' }, { status: 400 });
+    }
+
+    // Validate option_value byte length (DHCP option length is 1 byte, max 255)
+    const valueStr = String(option_value);
+    if (Buffer.byteLength(valueStr, 'utf8') > 255) {
+      return NextResponse.json({ error: 'Option value exceeds 255 bytes' }, { status: 400 });
+    }
+
     const mac = normalizeMac(mac_address);
     if (!mac) {
       return NextResponse.json({ error: 'Invalid MAC address format' }, { status: 400 });
@@ -52,7 +65,7 @@ export async function POST(request: Request) {
     // 校验 mac+code 唯一
     const existing = db.prepare(
       'SELECT id FROM device_options WHERE mac_address = ? AND option_code = ?'
-    ).get(mac, option_code);
+    ).get(mac, code);
 
     if (existing) {
       return NextResponse.json({ error: 'Option already exists for this MAC address' }, { status: 409 });
@@ -61,10 +74,11 @@ export async function POST(request: Request) {
     const result = db.prepare(`
       INSERT INTO device_options (mac_address, option_code, option_value, option_name)
       VALUES (?, ?, ?, ?)
-    `).run(mac, option_code, option_value, option_name || null);
+    `).run(mac, code, valueStr, option_name || null);
 
     return NextResponse.json({ id: result.lastInsertRowid, message: 'Option created' }, { status: 201 });
   } catch (error) {
+    console.error('[API] POST /options:', error);
     return NextResponse.json({ error: 'Failed to create option' }, { status: 500 });
   }
 }

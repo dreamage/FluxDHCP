@@ -11,6 +11,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
     return NextResponse.json(option);
   } catch (error) {
+    console.error('[API] GET /options/:id:', error);
     return NextResponse.json({ error: 'Failed to fetch option' }, { status: 500 });
   }
 }
@@ -27,14 +28,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Option not found' }, { status: 404 });
     }
 
+    const newValue = option_value !== undefined ? String(option_value) : existing.option_value;
+    // Validate option_value byte length (DHCP option length is 1 byte, max 255)
+    if (Buffer.byteLength(newValue, 'utf8') > 255) {
+      return NextResponse.json({ error: 'Option value exceeds 255 bytes' }, { status: 400 });
+    }
+
     db.prepare('UPDATE device_options SET option_value = ?, option_name = ? WHERE id = ?').run(
-      option_value !== undefined ? option_value : existing.option_value,
+      newValue,
       option_name !== undefined ? option_name : existing.option_name,
       id,
     );
 
     return NextResponse.json({ message: 'Option updated' });
   } catch (error) {
+    console.error('[API] PUT /options/:id:', error);
     return NextResponse.json({ error: 'Failed to update option' }, { status: 500 });
   }
 }
@@ -49,6 +57,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
     return NextResponse.json({ message: 'Option deleted' });
   } catch (error) {
+    console.error('[API] DELETE /options/:id:', error);
     return NextResponse.json({ error: 'Failed to delete option' }, { status: 500 });
   }
 }

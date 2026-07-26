@@ -42,6 +42,7 @@ export async function GET(request: Request) {
       data: deliveries,
     });
   } catch (error) {
+    console.error('[API] GET /webhooks/deliveries:', error);
     return NextResponse.json({ error: 'Failed to fetch webhook deliveries' }, { status: 500 });
   }
 }
@@ -52,6 +53,7 @@ export async function DELETE() {
     const result = db.prepare('DELETE FROM webhook_deliveries').run();
     return NextResponse.json({ message: 'Webhook delivery logs cleared', deleted: result.changes });
   } catch (error) {
+    console.error('[API] DELETE /webhooks/deliveries:', error);
     return NextResponse.json({ error: 'Failed to clear webhook deliveries' }, { status: 500 });
   }
 }

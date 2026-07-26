@@ -24,10 +24,17 @@ let db: Database.Database | null = null;
  * 获取数据库单例
  * 优先使用环境变量 DB_PATH，否则使用默认路径 ./data/fluxdhcp.db
  */
+/**
+ * 解析数据库文件路径（不初始化连接）
+ */
+export function resolveDbPath(dbPath?: string): string {
+  return dbPath || process.env.DB_PATH || path.join(process.cwd(), 'data', 'fluxdhcp.db');
+}
+
 export function getDatabase(dbPath?: string): Database.Database {
   if (db) return db;
 
-  const resolvedPath = dbPath || process.env.DB_PATH || path.join(process.cwd(), 'data', 'fluxdhcp.db');
+  const resolvedPath = resolveDbPath(dbPath);
 
   // 确保数据目录存在
   const dir = path.dirname(resolvedPath);

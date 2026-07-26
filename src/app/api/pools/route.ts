@@ -25,6 +25,7 @@ export async function GET() {
 
     return NextResponse.json(result);
   } catch (error) {
+    console.error('[API] GET /pools:', error);
     return NextResponse.json({ error: 'Failed to fetch pools' }, { status: 500 });
   }
 }
@@ -86,6 +87,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id: result.lastInsertRowid, message: 'Pool created' }, { status: 201 });
   } catch (error) {
+    console.error('[API] POST /pools:', error);
     return NextResponse.json({ error: 'Failed to create pool' }, { status: 500 });
   }
 }

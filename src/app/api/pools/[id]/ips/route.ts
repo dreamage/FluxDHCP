@@ -67,6 +67,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ ips, stats });
   } catch (error) {
+    console.error('[API] GET /pools/:id/ips:', error);
     return NextResponse.json({ error: 'Failed to fetch pool IPs' }, { status: 500 });
   }
 }
