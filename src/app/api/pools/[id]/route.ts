@@ -73,7 +73,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: `IP range overlaps with pool "${overlapping.name}"` }, { status: 400 });
     }
 
-    const dnsJson = dns_servers ? JSON.stringify(dns_servers) : null;
+    const dnsJson = dns_servers !== undefined ? JSON.stringify(dns_servers) : undefined;
 
     db.prepare(`
       UPDATE pools SET name = ?, subnet = ?, netmask = ?, start_ip = ?, end_ip = ?, gateway = ?, dns_servers = ?, lease_time = ?, enabled = ?, updated_at = datetime('now')
@@ -116,17 +116,12 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     db.prepare('DELETE FROM reservations WHERE pool_id = ?').run(id);
     // 删除关联的租约
     db.prepare('DELETE FROM leases WHERE pool_id = ?').run(id);
-    // 删除该 IP 范围内的 DECLINE 黑名单 (#5)
+    // 删除该 IP 范围内的 DECLINE 黑名单（用 ip2num 数值比较）
     const pool = db.prepare('SELECT start_ip, end_ip FROM pools WHERE id = ?').get(id) as any;
     if (pool) {
-      const startNum = ipToNum(pool.start_ip);
-      const endNum = ipToNum(pool.end_ip);
       db.prepare(
-        "DELETE FROM declined_ips WHERE ip_address BETWEEN ? AND ?"
-      ).run(
-        `${(startNum >>> 24) & 0xFF}.${(startNum >>> 16) & 0xFF}.${(startNum >>> 8) & 0xFF}.${startNum & 0xFF}`,
-        `${(endNum >>> 24) & 0xFF}.${(endNum >>> 16) & 0xFF}.${(endNum >>> 8) & 0xFF}.${endNum & 0xFF}`
-      );
+        "DELETE FROM declined_ips WHERE ip2num(ip_address) BETWEEN ? AND ?"
+      ).run(ipToNum(pool.start_ip), ipToNum(pool.end_ip));
     }
     // 删除地址池
     db.prepare('DELETE FROM pools WHERE id = ?').run(id);

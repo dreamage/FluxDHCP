@@ -24,7 +24,7 @@ export async function GET() {
 
     // 24小时内请求数
     const requests24h = db.prepare(
-      "SELECT COUNT(*) as count FROM dhcp_logs WHERE timestamp >= datetime('now', '-1 day')"
+      "SELECT COUNT(*) as count FROM dhcp_logs WHERE timestamp >= strftime('%Y-%m-%dT%H:%M:%S', 'now', '-1 day')"
     ).get() as { count: number };
 
     // 各地址池使用率 — 用单次查询获取所有租约计数 (#11)
