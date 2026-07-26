@@ -167,7 +167,10 @@
     "editOption": "编辑选项",
     "deleteOption": "删除选项",
     "deleteConfirm": "确定要删除此选项吗？",
-    "customCode": "自定义选项码"
+    "customCode": "自定义选项码",
+    "filter": "筛选",
+    "reset": "重置",
+    "valuePlaceholder": "选项值片段"
   },
   "dhcpLogs": {
     "title": "DHCP日志",
@@ -483,7 +486,9 @@
     "editNote": "编辑备注",
     "deleteNote": "删除备注",
     "placeholder": "如：张三的笔记本",
-    "deleteConfirm": "确定要删除此MAC备注吗？"
+    "deleteConfirm": "确定要删除此MAC备注吗？",
+    "filter": "筛选",
+    "reset": "重置"
   },
   "macBlacklist": {
     "title": "MAC黑名单管理",
@@ -495,7 +500,11 @@
     "addEntry": "添加黑名单",
     "editEntry": "编辑黑名单",
     "deleteEntry": "移出黑名单",
-    "deleteConfirm": "确定要将此MAC移出黑名单吗？"
+    "deleteConfirm": "确定要将此MAC移出黑名单吗？",
+    "filter": "筛选",
+    "reset": "重置",
+    "allStates": "全部状态",
+    "disabled": "已禁用"
   },
   "serverResponse": {
     "srDecline": "客户端拒绝IP {ip}（地址冲突）",

@@ -167,7 +167,10 @@
     "editOption": "Edit Option",
     "deleteOption": "Delete Option",
     "deleteConfirm": "Are you sure you want to delete this option?",
-    "customCode": "Custom Code"
+    "customCode": "Custom Code",
+    "filter": "Filter",
+    "reset": "Reset",
+    "valuePlaceholder": "Option value fragment"
   },
   "dhcpLogs": {
     "title": "DHCP Logs",
@@ -483,7 +486,9 @@
     "editNote": "Edit Note",
     "deleteNote": "Delete Note",
     "placeholder": "e.g. John's laptop",
-    "deleteConfirm": "Are you sure you want to delete this MAC note?"
+    "deleteConfirm": "Are you sure you want to delete this MAC note?",
+    "filter": "Filter",
+    "reset": "Reset"
   },
   "macBlacklist": {
     "title": "MAC Blacklist",
@@ -495,7 +500,11 @@
     "addEntry": "Add to Blacklist",
     "editEntry": "Edit Blacklist Entry",
     "deleteEntry": "Remove from Blacklist",
-    "deleteConfirm": "Are you sure you want to remove this MAC from the blacklist?"
+    "deleteConfirm": "Are you sure you want to remove this MAC from the blacklist?",
+    "filter": "Filter",
+    "reset": "Reset",
+    "allStates": "All States",
+    "disabled": "Disabled"
   },
   "serverResponse": {
     "srDecline": "Client declined IP {ip} (address conflict)",

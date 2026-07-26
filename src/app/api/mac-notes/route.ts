@@ -2,10 +2,27 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { normalizeMac } from '@/lib/mac-utils';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const db = getDb();
-    const rows = db.prepare('SELECT * FROM mac_notes ORDER BY updated_at DESC').all() as any[];
+    const { searchParams } = new URL(request.url);
+    const mac = searchParams.get('mac')?.trim();
+    const note = searchParams.get('note')?.trim();
+
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    if (mac) {
+      conditions.push('mac_address LIKE ?');
+      params.push(`%${mac.toUpperCase()}%`);
+    }
+    if (note) {
+      conditions.push('note LIKE ?');
+      params.push(`%${note}%`);
+    }
+
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const rows = db.prepare(`SELECT * FROM mac_notes ${where} ORDER BY updated_at DESC`).all(...params) as any[];
     // Return as object keyed by MAC for easy frontend lookup
     const map: Record<string, string> = {};
     for (const row of rows) {

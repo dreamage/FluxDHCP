@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, InputNumber, Popconfirm, Select, Space } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Modal, Form, Input, InputNumber, Popconfirm, Select, Space, Card } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { useNotify } from '@/hooks/useNotify';
@@ -30,6 +30,9 @@ export default function OptionsPage() {
   const tOpt = useTranslations('dhcpOptionCodes');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({ mac: '', option_code: '', option_value: '' });
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterForm] = Form.useForm();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const { macNotes, fetchMacNotes } = useMacNotes();
@@ -39,15 +42,36 @@ export default function OptionsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/options');
+      const searchParams = new URLSearchParams();
+      if (activeFilters.mac) searchParams.set('mac', activeFilters.mac);
+      if (activeFilters.option_code) searchParams.set('option_code', activeFilters.option_code);
+      if (activeFilters.option_value) searchParams.set('option_value', activeFilters.option_value);
+      const res = await fetch(`/api/options?${searchParams}`);
       const result = await res.json();
       setData(Array.isArray(result) ? result : []);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeFilters]);
 
   useEffect(() => { fetchData(); fetchMacNotes(); }, [fetchData, fetchMacNotes]);
+
+  const handleSearch = async () => {
+    try {
+      const values = await filterForm.validateFields();
+      setActiveFilters({
+        mac: values.mac || '',
+        option_code: values.option_code ? String(values.option_code) : '',
+        option_value: values.option_value || '',
+      });
+    } catch { /* validation */ }
+  };
+
+  const handleReset = () => {
+    filterForm.resetFields();
+    filterForm.setFieldsValue({ mac: '', option_code: '', option_value: '' });
+    setActiveFilters({ mac: '', option_code: '', option_value: '' });
+  };
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -117,8 +141,43 @@ export default function OptionsPage() {
     <>
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
-        <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addOption')}</Button>
+        <Space>
+          <Button
+            size="small"
+            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => setFilterOpen(!filterOpen)}
+          >
+            {t('filter')}
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addOption')}</Button>
+        </Space>
       </div>
+
+      {filterOpen && (
+        <Card size="small" style={{ marginBottom: 12 }}>
+          <Form form={filterForm} layout="inline" initialValues={{ mac: '', option_code: '', option_value: '' }}>
+            <Form.Item name="mac" label={t('macAddress')}>
+              <Input size="small" placeholder={t('macPlaceholder')} style={{ width: 180 }} allowClear />
+            </Form.Item>
+            <Form.Item name="option_code" label={t('optionCode')}>
+              <InputNumber size="small" min={1} max={254} placeholder={t('customCode')} style={{ width: 140 }} />
+            </Form.Item>
+            <Form.Item name="option_value" label={t('optionValue')}>
+              <Input size="small" placeholder={t('valuePlaceholder')} style={{ width: 160 }} allowClear />
+            </Form.Item>
+            <Form.Item>
+              <Space>
+                <Button type="primary" size="small" icon={<SearchOutlined />} onClick={handleSearch}>
+                  {tc('search')}
+                </Button>
+                <Button size="small" icon={<ReloadOutlined />} onClick={handleReset}>
+                  {t('reset')}
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Card>
+      )}
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading} size="small"
         scroll={{ x: 'max-content' }}
         pagination={{ showSizeChanger: true, pageSizeOptions: [20, 50, 100], defaultPageSize: 20 }} />

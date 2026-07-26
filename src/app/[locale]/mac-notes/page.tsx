@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Tag } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, TagOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Card } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacInput from '@/components/MacInput';
 import { useNotify } from '@/hooks/useNotify';
 import { formatLocalTime } from '@/lib/format-time';
@@ -22,6 +22,9 @@ export default function MacNotesPage() {
   const tc = useTranslations('common');
   const [data, setData] = useState<MacNoteRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({ mac: '', note: '' });
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterForm] = Form.useForm();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMac, setEditingMac] = useState<string | null>(null);
   const [form] = Form.useForm();
@@ -30,7 +33,10 @@ export default function MacNotesPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/mac-notes');
+      const searchParams = new URLSearchParams();
+      if (activeFilters.mac) searchParams.set('mac', activeFilters.mac);
+      if (activeFilters.note) searchParams.set('note', activeFilters.note);
+      const res = await fetch(`/api/mac-notes?${searchParams}`);
       if (res.ok) {
         const map = await res.json();
         const rows: MacNoteRow[] = Object.entries(map).map(([mac_address, note]) => ({
@@ -44,9 +50,25 @@ export default function MacNotesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeFilters]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleSearch = async () => {
+    try {
+      const values = await filterForm.validateFields();
+      setActiveFilters({
+        mac: values.mac || '',
+        note: values.note || '',
+      });
+    } catch { /* validation */ }
+  };
+
+  const handleReset = () => {
+    filterForm.resetFields();
+    filterForm.setFieldsValue({ mac: '', note: '' });
+    setActiveFilters({ mac: '', note: '' });
+  };
 
   const handleAdd = () => {
     setEditingMac(null);
@@ -138,8 +160,40 @@ export default function MacNotesPage() {
     <>
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
-        <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addNote')}</Button>
+        <Space>
+          <Button
+            size="small"
+            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => setFilterOpen(!filterOpen)}
+          >
+            {t('filter')}
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addNote')}</Button>
+        </Space>
       </div>
+
+      {filterOpen && (
+        <Card size="small" style={{ marginBottom: 12 }}>
+          <Form form={filterForm} layout="inline" initialValues={{ mac: '', note: '' }}>
+            <Form.Item name="mac" label={t('macAddress')}>
+              <Input size="small" placeholder={t('macPlaceholder')} style={{ width: 180 }} allowClear />
+            </Form.Item>
+            <Form.Item name="note" label={t('note')}>
+              <Input size="small" placeholder={t('placeholder')} style={{ width: 200 }} allowClear />
+            </Form.Item>
+            <Form.Item>
+              <Space>
+                <Button type="primary" size="small" icon={<SearchOutlined />} onClick={handleSearch}>
+                  {tc('search')}
+                </Button>
+                <Button size="small" icon={<ReloadOutlined />} onClick={handleReset}>
+                  {t('reset')}
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Card>
+      )}
 
       <Table columns={columns} dataSource={data} rowKey="mac_address" loading={loading}
         size="small" scroll={{ x: 'max-content' }}

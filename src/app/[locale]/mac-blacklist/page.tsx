@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Switch } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Modal, Form, Input, Popconfirm, Space, Switch, Select, Card } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacInput from '@/components/MacInput';
 import MacAddress from '@/components/MacAddress';
 import { useMacNotes } from '@/hooks/useMacNotes';
@@ -24,6 +24,9 @@ export default function MacBlacklistPage() {
   const tc = useTranslations('common');
   const [data, setData] = useState<MacBlacklistRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({ mac: '', reason: '', enabled: 'ALL' });
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterForm] = Form.useForm();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMac, setEditingMac] = useState<string | null>(null);
   const [form] = Form.useForm();
@@ -33,7 +36,11 @@ export default function MacBlacklistPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/mac-blacklist');
+      const searchParams = new URLSearchParams();
+      if (activeFilters.mac) searchParams.set('mac', activeFilters.mac);
+      if (activeFilters.reason) searchParams.set('reason', activeFilters.reason);
+      if (activeFilters.enabled !== 'ALL') searchParams.set('enabled', activeFilters.enabled);
+      const res = await fetch(`/api/mac-blacklist?${searchParams}`);
       if (res.ok) {
         const rows = await res.json();
         setData(rows);
@@ -41,9 +48,26 @@ export default function MacBlacklistPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeFilters]);
 
   useEffect(() => { fetchData(); fetchMacNotes(); }, [fetchData, fetchMacNotes]);
+
+  const handleSearch = async () => {
+    try {
+      const values = await filterForm.validateFields();
+      setActiveFilters({
+        mac: values.mac || '',
+        reason: values.reason || '',
+        enabled: values.enabled || 'ALL',
+      });
+    } catch { /* validation */ }
+  };
+
+  const handleReset = () => {
+    filterForm.resetFields();
+    filterForm.setFieldsValue({ mac: '', reason: '', enabled: 'ALL' });
+    setActiveFilters({ mac: '', reason: '', enabled: 'ALL' });
+  };
 
   const handleAdd = () => {
     setEditingMac(null);
@@ -159,8 +183,47 @@ export default function MacBlacklistPage() {
     <>
       <div className="page-title-bar" style={{ justifyContent: 'space-between' }}>
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
-        <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addEntry')}</Button>
+        <Space>
+          <Button
+            size="small"
+            icon={filterOpen ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => setFilterOpen(!filterOpen)}
+          >
+            {t('filter')}
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} size="small" onClick={handleAdd}>{t('addEntry')}</Button>
+        </Space>
       </div>
+
+      {filterOpen && (
+        <Card size="small" style={{ marginBottom: 12 }}>
+          <Form form={filterForm} layout="inline" initialValues={{ mac: '', reason: '', enabled: 'ALL' }}>
+            <Form.Item name="mac" label={t('macAddress')}>
+              <Input size="small" placeholder={t('macPlaceholder')} style={{ width: 180 }} allowClear />
+            </Form.Item>
+            <Form.Item name="reason" label={t('reason')}>
+              <Input size="small" placeholder={t('reasonPlaceholder')} style={{ width: 160 }} allowClear />
+            </Form.Item>
+            <Form.Item name="enabled" label={t('enabled')}>
+              <Select style={{ width: 130 }} size="small" allowClear>
+                <Select.Option value="ALL">{t('allStates')}</Select.Option>
+                <Select.Option value="1">{t('enabled')}</Select.Option>
+                <Select.Option value="0">{t('disabled')}</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item>
+              <Space>
+                <Button type="primary" size="small" icon={<SearchOutlined />} onClick={handleSearch}>
+                  {tc('search')}
+                </Button>
+                <Button size="small" icon={<ReloadOutlined />} onClick={handleReset}>
+                  {t('reset')}
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Card>
+      )}
 
       <Table columns={columns} dataSource={data} rowKey="mac_address" loading={loading}
         size="small" scroll={{ x: 'max-content' }}
