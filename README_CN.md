@@ -186,6 +186,10 @@ FluxDHCP
 | `{{timestamp}}` | ISO 8601 时间戳 |
 | `{{datetime}}` | 本地日期时间（如 `2026-07-23 12:34:56`）|
 
+## 界面截图
+
+![中文界面](docs/screenshots/home-zh.png)
+
 ## 许可证
 
 本项目基于 [GNU Affero 通用公共许可证 v3.0](./LICENSE) 开源。

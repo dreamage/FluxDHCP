@@ -186,6 +186,10 @@ DHCP config is automatically hot-reloaded after import (no service restart neede
 | `{{timestamp}}` | ISO 8601 timestamp |
 | `{{datetime}}` | Local date-time (e.g. `2026-07-23 12:34:56`) |
 
+## Screenshots
+
+![English UI](docs/screenshots/homepage-en.png)
+
 ## License
 
 This project is licensed under the [GNU Affero General Public License v3.0](./LICENSE).
