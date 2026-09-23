@@ -510,3 +510,74 @@ code, pre, .mono {
   .ant-table { font-size: 12px; }
   .ant-tabs-tab { padding: 4px 6px !important; font-size: 11px !important; }
 }
+
+/* ========== Dashboard Charts ========== */
+:root {
+  --color-chart-1: #4a90d9;
+  --color-chart-2: #5ba8b5;
+  --color-chart-3: #c49558;
+  --color-chart-4: #c27070;
+  --color-chart-5: #5da878;
+  --color-chart-6: #8070a8;
+  --color-chart-grid: rgba(15, 23, 42, 0.08);
+  --color-lease-expired: #94a3b8;
+  --color-lease-released: #cbd5e1;
+}
+
+:root[data-theme="dark"] {
+  --color-chart-1: #6aace8;
+  --color-chart-2: #6fc0cb;
+  --color-chart-3: #d9a76a;
+  --color-chart-4: #d98a8a;
+  --color-chart-5: #6fc08a;
+  --color-chart-6: #9b8bc4;
+  --color-chart-grid: rgba(241, 245, 249, 0.1);
+  --color-lease-expired: #64748b;
+  --color-lease-released: #475569;
+}
+
+/* 等宽数字 — 避免数值刷新时宽度跳动 */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* 卡片入场动画（stagger 由内联 animation-delay 控制） */
+@keyframes cardRiseIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-rise {
+  animation: cardRiseIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* DHCP 服务运行状态指示点 */
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  50%      { box-shadow: 0 0 0 5px rgba(34, 197, 94, 0); }
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot-running {
+  background: #22c55e;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+.status-dot-stopped {
+  background: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-rise,
+  .status-dot-running {
+    animation: none !important;
+  }
+}
