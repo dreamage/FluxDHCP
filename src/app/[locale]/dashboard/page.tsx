@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import {
   Card, Row, Col, Typography, Progress, Tag, Space, Tooltip, Alert,
-  Segmented, Button, Skeleton, Divider,
+  Segmented, Button, Skeleton, Divider, Switch, Select,
 } from 'antd';
 import {
   TeamOutlined, ClusterOutlined, EnvironmentOutlined, LineChartOutlined,
@@ -146,9 +146,12 @@ export default function DashboardPage() {
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState('');
   const [trendRange, setTrendRange] = useState<TrendRange>('h24');
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(30000);
   const { macNotes, fetchMacNotes } = useMacNotes();
   const notify = useNotify();
   const hasNotified = useRef(false);
+  const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tRef = useRef(t);
   const notifyRef = useRef(notify);
   useEffect(() => { tRef.current = t; notifyRef.current = notify; });
@@ -195,11 +198,17 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // 首次加载
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // 自动刷新（可开关 + 可调间隔），参考 DHCP 日志页
   useEffect(() => {
-    fetchData();
-    const timer = setInterval(() => fetchData(true), 30000);
-    return () => clearInterval(timer);
-  }, [fetchData]);
+    if (!autoRefresh) return;
+    autoRefreshRef.current = setInterval(() => fetchData(true), refreshInterval);
+    return () => {
+      if (autoRefreshRef.current) clearInterval(autoRefreshRef.current);
+    };
+  }, [autoRefresh, refreshInterval, fetchData]);
 
   const usagePercent = data && data.totalIPs > 0
     ? Math.round((data.activeLeases / data.totalIPs) * 100) : 0;
@@ -266,6 +275,17 @@ export default function DashboardPage() {
           {data && lastUpdated && (
             <Text type="secondary" style={{ fontSize: 12 }}>{t('lastUpdated', { time: lastUpdated })}</Text>
           )}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <Switch size="small" checked={autoRefresh} onChange={setAutoRefresh} />
+            <span style={{ fontSize: 13, whiteSpace: 'nowrap' }}>{t('autoRefresh')}</span>
+          </span>
+          {autoRefresh && (
+            <Select value={refreshInterval} onChange={setRefreshInterval} style={{ width: 90 }} size="small">
+              <Select.Option value={10000}>10{t('seconds')}</Select.Option>
+              <Select.Option value={30000}>30{t('seconds')}</Select.Option>
+              <Select.Option value={60000}>60{t('seconds')}</Select.Option>
+            </Select>
+          )}
           <Button size="small" icon={<ReloadOutlined />} onClick={() => fetchData()} loading={loading}>
             {t('refresh')}
           </Button>
@@ -283,7 +303,7 @@ export default function DashboardPage() {
           <Col xs={24} lg={14}>
             <Row gutter={[16, 16]}>
               {[0, 1, 2, 3].map(i => (
-                <Col xs={12} sm={12} md={6} key={i}>
+                <Col xs={12} sm={12} md={12} key={i}>
                   <Card variant="borderless" style={{ borderRadius: 12 }}><Skeleton active paragraph={{ rows: 1 }} /></Card>
                 </Col>
               ))}
@@ -297,7 +317,7 @@ export default function DashboardPage() {
 
       {data && (
         <>
-          {/* ===== Hero：服务状态 + 总体使用率 | KPI ===== */}
+          {/* ===== Hero：服务状态 + 总体使用率 | KPI (2×2) ===== */}
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={10}>
               <Card variant="borderless" className="card-rise" style={{ borderRadius: 12, height: '100%' }}>
@@ -340,19 +360,19 @@ export default function DashboardPage() {
 
             <Col xs={24} lg={14}>
               <Row gutter={[16, 16]}>
-                <Col xs={12} sm={12} md={6}>
+                <Col xs={12} sm={12} md={12}>
                   <StatCard icon={<TeamOutlined />} color="#0ea5e9" title={t('activeLeases')}
                     value={data.activeLeases.toLocaleString()} suffix={`/ ${data.totalIPs.toLocaleString()}`} />
                 </Col>
-                <Col xs={12} sm={12} md={6}>
+                <Col xs={12} sm={12} md={12}>
                   <StatCard icon={<ClusterOutlined />} color="#8b5cf6" title={t('poolCount')}
                     value={data.activePoolCount} suffix={`/ ${data.poolCount}`} />
                 </Col>
-                <Col xs={12} sm={12} md={6}>
+                <Col xs={12} sm={12} md={12}>
                   <StatCard icon={<EnvironmentOutlined />} color="#f59e0b" title={t('reservationCount')}
                     value={data.reservationCount.toLocaleString()} />
                 </Col>
-                <Col xs={12} sm={12} md={6}>
+                <Col xs={12} sm={12} md={12}>
                   <StatCard icon={<LineChartOutlined />} color="#22c55e" title={t('requests24h')}
                     value={data.requests24h.toLocaleString()} />
                 </Col>
@@ -382,9 +402,10 @@ export default function DashboardPage() {
                 <TrendAreaChart
                   data={trendData}
                   unit={trendUnit}
-                  height={220}
+                  height={160}
                   emptyText={t('noTrendData')}
                   ariaLabel={t('eventTrend')}
+                  resolveType={(type) => ({ label: tMsg(String(type)), color: msgColor(type) })}
                 />
               </Panel>
             </Col>
@@ -448,10 +469,22 @@ export default function DashboardPage() {
             </Col>
           </Row>
 
-          {/* ===== 预警 / 健康 / 安全 ===== */}
+          {/* ===== 安全 / 预警 / 健康 ===== */}
           <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
             <Col xs={24} md={8}>
-              <Panel title={<Space size={6}><FieldTimeOutlined />{t('expiringLeases')}</Space>} delay={280}>
+              <Panel title={t('securityOverview')} delay={280}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <MiniStat label={t('macBlacklist')} value={data.security.macBlacklist} />
+                  <MiniStat label={t('activeDeclines')} value={data.security.activeDeclines} />
+                  <Divider style={{ margin: '2px 0' }} />
+                  <MiniStat label={t('deviceOptions')} value={data.assets.deviceOptions} />
+                  <MiniStat label={t('macNotesCount')} value={data.assets.macNotes} />
+                  <MiniStat label={t('disabledPools')} value={data.assets.disabledPools} />
+                </div>
+              </Panel>
+            </Col>
+            <Col xs={24} md={8}>
+              <Panel title={<Space size={6}><FieldTimeOutlined />{t('expiringLeases')}</Space>} delay={320}>
                 {data.expiringLeases.within24h === 0 ? (
                   <Text type="secondary" style={{ fontSize: 13 }}>{t('noExpiring')}</Text>
                 ) : (
@@ -463,7 +496,7 @@ export default function DashboardPage() {
               </Panel>
             </Col>
             <Col xs={24} md={8}>
-              <Panel title={t('webhookHealth')} delay={320}>
+              <Panel title={t('webhookHealth')} delay={360}>
                 {data.webhookHealth.success + data.webhookHealth.failed === 0 ? (
                   <Text type="secondary" style={{ fontSize: 13 }}>{t('noWebhooks')}</Text>
                 ) : (
@@ -472,18 +505,6 @@ export default function DashboardPage() {
                     <MiniStat label={t('webhookFailed')} value={data.webhookHealth.failed} color="var(--color-chart-4)" />
                   </div>
                 )}
-              </Panel>
-            </Col>
-            <Col xs={24} md={8}>
-              <Panel title={t('securityOverview')} delay={360}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <MiniStat label={t('macBlacklist')} value={data.security.macBlacklist} />
-                  <MiniStat label={t('activeDeclines')} value={data.security.activeDeclines} />
-                  <Divider style={{ margin: '2px 0' }} />
-                  <MiniStat label={t('deviceOptions')} value={data.assets.deviceOptions} />
-                  <MiniStat label={t('macNotesCount')} value={data.assets.macNotes} />
-                  <MiniStat label={t('disabledPools')} value={data.assets.disabledPools} />
-                </div>
               </Panel>
             </Col>
           </Row>

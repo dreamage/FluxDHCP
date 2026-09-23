@@ -72,7 +72,9 @@
     "noClients": "No client activity",
     "refresh": "Refresh",
     "lastUpdated": "Updated {time}",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "autoRefresh": "Auto refresh",
+    "seconds": "s"
   },
   "pools": {
     "title": "Address Pools",

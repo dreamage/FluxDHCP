@@ -8,7 +8,10 @@ type TrendUnit = 'hour' | 'day';
 interface TrendPoint {
   /** 桶起始时间 (ISO 8601 UTC，前端转本地时区显示) */
   t: string;
+  /** 该桶事件总数 */
   count: number;
+  /** 各 DHCP 消息类型数量 (message_type -> count)，供悬停明细展示 */
+  byType: Record<number, number>;
 }
 
 /**
@@ -42,18 +45,33 @@ function queryTrend(db: ReturnType<typeof getDb>, unit: TrendUnit, count: number
   const firstKey = keys[0];
   const since = unit === 'hour' ? `${firstKey}:00:00.000Z` : `${firstKey}T00:00:00.000Z`;
 
+  // 一次查询按 桶 + 消息类型 分组，既得总数也能得各类型明细
   const rows = db.prepare(
-    `SELECT substr(timestamp, 1, ${sliceLen}) AS bucket, COUNT(*) AS count
+    `SELECT substr(timestamp, 1, ${sliceLen}) AS bucket, message_type AS type, COUNT(*) AS count
      FROM dhcp_logs
      WHERE timestamp >= ?
-     GROUP BY bucket`
-  ).all(since) as Array<{ bucket: string; count: number }>;
+     GROUP BY bucket, type`
+  ).all(since) as Array<{ bucket: string; type: number; count: number }>;
 
-  const countMap = new Map(rows.map(r => [r.bucket, r.count]));
-  return keys.map(k => ({
-    t: unit === 'hour' ? `${k}:00:00.000Z` : `${k}T00:00:00.000Z`,
-    count: countMap.get(k) || 0,
-  }));
+  const agg = new Map<string, { total: number; byType: Record<number, number> }>();
+  for (const r of rows) {
+    let entry = agg.get(r.bucket);
+    if (!entry) {
+      entry = { total: 0, byType: {} };
+      agg.set(r.bucket, entry);
+    }
+    entry.total += r.count;
+    entry.byType[r.type] = (entry.byType[r.type] || 0) + r.count;
+  }
+
+  return keys.map(k => {
+    const entry = agg.get(k);
+    return {
+      t: unit === 'hour' ? `${k}:00:00.000Z` : `${k}T00:00:00.000Z`,
+      count: entry?.total || 0,
+      byType: entry?.byType || {},
+    };
+  });
 }
 
 export async function GET() {

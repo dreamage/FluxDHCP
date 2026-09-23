@@ -5,7 +5,16 @@ import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 export interface TrendPoint {
   /** 桶起始时间 (ISO 8601 UTC) */
   t: string;
+  /** 该桶事件总数 */
   count: number;
+  /** 各 DHCP 消息类型数量 (message_type -> count) */
+  byType?: Record<number, number>;
+}
+
+/** 悬停明细中单个消息类型的展示元信息 */
+export interface TrendTypeMeta {
+  label: string;
+  color: string;
 }
 
 interface TrendAreaChartProps {
@@ -16,19 +25,26 @@ interface TrendAreaChartProps {
   color?: string;
   emptyText?: string;
   ariaLabel?: string;
+  /** 解析消息类型 -> 展示元信息；返回 null 则该类型不计入明细 */
+  resolveType?: (type: number) => TrendTypeMeta | null;
 }
+
+// 明细最多展示的类型行数，超出部分合并为一行，避免 tooltip 溢出图表
+const MAX_DETAIL_ROWS = 6;
 
 /**
  * 手写 SVG 面积趋势图 — 零第三方依赖。
  * 采用 ResizeObserver 获取容器实宽，viewBox 与像素 1:1 映射，避免描边变形。
+ * 悬停时除总数外，还会按 DHCP 消息类型展示明细。
  */
 export default function TrendAreaChart({
   data,
   unit,
-  height = 200,
+  height = 180,
   color = 'var(--color-chart-1)',
   emptyText = '',
   ariaLabel,
+  resolveType,
 }: TrendAreaChartProps) {
   const rawId = useId();
   // useId 可能含特殊字符（如 «r0»），清理后再用于 SVG url(#id) 引用更安全
@@ -48,7 +64,7 @@ export default function TrendAreaChart({
     return () => ro.disconnect();
   }, []);
 
-  const pad = { top: 16, right: 14, bottom: 26, left: 34 };
+  const pad = { top: 14, right: 14, bottom: 24, left: 34 };
   const innerW = Math.max(0, width - pad.left - pad.right);
   const innerH = Math.max(0, height - pad.top - pad.bottom);
   const n = data.length;
@@ -102,6 +118,27 @@ export default function TrendAreaChart({
   };
 
   const hoverPoint = hover != null && points[hover] ? points[hover] : null;
+
+  // 悬停明细：按各消息类型数量降序
+  const detailRows = useMemo(() => {
+    const byType = hover != null ? data[hover]?.byType : undefined;
+    if (!byType || !resolveType) return [];
+    return Object.entries(byType)
+      .map(([type, value]) => {
+        const meta = resolveType(Number(type));
+        return meta ? { type: Number(type), label: meta.label, color: meta.color, value } : null;
+      })
+      .filter((r): r is { type: number; label: string; color: string; value: number } => r !== null)
+      .sort((a, b) => b.value - a.value);
+  }, [hover, data, resolveType]);
+
+  const visibleRows = detailRows.slice(0, MAX_DETAIL_ROWS);
+  const hiddenRows = detailRows.slice(MAX_DETAIL_ROWS);
+  const hiddenTotal = hiddenRows.reduce((sum, r) => sum + r.value, 0);
+
+  // tooltip 定位：数据点在上半部则显示在下方，反之显示在上方，避免溢出容器
+  const tipBelow = hoverPoint ? hoverPoint.y < height * 0.45 : true;
+  const tipLeft = hoverPoint ? Math.max(80, Math.min(width - 80, hoverPoint.x)) : 0;
 
   return (
     <div ref={wrapRef} style={{ position: 'relative', width: '100%' }}>
@@ -183,29 +220,56 @@ export default function TrendAreaChart({
             ))}
           </svg>
 
-          {/* Hover Tooltip */}
+          {/* Hover Tooltip：总数 + 各消息类型明细 */}
           {hoverPoint && (
             <div
               style={{
                 position: 'absolute',
-                left: Math.max(46, Math.min(width - 46, hoverPoint.x)),
-                top: 0,
-                transform: 'translate(-50%, -100%)',
+                left: tipLeft,
+                transform: 'translateX(-50%)',
+                ...(tipBelow
+                  ? { top: hoverPoint.y + 12 }
+                  : { bottom: height - hoverPoint.y + 12 }),
                 background: 'var(--color-surface-elevated)',
                 border: '1px solid var(--color-border)',
-                borderRadius: 6,
-                padding: '4px 8px',
+                borderRadius: 8,
+                padding: '6px 10px',
                 fontSize: 11,
-                lineHeight: 1.4,
+                lineHeight: 1.5,
                 color: 'var(--color-text)',
-                boxShadow: 'var(--shadow-sm)',
+                boxShadow: 'var(--shadow-md)',
                 pointerEvents: 'none',
                 whiteSpace: 'nowrap',
+                minWidth: 108,
                 zIndex: 2,
               }}
             >
-              <div style={{ color: 'var(--color-text-secondary)' }}>{fmtLabel(hoverPoint.t)}</div>
-              <div style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{hoverPoint.count}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, color: 'var(--color-text-secondary)' }}>
+                <span>{fmtLabel(hoverPoint.t)}</span>
+                <span className="tabular-nums" style={{ fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>
+                  {hoverPoint.count}
+                </span>
+              </div>
+
+              {visibleRows.length > 0 && (
+                <>
+                  <div style={{ borderTop: '1px solid var(--color-border-subtle)', margin: '4px 0' }} />
+                  {visibleRows.map(row => (
+                    <div key={row.type} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: row.color, flexShrink: 0 }} />
+                      <span style={{ flex: 1, color: 'var(--color-text-secondary)' }}>{row.label}</span>
+                      <span className="tabular-nums" style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{row.value}</span>
+                    </div>
+                  ))}
+                  {hiddenRows.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      <span style={{ width: 6, flexShrink: 0 }} />
+                      <span style={{ flex: 1, color: 'var(--color-text-muted)' }}>···</span>
+                      <span className="tabular-nums" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{hiddenTotal}</span>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
         </>

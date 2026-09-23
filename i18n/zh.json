@@ -72,7 +72,9 @@
     "noClients": "暂无客户端活动",
     "refresh": "刷新",
     "lastUpdated": "更新于 {time}",
-    "viewAll": "查看全部"
+    "viewAll": "查看全部",
+    "autoRefresh": "自动刷新",
+    "seconds": "秒"
   },
   "pools": {
     "title": "地址池管理",
