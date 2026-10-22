@@ -5,14 +5,14 @@ description: Operate a FluxDHCP server through its MCP tools — inspect pools, 
 
 # FluxDHCP operations handbook
 
-This assumes the `fluxdhcp` MCP server is connected. If it is not, ask the user to configure `FLUXDHCP_URL` and `FLUXDHCP_API_KEY`. Do not try to work around the MCP layer with raw curl calls.
+This assumes the `fluxdhcp` MCP server is connected. It is configured with a URL (`http://host:3000/api/mcp`) plus an `Authorization: Bearer` header — if tools are missing, ask the user to fix that entry. Do not try to work around the MCP layer with raw curl calls.
 
-The server rejects anonymous requests. Any tool returning `AUTH_REQUIRED` means the key is missing — point the user to **Settings → API access** and wait. Do not look for another way in.
+The server rejects anonymous requests. Any tool returning `AUTH_REQUIRED` means the key is missing — point the user to the **API Access** page in the sidebar and wait. Do not look for another way in.
 
 ## Credentials
 
 - Default to a **read-only** key. Read scope covers everything needed for troubleshooting.
-- Only read/write keys can change configuration, add reservations, block MACs or resize pools. On `API_KEY_READ_ONLY`, stop and tell the user to switch keys; never try to bypass it.
+- Only read/write keys can add or edit reservations, change pools, options, notes, blacklists or webhooks. On `API_KEY_READ_ONLY`, stop and tell the user to switch keys; never try to bypass it.
 - Never repeat the key value in replies, logs or commits.
 
 ## Tool map
@@ -21,7 +21,8 @@ The server rejects anonymous requests. Any tool returning `AUTH_REQUIRED` means 
 |---|---|
 | Is the service up? How full are the pools? | `dhcp_status` |
 | What is this device, and what address does it have? | `mac_info` |
-| Which pools exist? Which settings are active? | `pool_list` / `pool_get` / `config_get` |
+| Which pools exist? | `pool_list` / `pool_get` |
+| What are the current server settings? | `config_get` |
 | Which IPs in a pool are taken? | `pool_ips` |
 | Who holds which address? | `lease_list` |
 | Which devices have fixed addresses? | `reservation_list` |
@@ -46,14 +47,14 @@ Start with `mac_info mac=<mac>` — it returns the reserved or leased IP, pool, 
 2. `dhcp_status` — if the service is stopped, nothing gets a lease
 3. `logs_query mac=<mac> pageSize=20` — is the client's DISCOVER going unanswered, or is the REQUEST being NAKed?
 4. `lease_list mac=<mac>` — did an old lease expire and fail to renew?
-5. `pool_get` + `pool_ips` — is the pool full, `enabled=0`, or is the IP still in DECLINE cooldown?
+5. `pool_get` + `pool_ips` — is the pool full, is `enabled=0`, or was the address DECLINEd recently (`decline_blacklist_duration` in `config_get`)?
 
 The `server_response` field on NAK rows states the reason (not in pool, already leased, reservation mismatch). Quote it when explaining the failure.
 
 ### B. Give a new device a fixed address
 
 1. `pool_list` — pick a pool with `enabled=1`; note `start_ip` / `end_ip`
-2. `pool_ips` — choose an address with `status=free` (not `reserved` or `bound`)
+2. `pool_ips` — choose an address with `status=free` (not `reserved`, `bound` or `offered`)
 3. `note_list mac=<mac>` — reuse an existing note as `description` if present
 4. `reservation_create`
 5. Verify with `reservation_list mac=<mac>`
@@ -77,6 +78,7 @@ Before shrinking a range, verify no active lease sits in the portion being remov
 ## Hard constraints
 
 - Taking the DHCP service down and importing a configuration are **not available to you** — they are web-UI only, by design. If a task needs either, say so plainly and ask the user to do it there; do not look for a workaround.
+- Changing server settings (lease time, T1/T2, allocation order, log retention, ports) is **also web-UI only**. There is no write tool for it; hand the request back instead of trying `config_get` twice.
 - Never delete a pool while it has active leases. The server returns 409 — do not work around it by deleting leases.
 - Do not batch-delete reservations, blacklist entries or options. One at a time, each individually reversible.
 - `netmask` is always dotted decimal (`255.255.255.0`), never `/24`.
@@ -87,6 +89,6 @@ Before shrinking a range, verify no active lease sits in the portion being remov
 ## Stop and ask the user when
 
 - The pool is full and cannot be expanded within the current subnet
-- The change touches `server_ip` / `web_port` and would rebind the service
+- The request needs a server setting change (lease time, ports, retention) — point the user at the Settings page
 - A single action could affect many devices
 - The request conflicts with the current state (for example deleting a pool that still has active leases)

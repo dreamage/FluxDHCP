@@ -24,8 +24,8 @@
 - **Multi-tab Navigation** - Grounded tab bar with right-click context menu (refresh, close, close others, close right, close all)
 - **Loading Splash Screen** - Dark-mode-aware CSS splash screen eliminates flash of unstyled content during initial load
 - **i18n Support** - Full English and Chinese localization including DHCP option codes, server response messages, NAK reason codes, and browser locale detection
-- **Security** - Admin password login (scrypt, 7-day sessions, per-session revocation, CLI reset), API keys with read/write scopes stored as hashes, Origin header validation on API mutations (CSRF protection), SSRF-protected webhook URLs, IP format validation
-- **AI Agent Access** - MCP server over Streamable HTTP (`POST /api/mcp`) exposing 33 tools with read/write scopes and confirmation gates on destructive actions, plus a companion skill
+- **Security** - Admin password login (scrypt, 7-day sessions, per-session revocation, CLI reset), API keys with read/write scopes stored as hashes, every API request requires a session or a key, Origin header validation on API mutations (CSRF protection), SSRF-protected webhook URLs, IP format validation
+- **AI Agent Access** - MCP server over Streamable HTTP (`POST /api/mcp`) exposing 33 tools with read/write scopes, an explicit confirmation gate on log clearing, plus a companion skill
 - **Accessibility** - Focus-visible styles for keyboard navigation, error boundary for crash recovery
 - **Docker Ready** - One-command deployment with Docker Compose
 
@@ -52,7 +52,7 @@ docker-compose up -d
 
 Open `http://localhost:3000` in your browser.
 
-> On first launch you will be asked to set an admin password (8+ characters). If you lose it, run `npm run reset-password` on the server — this returns the app to the first-run state.
+> On first launch you will be asked to set an admin password (8+ characters). If you lose it, run `npm run reset-password` on the server (Docker: `docker exec -it -u nextjs fluxdhcp npm run reset-password`) — this returns the app to the first-run state.
 > Set `ADMIN_PASSWORD` on first boot to initialize immediately and avoid a first-visitor window.
 
 ### Manual Installation
@@ -96,8 +96,8 @@ npm run dev
 | **MAC Notes** | MAC address labels and notes, sortable columns, page size selector |
 | **Webhooks** | Webhook CRUD, event subscription, template variables, custom headers, SSRF-protected URLs, test button |
 | **DHCP Logs** | Millisecond timestamps, direction indicator, 60+ option code translations, column visibility selector, auto-refresh (3/5/10/30/60s, default 10s), MAC/IP autocomplete filters, clear-all button with total count, page size selector |
-| **API Access** | API keys for AI agents: read/write scopes, prefix-only display, one-time plaintext, enable/disable, last-used time, plus copyable MCP client configuration |
-| **Settings** | DHCP service control, server config (IP/listen interface/web port/default lease time), T1/T2 ratios with tooltips, DHCP log retention days, DECLINE blacklist duration, webhook timeout, IP allocation order (sequential/random), honor-client-requested-IP toggle, config import/export (card-style selector, exported-at display, validation) |
+| **API Access** | API keys for AI agents and scripts: read/write scopes, prefix-only display, one-time plaintext, enable/disable, last-used time, plus copyable MCP client configuration and skill download |
+| **Settings** | DHCP service control, server config (IP/listen interface/web port/default lease time), T1/T2 ratios with tooltips, DHCP log retention days, DECLINE blacklist duration, webhook timeout, IP allocation order (sequential/random), honor-client-requested-IP toggle, config import/export, plus account security (password change, session revocation) |
 
 ## Config Import/Export
 
@@ -121,7 +121,7 @@ DHCP config is automatically hot-reloaded after import (no service restart neede
 
 FluxDHCP exposes its API as MCP tools over Streamable HTTP at `POST /api/mcp`, so an agent can inspect the server and make changes under the same validation and permission checks as the web UI.
 
-Create a key on the **API Access** page (sidebar). A read-only key covers troubleshooting; switch to read/write only when the agent must change configuration. API keys can never manage other API keys.
+Create a key on the **API Access** page (sidebar). A read-only key covers troubleshooting; switch to read/write only when the agent must change pools, reservations, options, notes, blacklists or webhooks. API keys can never manage other API keys.
 
 ```json
 {
@@ -137,9 +137,9 @@ Create a key on the **API Access** page (sidebar). A read-only key covers troubl
 
 Notes:
 
-- 33 tools: 15 read-only, 18 write. Service start/stop and config import stay web-only. Read-only keys get `403 API_KEY_READ_ONLY` on any write tool.
+- 33 tools: 15 read-only, 18 write. Read-only keys get `403 API_KEY_READ_ONLY` on any write tool.
 - The endpoint is stateless and accepts **API keys only** — browser sessions are rejected, because tool calls forward the same key to the internal API.
-- Starting/stopping the DHCP service and importing a configuration are **not exposed to MCP**. They can take a whole subnet offline in one call, so they stay in the web UI.
+- Starting/stopping the DHCP service, importing a configuration and changing server settings are **not exposed to MCP**. They can take a whole subnet offline in one call, so they stay in the web UI.
 - Pair it with the bundled skill so the agent follows safe ordering instead of improvising. The skill is served publicly (static documentation, no instance data), so a machine without a repository checkout can install it directly:
 
   ```bash

@@ -2,14 +2,14 @@
 
 > 这是 `SKILL.md` 的中文对照版，供人阅读。Agent 实际加载的是 `SKILL.md`（英文），因为 MCP 工具描述也是英文，保持同一语言可以减少歧义。
 
-这套流程假设 `fluxdhcp` MCP server 已连接。没连上时先让用户配置 `FLUXDHCP_URL` 和 `FLUXDHCP_API_KEY`，不要试图用 curl 绕过。
+这套流程假设 `fluxdhcp` MCP server 已连接。它通过 URL（`http://host:3000/api/mcp`）加 `Authorization: Bearer` 头接入；工具缺失时让用户检查这条配置，不要试图用 curl 绕过。
 
-服务端不接受匿名请求。任何工具返回 `AUTH_REQUIRED` 都说明 key 没配好——让用户到 **设置 → API 访问** 创建一把，不要改用其他方式发请求。
+服务端不接受匿名请求。任何工具返回 `AUTH_REQUIRED` 都说明 key 没配好——让用户到左侧 **API 访问** 页面创建一把，不要改用其他方式发请求。
 
 ## 凭据策略
 
 - 默认使用**只读 key**。只读能完成排查类任务的全部工作。
-- 只有用户明确要求“改配置 / 加保留 / 封 MAC / 扩容”时才需要写权限；遇到 `API_KEY_READ_ONLY` 就停下来告诉用户换 key，不要自己想办法绕过。
+- 只有用户明确要求“改地址池 / 加保留 / 封 MAC / 管 webhook”时才需要写权限；遇到 `API_KEY_READ_ONLY` 就停下来告诉用户换 key，不要自己想办法绕过。
 - 不要在回复、日志或提交里出现 key 明文。
 
 ## 工具速查
@@ -18,7 +18,8 @@
 |---|---|
 | 服务是否在跑、池用了多少、24h 请求量 | `dhcp_status` |
 | 这台设备是谁、现在拿了什么 IP | `mac_info` |
-| 有哪些地址池、当前配置是什么 | `pool_list` / `pool_get` / `config_get` |
+| 有哪些地址池 | `pool_list` / `pool_get` |
+| 当前服务器配置是什么 | `config_get` |
 | 池里哪些 IP 被占了 | `pool_ips` |
 | 谁拿了什么地址 | `lease_list` |
 | 谁被固定了地址 | `reservation_list` |
@@ -43,14 +44,14 @@
 2. `dhcp_status` —— 服务停了的话所有设备都拿不到
 3. `logs_query mac=<mac> pageSize=20` —— 看最后几条是 DISCOVER 无应答，还是 REQUEST 被 NAK
 4. `lease_list mac=<mac>` —— 是否有 EXPIRED 后没续上
-5. `pool_get` + `pool_ips` —— 池是否已满、是否 `enabled=0`、该 IP 是否在 DECLINE 冷却期
+5. `pool_get` + `pool_ips` —— 池是否已满、是否 `enabled=0`、该地址是否刚被 DECLINE 过（`config_get` 里的 `decline_blacklist_duration`）
 
 `logs_query` 里 NAK 的 `server_response` 会写明原因（不在池内、已被占用、保留地址不匹配等），直接引用它解释给用户。
 
 ### B. 给新设备分配固定 IP
 
 1. `pool_list` 选一个 `enabled=1` 的池，注意 `start_ip`/`end_ip`
-2. `pool_ips` 找一个 `status=free` 的地址（不要挑 reserved/bound 的）
+2. `pool_ips` 找一个 `status=free` 的地址（不要挑 reserved / bound / offered 的）
 3. `note_list mac=<mac>` 看是否已有备注，可复用为 `description`
 4. `reservation_create`
 5. 用 `reservation_list mac=<mac>` 复核
@@ -74,6 +75,7 @@
 ## 硬约束
 
 - **启停 DHCP 服务和导入配置你没有权限做**——它们刻意只保留在 Web 界面。遇到这类需求，直接说明并让用户去界面操作，不要另找绕路。
+- **修改服务器配置（租约时间、T1/T2、分配顺序、日志保留、端口）同样只能在 Web 界面做**。没有对应的写工具，把需求交回用户，不要反复调 `config_get` 试探。
 - 删除地址池（`pool_delete`）前必须先确认无活跃租约；服务端会返回 409，不要靠删除租约来绕过。
 - 不要批量删除 reservation / blacklist / options。逐条来，每条都能单独回滚。
 - `netmask` 一律点分十进制（`255.255.255.0`），不要写 `/24`。
@@ -84,6 +86,6 @@
 ## 停下来问人的情况
 
 - 池已满且无法在当前子网内扩容
-- 需要修改 `server_ip` / `web_port` 这类会导致服务重绑的配置
+- 需要修改服务器配置（租约时间、端口、日志保留）——指引用户去设置页
 - 一次操作可能影响大量设备
 - 用户的要求与当前状态冲突（比如要删的池里还有活跃租约）

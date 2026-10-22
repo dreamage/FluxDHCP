@@ -24,8 +24,8 @@
 - **多标签页导航** - 底部对齐 Tab 栏，右键菜单支持刷新、关闭、关闭其它、关闭右侧、关闭所有
 - **加载动画** - 感知深色模式的纯 CSS 启动屏幕，消除页面加载时的无样式闪烁
 - **国际化** - 完整的中英文支持，包括 DHCP 选项码、服务器响应消息、NAK 原因码，浏览器语言自动检测
-- **安全** - 管理密码登录（scrypt，7 天会话，可逐条吊销，CLI 重置）、API Key（只读/读写、只存哈希）、API 请求 Origin 校验（CSRF 防护）、Webhook URL SSRF 防护、IPv4 格式校验
-- **AI 智能体接入** - MCP server 通过 Streamable HTTP（`POST /api/mcp`）暴露 33 个工具，按读写权限管控，危险操作需显式确认，并附配套 skill
+- **安全** - 管理密码登录（scrypt，7 天会话，可逐条吊销，CLI 重置）、API Key（只读/读写、只存哈希）、所有 API 请求都需要会话或密钥、API 请求 Origin 校验（CSRF 防护）、Webhook URL SSRF 防护、IPv4 格式校验
+- **AI 智能体接入** - MCP server 通过 Streamable HTTP（`POST /api/mcp`）暴露 33 个工具，按读写权限管控，清空日志需显式确认，并附配套 skill
 - **无障碍** - focus-visible 键盘导航样式，React Error Boundary 崩溃恢复
 - **Docker 一键部署** - 使用 Docker Compose 快速启动
 
@@ -52,7 +52,7 @@ docker-compose up -d
 
 在浏览器中打开 `http://localhost:3000`。
 
-> 首次打开会要求设置管理密码（至少 8 位）。忘记密码时在服务器上执行 `npm run reset-password` 重置，重置后回到首次设置状态。
+> 首次打开会要求设置管理密码（至少 8 位）。忘记密码时在服务器上执行 `npm run reset-password` 重置（Docker：`docker exec -it -u nextjs fluxdhcp npm run reset-password`），重置后回到首次设置状态。
 > 也可以通过环境变量 `ADMIN_PASSWORD` 在首次启动时直接初始化，避免任何“先到先得”的窗口期。
 
 ### 手动安装
@@ -96,8 +96,8 @@ npm run dev
 | **MAC 备注** | 独立页面管理 MAC 地址的备注标签，支持增删改查和排序，每页条数选择器 |
 | **Webhook** | Webhook 增删改查，支持事件订阅、模板变量、自定义请求头、SSRF 防护、测试按钮 |
 | **DHCP日志** | 毫秒级时间戳，方向标识，60+ DHCP 选项码翻译，列显示选择器，自动刷新（3/5/10/30/60 秒，默认 10 秒），MAC/IP 自动补全搜索，IP 筛选支持所有 IP 列，清空全部按钮（带总数显示），每页条数选择器 |
-| **API 访问** | 供 AI agent 使用的 API 密钥：只读/读写权限、仅显示前缀、明文只出现一次、启用开关、最后使用时间，并附可直接复制的 MCP 客户端配置 |
-| **设置** | DHCP 服务控制、服务器配置（服务器 IP/监听网卡/Web 端口/默认租约时间）、T1/T2 参数（带说明）、DHCP 日志保留天数、DECLINE 黑名单时长、Webhook 超时、IP 分配顺序（顺序/随机）、优先分配客户端请求 IP 开关、配置导入导出（卡片式选择器、显示导出时间、含校验） |
+| **API 访问** | 供 AI agent 和外部脚本使用的 API 密钥：只读/读写权限、仅显示前缀、明文只出现一次、启用开关、最后使用时间，并附可直接复制的 MCP 客户端配置与 skill 下载 |
+| **设置** | DHCP 服务控制、服务器配置（服务器 IP/监听网卡/Web 端口/默认租约时间）、T1/T2 参数（带说明）、DHCP 日志保留天数、DECLINE 黑名单时长、Webhook 超时、IP 分配顺序（顺序/随机）、优先分配客户端请求 IP 开关、配置导入导出，以及账号安全（修改密码、注销会话） |
 
 ## 配置导入导出
 
@@ -121,7 +121,7 @@ npm run dev
 
 FluxDHCP 把 API 暴露成 MCP 工具，通过 Streamable HTTP 挂在 `POST /api/mcp`。agent 可以在与服务端相同的校验和权限下检查和修改配置。
 
-密钥在左侧 **API 访问** 页面创建。排查类任务用只读 key，只有确实要改配置时才用读写 key。API Key 永远不能管理其他 API Key。
+密钥在左侧 **API 访问** 页面创建。排查类任务用只读 key，只有确实要改地址池、保留地址、设备选项、备注、黑名单或 webhook 时才用读写 key。API Key 永远不能管理其他 API Key。
 
 ```json
 {
@@ -137,9 +137,9 @@ FluxDHCP 把 API 暴露成 MCP 工具，通过 Streamable HTTP 挂在 `POST /api
 
 几点说明：
 
-- 共 33 个工具：15 个只读、18 个写入。启停服务和配置导入仅限 Web 界面。只读 key 调用写工具会得到 `403 API_KEY_READ_ONLY`。
+- 共 33 个工具：15 个只读、18 个写入。只读 key 调用写工具会得到 `403 API_KEY_READ_ONLY`。
 - 端点是无状态的，且**只接受 API Key**——工具调用会把同一份凭据转发给内部 API，浏览器会话无法这样转发，也不应该用它驱动 agent。
-- 启停 DHCP 服务和导入配置**不通过 MCP 开放**。它们一次调用就能让整个网段断网，只在 Web 界面提供。
+- 启停 DHCP 服务、导入配置、修改服务器设置**都不通过 MCP 开放**。它们一次调用就能让整个网段断网，只在 Web 界面提供。
 - 配合仓库内的 skill 使用，agent 会按推荐顺序操作，而不是即兴发挥。skill 是公开的静态文档（不含任何实例数据），没有仓库副本的机器可以直接下载：
 
   ```bash
