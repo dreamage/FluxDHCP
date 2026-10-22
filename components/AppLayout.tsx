@@ -118,9 +118,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { key: '/options', icon: <ToolOutlined />, label: t('options') },
     { key: '/mac-blacklist', icon: <StopOutlined />, label: t('macBlacklist') },
     { key: '/mac-notes', icon: <TagOutlined />, label: t('macNotes') },
+    { key: '/api-access', icon: <KeyOutlined />, label: t('apiAccess') },
     { key: '/webhooks', icon: <ApiOutlined />, label: t('webhooks') },
     { key: '/dhcp-logs', icon: <HistoryOutlined />, label: t('logs') },
-    { key: '/api-access', icon: <KeyOutlined />, label: t('apiAccess') },
     { key: '/settings', icon: <SettingOutlined />, label: t('settings') },
   ];
 
