@@ -4,10 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "tsx src/server.ts",
-    "build": "next build && tsc -p tsconfig.server.json && tsc -p tsconfig.mcp.json",
+    "build": "next build && tsc -p tsconfig.server.json",
     "start": "NODE_ENV=production node dist/server.js",
     "reset-password": "node dist/scripts/reset-password.js",
-    "mcp": "node dist/mcp/stdio.js",
     "lint": "next lint"
   },
   "dependencies": {

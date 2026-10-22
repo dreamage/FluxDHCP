@@ -22,7 +22,8 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "skipToContent": "Skip to content",
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "apiAccess": "API Access"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -332,14 +333,9 @@
     "apiKeySaved": "I saved it",
     "apiUsageTitle": "Connect an AI agent",
     "apiUsageStep1": "Create a key above. Read-only is enough for troubleshooting; switch to read/write only when configuration changes are needed.",
-    "apiUsageStep2": "Pick a transport: the HTTP endpoint needs no installation; stdio needs this repository locally and a completed build.",
-    "apiUsageStep3": "Add the configuration below to your MCP client (Claude Code, CodeBuddy, Cursor, …).",
-    "apiUsageStep4": "Optional: copy .codebuddy/skills/fluxdhcp into ~/.codebuddy/skills/ so the agent follows the recommended workflow.",
+    "apiUsageStep2": "Add the configuration below to your MCP client (Claude Code, CodeBuddy, Cursor, …).",
+    "apiUsageStep3": "Optional: copy .codebuddy/skills/fluxdhcp into ~/.codebuddy/skills/ so the agent follows the recommended workflow.",
     "apiUsageCopy": "Copy config",
-    "apiUsageTabsHttp": "HTTP endpoint (recommended)",
-    "apiUsageTabsStdio": "stdio (local)",
-    "apiUsageHttpHint": "Nothing to install. The agent can run anywhere that can reach this server.",
-    "apiUsageStdioHint": "Requires Node 18+ and this repository locally, after npm install && npm run build.",
     "apiUsageKeyHint": "The key is shown only once. The snippet above uses a placeholder — replace it with your real key.",
     "apiKeyConfigTitle": "Client configuration",
     "apiKeyConfigHint": "Already contains the key you just created; paste it into your MCP client.",

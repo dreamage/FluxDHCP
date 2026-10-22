@@ -5,9 +5,8 @@ import { registerWriteTools } from './tools/write';
 import { registerServiceTools } from './tools/service';
 
 /**
- * 工具注册的唯一入口。
- * stdio（src/mcp/stdio.ts）和 HTTP（src/app/api/mcp/route.ts）共用这一份定义，
- * 避免两种接入方式的工具集出现差异。
+ * 工具注册的唯一入口，由 HTTP 端点（src/app/api/mcp/route.ts）调用。
+ * 传输层与工具定义分离，后续新增传输方式时无需改动工具代码。
  */
 export function registerAllTools(server: McpServer, client: FluxClient): void {
   registerReadTools(server, client);

@@ -10,7 +10,6 @@ import { translateError } from '@/lib/error-map';
 import { apiErrorMessage } from '@/lib/api-error';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
 import { CONFIG_CATEGORIES, DEFAULT_EXPORT_KEYS } from '@/lib/config-categories';
-import ApiKeysCard from '@/components/ApiKeysCard';
 import SecurityCard from '@/components/SecurityCard';
 
 const { Title, Text } = Typography;
@@ -419,9 +418,6 @@ export default function SettingsPage() {
           <Text type="secondary" style={{ fontSize: 13 }}>{t('importExportHelp')}</Text>
         </div>
       </Card>
-
-      {/* API Access */}
-      <ApiKeysCard />
 
       {/* Security */}
       <SecurityCard />

@@ -22,7 +22,8 @@
     "themeLight": "浅色",
     "themeDark": "深色",
     "skipToContent": "跳到内容",
-    "logout": "退出登录"
+    "logout": "退出登录",
+    "apiAccess": "API 访问"
   },
   "dashboard": {
     "title": "仪表盘",
@@ -240,7 +241,7 @@
     "columns": "列"
   },
   "settings": {
-    "title": "系统设置",
+    "title": "设置",
     "serverIp": "服务器IP",
     "listenInterface": "监听接口",
     "defaultLeaseTime": "默认租约时间（秒）",
@@ -332,14 +333,9 @@
     "apiKeySaved": "我已保存",
     "apiUsageTitle": "接入 AI Agent",
     "apiUsageStep1": "在上方新建一把密钥。排查类任务用只读即可，需要改配置时才用读写。",
-    "apiUsageStep2": "选择接入方式：HTTP 端点无需安装任何东西；stdio 需要本地有本项目并已构建。",
-    "apiUsageStep3": "把下面的配置加到 MCP 客户端（Claude Code / CodeBuddy / Cursor 等）。",
-    "apiUsageStep4": "可选：把 .codebuddy/skills/fluxdhcp 复制到 ~/.codebuddy/skills/，agent 会按推荐流程操作。",
+    "apiUsageStep2": "把下面的配置加到 MCP 客户端（Claude Code / CodeBuddy / Cursor 等）。",
+    "apiUsageStep3": "可选：把 .codebuddy/skills/fluxdhcp 复制到 ~/.codebuddy/skills/，agent 会按推荐流程操作。",
     "apiUsageCopy": "复制配置",
-    "apiUsageTabsHttp": "HTTP 端点（推荐）",
-    "apiUsageTabsStdio": "stdio（本地）",
-    "apiUsageHttpHint": "无需安装。agent 可以在任何能访问本服务的机器上运行。",
-    "apiUsageStdioHint": "需要本机有 Node 18+ 和本项目代码，并已执行 npm install && npm run build。",
     "apiUsageKeyHint": "密钥只在创建时显示一次。上面的示例使用占位符，请替换成你的真实密钥。",
     "apiKeyConfigTitle": "客户端配置",
     "apiKeyConfigHint": "已填入本次创建的密钥，可直接粘贴到 MCP 客户端。",

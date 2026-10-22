@@ -25,7 +25,7 @@
 - **Loading Splash Screen** - Dark-mode-aware CSS splash screen eliminates flash of unstyled content during initial load
 - **i18n Support** - Full English and Chinese localization including DHCP option codes, server response messages, NAK reason codes, and browser locale detection
 - **Security** - Admin password login (scrypt, 7-day sessions, per-session revocation, CLI reset), API keys with read/write scopes stored as hashes, Origin header validation on API mutations (CSRF protection), SSRF-protected webhook URLs, IP format validation
-- **AI Agent Access** - MCP server exposed over HTTP (`POST /api/mcp`) and stdio (`dist/mcp/stdio.js`), 26 tools with read/write scopes, confirmation gates on destructive actions, plus a companion skill
+- **AI Agent Access** - MCP server over Streamable HTTP (`POST /api/mcp`) exposing 26 tools with read/write scopes and confirmation gates on destructive actions, plus a companion skill
 - **Accessibility** - Focus-visible styles for keyboard navigation, error boundary for crash recovery
 - **Docker Ready** - One-command deployment with Docker Compose
 
@@ -96,6 +96,7 @@ npm run dev
 | **MAC Notes** | MAC address labels and notes, sortable columns, page size selector |
 | **Webhooks** | Webhook CRUD, event subscription, template variables, custom headers, SSRF-protected URLs, test button |
 | **DHCP Logs** | Millisecond timestamps, direction indicator, 60+ option code translations, column visibility selector, auto-refresh (3/5/10/30/60s, default 10s), MAC/IP autocomplete filters, clear-all button with total count, page size selector |
+| **API Access** | API keys for AI agents: read/write scopes, prefix-only display, one-time plaintext, enable/disable, last-used time, plus copyable MCP client configuration |
 | **Settings** | DHCP service control, server config (IP/listen interface/web port/default lease time), T1/T2 ratios with tooltips, DHCP log retention days, DECLINE blacklist duration, webhook timeout, IP allocation order (sequential/random), honor-client-requested-IP toggle, config import/export (card-style selector, exported-at display, validation) |
 
 ## Config Import/Export
@@ -118,16 +119,9 @@ DHCP config is automatically hot-reloaded after import (no service restart neede
 
 ## AI Agent Access (MCP)
 
-FluxDHCP exposes its API as MCP tools, so an agent can inspect the server and make changes with the same validation and permission checks as the web UI. Both transports share one tool definition, so they never diverge:
+FluxDHCP exposes its API as MCP tools over Streamable HTTP at `POST /api/mcp`, so an agent can inspect the server and make changes under the same validation and permission checks as the web UI.
 
-| Transport | Endpoint | Requirements |
-|-----------|----------|--------------|
-| **HTTP** (recommended) | `POST /api/mcp` | Nothing to install — the agent only needs network access and an API key |
-| **stdio** | `dist/mcp/stdio.js` | Node 18+ and this repository locally, after `npm run build` |
-
-Create a key in **Settings → API access**. A read-only key covers troubleshooting; switch to read/write only when the agent must change configuration. API keys can never manage other API keys.
-
-HTTP client configuration:
+Create a key on the **API Access** page (sidebar). A read-only key covers troubleshooting; switch to read/write only when the agent must change configuration. API keys can never manage other API keys.
 
 ```json
 {
@@ -141,26 +135,10 @@ HTTP client configuration:
 }
 ```
 
-stdio client configuration:
-
-```json
-{
-  "mcpServers": {
-    "fluxdhcp": {
-      "command": "node",
-      "args": ["/absolute/path/to/FluxDHCP/dist/mcp/stdio.js"],
-      "env": {
-        "FLUXDHCP_URL": "http://127.0.0.1:3000",
-        "FLUXDHCP_API_KEY": "fdx_xxxxxxxxxxxxxxxx"
-      }
-    }
-  }
-}
-```
-
 Notes:
 
-- The HTTP endpoint is stateless and accepts **API keys only** — browser sessions are rejected, because tool calls forward the same key to the internal API.
+- 26 tools: 12 read-only, 11 write, 3 service/config. Read-only keys get `403 API_KEY_READ_ONLY` on any write tool.
+- The endpoint is stateless and accepts **API keys only** — browser sessions are rejected, because tool calls forward the same key to the internal API.
 - `service_stop` and `config_import` additionally require `confirm=true`; the tool refuses locally otherwise.
 - Pair it with the bundled skill (`.codebuddy/skills/fluxdhcp/SKILL.md`, with a Chinese reference at `SKILL.zh-CN.md`) so the agent follows safe ordering instead of improvising.
 

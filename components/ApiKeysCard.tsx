@@ -2,8 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, Card, Collapse, Form, Input, Modal, Popconfirm, Radio, Space, Switch, Table, Tabs, Tag, Typography } from 'antd';
-import { KeyOutlined, PlusOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Card, Collapse, Form, Input, Modal, Popconfirm, Radio, Space, Switch, Table, Tag, Typography } from 'antd';
+import { PlusOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { apiErrorMessage } from '@/lib/api-error';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
@@ -55,19 +55,6 @@ export default function ApiKeysCard() {
         type: 'http',
         url: `${origin}/api/mcp`,
         headers: { Authorization: `Bearer ${apiKey}` },
-      },
-    },
-  }, null, 2);
-
-  const stdioConfig = (apiKey: string) => JSON.stringify({
-    mcpServers: {
-      fluxdhcp: {
-        command: 'node',
-        args: ['/absolute/path/to/FluxDHCP/dist/mcp/stdio.js'],
-        env: {
-          FLUXDHCP_URL: origin,
-          FLUXDHCP_API_KEY: apiKey,
-        },
       },
     },
   }, null, 2);
@@ -190,44 +177,13 @@ export default function ApiKeysCard() {
         <li>{t('apiUsageStep1')}</li>
         <li>{t('apiUsageStep2')}</li>
         <li>{t('apiUsageStep3')}</li>
-        <li>{t('apiUsageStep4')}</li>
       </ol>
 
-      <Tabs
-        size="small"
-        items={[
-          {
-            key: 'http',
-            label: t('apiUsageTabsHttp'),
-            children: (
-              <>
-                <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 0 }}>
-                  {t('apiUsageHttpHint')}
-                </Paragraph>
-                <pre style={codeStyle}>{httpConfig('fdx_xxxxxxxxxxxxxxxx')}</pre>
-                <Button size="small" icon={<CopyOutlined />} onClick={() => copy(httpConfig('fdx_xxxxxxxxxxxxxxxx'))}>
-                  {t('apiUsageCopy')}
-                </Button>
-              </>
-            ),
-          },
-          {
-            key: 'stdio',
-            label: t('apiUsageTabsStdio'),
-            children: (
-              <>
-                <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 0 }}>
-                  {t('apiUsageStdioHint')}
-                </Paragraph>
-                <pre style={codeStyle}>{stdioConfig('fdx_xxxxxxxxxxxxxxxx')}</pre>
-                <Button size="small" icon={<CopyOutlined />} onClick={() => copy(stdioConfig('fdx_xxxxxxxxxxxxxxxx'))}>
-                  {t('apiUsageCopy')}
-                </Button>
-              </>
-            ),
-          },
-        ]}
-      />
+      <pre style={codeStyle}>{httpConfig('fdx_xxxxxxxxxxxxxxxx')}</pre>
+
+      <Button size="small" icon={<CopyOutlined />} onClick={() => copy(httpConfig('fdx_xxxxxxxxxxxxxxxx'))}>
+        {t('apiUsageCopy')}
+      </Button>
 
       <Paragraph type="secondary" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
         {t('apiUsageKeyHint')}
@@ -236,15 +192,15 @@ export default function ApiKeysCard() {
   );
 
   return (
-    <Card
-      title={<span><KeyOutlined style={{ marginRight: 8 }} />{t('apiAccess')}</span>}
-      style={{ marginBottom: 16 }}
-      extra={<Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>{t('apiKeyCreate')}</Button>}
-    >
-      <Paragraph type="secondary" style={{ fontSize: 13, marginBottom: 12 }}>
-        {t('apiAccessDesc')}
-      </Paragraph>
-
+    <Card style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+        <Paragraph type="secondary" style={{ fontSize: 13, margin: 0 }}>
+          {t('apiAccessDesc')}
+        </Paragraph>
+        <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => setModalOpen(true)} style={{ flexShrink: 0 }}>
+          {t('apiKeyCreate')}
+        </Button>
+      </div>
       <Table
         columns={columns}
         dataSource={rows}

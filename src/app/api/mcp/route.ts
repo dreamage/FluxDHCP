@@ -7,7 +7,7 @@ import { authorize } from '@/lib/api-auth';
 import { readCredential } from '@/lib/api-keys';
 
 /**
- * Streamable HTTP 传输的 MCP 端点，与 stdio 版本共用 src/mcp 下的工具定义。
+ * 基于 Streamable HTTP 的 MCP 端点。工具定义位于 src/mcp 下，与传输方式解耦。
  *
  *   POST /api/mcp
  *   Authorization: Bearer fdx_...
