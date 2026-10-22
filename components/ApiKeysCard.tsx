@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Button, Card, Collapse, Form, Input, Modal, Popconfirm, Radio, Space, Spin, Switch, Table, Tag, Typography } from 'antd';
 import { PlusOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
-import { copyText } from '@/lib/clipboard';
+import { copyText } from '@/client/clipboard';
 import { apiErrorMessage } from '@/lib/api-error';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
 
