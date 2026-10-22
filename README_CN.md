@@ -80,7 +80,7 @@ npm run dev
 |------|--------|------|
 | `DB_PATH` | `./data/fluxdhcp.db` | SQLite 数据库文件路径 |
 | `WEB_PORT` | `3000` | Web 管理界面端口 |
-| `ADMIN_PASSWORD` | — | 可选。首次启动时初始化管理密码，消除“先访问者先设置”的窗口期；已设置密码后忽略 |
+| `ADMIN_PASSWORD` | — | 首次启动时初始化管理密码，消除“先访问者先设置”的窗口期；已设置密码后忽略 |
 | `FLUXDHCP_INTERNAL_URL` | `http://127.0.0.1:$WEB_PORT` | MCP HTTP 端点回调自身 API 使用的地址 |
 
 这四项都是可选的。不设置任何环境变量时，服务监听 `:3000`，数据保存在 `./data/fluxdhcp.db`。Docker 镜像已经把 `DB_PATH` 设为 `/data/fluxdhcp.db`，所以重建容器不会丢数据，无需额外配置。
