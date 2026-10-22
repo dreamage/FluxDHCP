@@ -120,14 +120,12 @@ export async function GET() {
       FROM dhcp_logs ORDER BY id DESC LIMIT 10
     `).all();
 
-    // ===== 新增：DHCP 服务运行状态 =====
-    // 单例状态 + 端口 67 交叉验证（Next.js 模块打包可能产生多实例）
-    let dhcpStatus: 'running' | 'stopped' = 'stopped';
+    // ===== DHCP 服务运行状态 =====
+    // 直接使用单例状态机（globalThis 单例保证进程内唯一），
+    // 不再用"端口被占用即运行中"探测，避免外部 DHCP 服务造成误报
+    let dhcpStatus: 'stopped' | 'starting' | 'running' | 'error' = 'stopped';
     try {
       dhcpStatus = dhcpInstance.getStatus();
-      if (dhcpStatus === 'stopped' && await dhcpInstance.isPortInUse()) {
-        dhcpStatus = 'running';
-      }
     } catch { /* 状态探测失败时保持 stopped */ }
 
     // ===== 新增：租约状态分布 =====

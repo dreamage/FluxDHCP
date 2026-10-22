@@ -25,6 +25,9 @@ export interface Reservation {
   enabled: number;
 }
 
+/** 随机分配模式下的最大采样次数（避免为超大地址池构建等长数组） */
+const RANDOM_SAMPLE_LIMIT = 4096;
+
 export class PoolManager {
   private db: Database.Database;
 
@@ -86,6 +89,15 @@ export class PoolManager {
     return this.db.prepare(
       'SELECT * FROM reservations WHERE mac_address = ? AND enabled = 1'
     ).get(mac.toUpperCase()) as Reservation | undefined;
+  }
+
+  /**
+   * 查找 IP 地址对应的保留记录（用于阻止其他设备抢占保留地址）
+   */
+  findReservationByIP(ip: string): Reservation | undefined {
+    return this.db.prepare(
+      'SELECT * FROM reservations WHERE ip_address = ? AND enabled = 1'
+    ).get(ip) as Reservation | undefined;
   }
 
   /**
@@ -174,14 +186,17 @@ export class PoolManager {
     } catch { /* ignore */ }
 
     if (order === 'random') {
-      // 随机分配：生成随机偏移数组
-      const offsets: number[] = Array.from({ length: count }, (_, i) => i);
-      for (let i = offsets.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [offsets[i], offsets[j]] = [offsets[j], offsets[i]];
-      }
-      for (const offset of offsets) {
+      // 随机分配：不构建与地址池规模等长的数组（/8 级别的池会直接 OOM）
+      // 采用随机采样，采样次数受池大小与固定上限双重约束
+      const attempts = Math.min(count, RANDOM_SAMPLE_LIMIT);
+      for (let i = 0; i < attempts; i++) {
+        const offset = Math.floor(Math.random() * count);
         const ip = this.numToIP(startNum + offset);
+        if (!occupiedIPs.has(ip)) return ip;
+      }
+      // 采样未命中（池已接近占满）时回退为顺序扫描
+      for (let ipNum = startNum; ipNum <= endNum; ipNum++) {
+        const ip = this.numToIP(ipNum);
         if (!occupiedIPs.has(ip)) return ip;
       }
     } else {

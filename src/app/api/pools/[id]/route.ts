@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
-import { ipToNum, isValidIPv4, isIPInSubnet } from '@/lib/ip-utils';
+import { ipToNum, isValidIPv4, isIPInSubnet, MAX_POOL_SIZE } from '@/lib/ip-utils';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -50,6 +50,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const newEnd = ipToNum(finalEndIp);
     if (newStart > newEnd) {
       return NextResponse.json({ error: 'Start IP must be less than or equal to End IP' }, { status: 400 });
+    }
+
+    // 限制单个地址池的地址数量，避免超大池在 IP 列表/分配时耗尽内存
+    const poolSize = newEnd - newStart + 1;
+    if (poolSize > MAX_POOL_SIZE) {
+      return NextResponse.json(
+        { error: `Pool range too large: ${poolSize} addresses (max ${MAX_POOL_SIZE})` },
+        { status: 400 },
+      );
     }
 
     // 校验 start/end IP 在子网范围内

@@ -51,7 +51,8 @@ export default function SettingsPage() {
   const tl = useTranslations('layout');
 
   const [form] = Form.useForm();
-  const [dhcpStatus, setDhcpStatus] = useState<'running' | 'stopped' | null>(null);
+  const [dhcpStatus, setDhcpStatus] = useState<'running' | 'stopped' | 'starting' | 'error' | null>(null);
+  const [dhcpError, setDhcpError] = useState('');
   const [dbPath, setDbPath] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -76,6 +77,7 @@ export default function SettingsPage() {
         applyConfig(form, config);
 
         setDhcpStatus(status.status);
+        setDhcpError(status.error || '');
         setDbPath(config.db_path || '');
       } finally {
         setLoading(false);
@@ -98,10 +100,16 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      const result = await res.json().catch(() => ({}));
       if (res.ok) {
-        notify.success(t('saveSuccess'));
+        // 配置已保存但 DHCP 未能应用（如端口被占用）时如实提示，而不是假装成功
+        if (result.warning) notify.warn(result.warning);
+        else notify.success(t('saveSuccess'));
+        if (result.dhcpStatus) {
+          setDhcpStatus(result.dhcpStatus);
+          setDhcpError(result.warning || '');
+        }
       } else {
-        const result = await res.json().catch(() => ({}));
         notify.error(translateError(result.error, tc));
       }
     } catch (err: any) {
@@ -214,8 +222,11 @@ export default function SettingsPage() {
       const data = await res.json();
       if (res.ok) {
         setDhcpStatus('running');
+        setDhcpError('');
         notify.success(t('dhcpStarted'));
       } else {
+        setDhcpStatus('error');
+        setDhcpError(data.detail || data.error || '');
         notify.fatal(t('dhcpService'), data.error);
       }
     } catch (err: any) {
@@ -229,6 +240,7 @@ export default function SettingsPage() {
       const data = await res.json();
       if (res.ok) {
         setDhcpStatus('stopped');
+        setDhcpError('');
         notify.success(t('dhcpStopped'));
       } else {
         notify.fatal(t('dhcpService'), data.error);
@@ -302,8 +314,12 @@ export default function SettingsPage() {
             )}
             <div>
               <Text strong style={{ fontSize: 15 }}>{t('dhcpService')}</Text>
-              <div style={{ fontSize: 13, color: '#8c8c8c', marginTop: 2 }}>
-                {dhcpStatus === null ? '' : isRunning ? tl('running') : tl('stopped')}
+              <div style={{ fontSize: 13, color: dhcpStatus === 'error' ? '#ff4d4f' : '#8c8c8c', marginTop: 2 }}>
+                {dhcpStatus === null ? ''
+                  : isRunning ? tl('running')
+                  : dhcpStatus === 'starting' ? `${tl('running')}…`
+                  : dhcpError ? `${tl('stopped')} · ${dhcpError}`
+                  : tl('stopped')}
               </div>
             </div>
           </div>

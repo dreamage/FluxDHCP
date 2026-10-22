@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { resolveDbPath } from '@/db';
+import { dhcpInstance } from '@/lib/dhcp-instance';
 
 export async function GET() {
   try {
@@ -79,7 +80,22 @@ export async function PUT(request: Request) {
 
     transaction(filtered.map(([k, v]) => [k, String(v)] as [string, string]));
 
-    return NextResponse.json({ message: 'Config updated' });
+    // 立即生效：重载内存参数；server_ip 变更会重新 bind，dhcp_enabled 变更会启停服务
+    try {
+      await dhcpInstance.applyConfigChange();
+    } catch (err) {
+      console.error('[API] PUT /config: DHCP apply failed:', err);
+      return NextResponse.json(
+        {
+          message: 'Config updated',
+          warning: `Config saved but DHCP server did not apply it: ${err instanceof Error ? err.message : String(err)}`,
+          dhcpStatus: dhcpInstance.getStatus(),
+        },
+        { status: 200 },
+      );
+    }
+
+    return NextResponse.json({ message: 'Config updated', dhcpStatus: dhcpInstance.getStatus() });
   } catch (error) {
     console.error('[API] PUT /config:', error);
     return NextResponse.json({ error: 'Failed to update config' }, { status: 500 });

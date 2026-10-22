@@ -46,15 +46,16 @@ export function decodeOptionValue(code: number, buf: Buffer): unknown {
 
   switch (type) {
     case DhcpOptionValueType.IP:
-      return bufToStringIP(buf);
+      // 长度不足 4 字节的畸形选项返回空串，而不是越界读取
+      return buf.length >= 4 ? bufToStringIP(buf) : '';
     case DhcpOptionValueType.IP_LIST:
       return decodeIPList(buf);
     case DhcpOptionValueType.UINT8:
-      return buf.readUInt8(0);
+      return buf.length >= 1 ? buf.readUInt8(0) : 0;
     case DhcpOptionValueType.UINT16:
-      return buf.readUInt16BE(0);
+      return buf.length >= 2 ? buf.readUInt16BE(0) : 0;
     case DhcpOptionValueType.UINT32:
-      return buf.readUInt32BE(0);
+      return buf.length >= 4 ? buf.readUInt32BE(0) : 0;
     case DhcpOptionValueType.STRING:
       return buf.toString('ascii');
     case DhcpOptionValueType.BYTES:
@@ -103,12 +104,16 @@ function bufToStringIP(buf: Buffer): string {
 
 function stringIPToBuffer(ip: string): Buffer {
   const parts = ip.split('.').map(Number);
+  // 非法 IP 直接返回空值，避免写入非 0-255 的字节抛异常
+  if (parts.length !== 4 || parts.some(p => !Number.isInteger(p) || p < 0 || p > 255)) {
+    return Buffer.alloc(0);
+  }
   return Buffer.from(parts);
 }
 
 function decodeIPList(buf: Buffer): string[] {
   const ips: string[] = [];
-  for (let i = 0; i < buf.length; i += 4) {
+  for (let i = 0; i + 4 <= buf.length; i += 4) {
     ips.push(bufToStringIP(buf.subarray(i, i + 4)));
   }
   return ips;

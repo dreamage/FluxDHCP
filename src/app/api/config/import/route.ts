@@ -124,31 +124,20 @@ export async function POST(request: Request) {
       db.pragma('foreign_keys = ON');
     }
 
-    // Reload DHCP config in memory
+    // 应用导入后的配置：重载内存参数、必要时重启 socket / 启停服务
+    let dhcpWarning: string | undefined;
     try {
-      dhcpInstance.reloadConfig();
-    } catch { /* DHCP may not be initialized */ }
-
-    // Sync the running state of the DHCP service with the imported dhcp_enabled value
-    try {
-      if (categories.includes('config')) {
-        const importedEnabled = (body.config || []).find(
-          (c: { key: string; value: string }) => c.key === 'dhcp_enabled',
-        );
-        const currentStatus = dhcpInstance.getStatus();
-        if (importedEnabled?.value === '1' && currentStatus === 'stopped') {
-          await dhcpInstance.start();
-        } else if (importedEnabled?.value === '0' && currentStatus === 'running') {
-          await dhcpInstance.stop();
-        }
-      }
+      await dhcpInstance.applyConfigChange();
     } catch (e) {
-      console.error('[API] Failed to sync DHCP state after import:', e);
+      console.error('[API] Failed to apply imported DHCP config:', e);
+      dhcpWarning = e instanceof Error ? e.message : String(e);
     }
 
     return NextResponse.json({
       message: 'Config imported successfully',
       imported,
+      dhcpStatus: dhcpInstance.getStatus(),
+      ...(dhcpWarning ? { warning: `Config imported but DHCP server did not apply it: ${dhcpWarning}` } : {}),
     });
   } catch (error) {
     console.error('[API] Config import error:', error);

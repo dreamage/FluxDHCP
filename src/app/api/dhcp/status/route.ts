@@ -2,16 +2,10 @@ import { NextResponse } from 'next/server';
 import { dhcpInstance } from '@/lib/dhcp-instance';
 
 export async function GET() {
-  let status = dhcpInstance.getStatus();
+  // 直接返回真实状态机状态，不再用"端口被占用即运行中"来猜测，
+  // 否则 67 端口被 dnsmasq 等外部进程占用时会误报为 running。
+  const status = dhcpInstance.getStatus();
+  const error = dhcpInstance.getLastError();
 
-  // If singleton says stopped, verify by checking if port 67 is actually in use.
-  // This handles cross-instance sync issues caused by Next.js module bundling.
-  if (status === 'stopped') {
-    const portInUse = await dhcpInstance.isPortInUse();
-    if (portInUse) {
-      status = 'running';
-    }
-  }
-
-  return NextResponse.json({ status });
+  return NextResponse.json({ status, ...(error ? { error } : {}) });
 }

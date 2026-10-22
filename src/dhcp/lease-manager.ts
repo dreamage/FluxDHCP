@@ -16,6 +16,9 @@ export interface Lease {
   xid: string | null;
 }
 
+/** 随机分配模式下的最大采样次数（避免为超大地址池构建等长数组） */
+const RANDOM_SAMPLE_LIMIT = 4096;
+
 export class LeaseManager {
   private db: Database.Database;
   private cleanupTimer: ReturnType<typeof setInterval> | null = null;
@@ -169,17 +172,24 @@ export class LeaseManager {
       const count = endNum - startNum + 1;
 
       if (order === 'random') {
-        // 随机分配：Fisher-Yates 洗牌
-        const offsets: number[] = Array.from({ length: count }, (_, i) => i);
-        for (let i = offsets.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [offsets[i], offsets[j]] = [offsets[j], offsets[i]];
-        }
-        for (const offset of offsets) {
+        // 随机分配：随机采样（不构建与池大小等长的数组，避免超大池 OOM）
+        const attempts = Math.min(count, RANDOM_SAMPLE_LIMIT);
+        for (let i = 0; i < attempts; i++) {
+          const offset = Math.floor(Math.random() * count);
           const candidate = numToIp(startNum + offset);
           if (!occupied.has(candidate)) {
             ip = candidate;
             break;
+          }
+        }
+        // 采样未命中时回退顺序扫描
+        if (!ip) {
+          for (let num = startNum; num <= endNum; num++) {
+            const candidate = numToIp(num);
+            if (!occupied.has(candidate)) {
+              ip = candidate;
+              break;
+            }
           }
         }
       } else {
@@ -218,6 +228,7 @@ export class LeaseManager {
 
   /**
    * 创建 OFFERED 租约（DHCPOFFER 时使用）
+   * @returns false 表示该 IP 仍被其他 MAC 持有（拒绝静默覆盖，避免同一 IP 分配给两台设备）
    */
   createOfferedLease(
     ip: string,
@@ -229,31 +240,44 @@ export class LeaseManager {
     clientId?: string,
     vendorClass?: string,
     requestedIp?: string,
-  ): void {
+  ): boolean {
+    const macUpper = mac.toUpperCase();
     const now = new Date();
     const leaseEnd = new Date(now.getTime() + leaseTime * 1000);
 
-    // 先删除同一 IP 的旧租约（如果存在）
-    this.db.prepare('DELETE FROM leases WHERE ip_address = ?').run(ip);
+    // 该 IP 若仍被其他 MAC 的活跃租约占用，则拒绝覆盖
+    const holder = this.db.prepare(
+      "SELECT mac_address FROM leases WHERE ip_address = ? AND state IN ('OFFERED', 'BOUND')"
+    ).get(ip) as { mac_address: string } | undefined;
+    if (holder && holder.mac_address !== macUpper) {
+      return false;
+    }
 
-    this.db.prepare(`
-      INSERT INTO leases (ip_address, mac_address, hostname, state, pool_id, lease_start, lease_end, client_id, vendor_class, requested_ip, xid)
-      VALUES (?, ?, ?, 'OFFERED', ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      ip, mac.toUpperCase(), hostname || null,
-      poolId,
-      now.toISOString(), leaseEnd.toISOString(),
-      clientId || null, vendorClass || null, requestedIp || null,
-      xid,
-    );
+    this.db.transaction(() => {
+      // 同一 IP 的过期/释放记录（或本机旧记录）可以安全替换
+      this.db.prepare('DELETE FROM leases WHERE ip_address = ?').run(ip);
+      this.db.prepare(`
+        INSERT INTO leases (ip_address, mac_address, hostname, state, pool_id, lease_start, lease_end, client_id, vendor_class, requested_ip, xid)
+        VALUES (?, ?, ?, 'OFFERED', ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        ip, macUpper, hostname || null,
+        poolId,
+        now.toISOString(), leaseEnd.toISOString(),
+        clientId || null, vendorClass || null, requestedIp || null,
+        xid,
+      );
+    })();
+
+    return true;
   }
 
   /**
    * 确认租约：OFFERED → BOUND（DHCPACK 时使用）
    * 使用 upsert：如果已有 OFFERED 租约则更新，没有则直接创建 BOUND
    * （客户端可能跳过 DISCOVER 直接 REQUEST，此时没有 OFFERED 记录）
+   * @returns false 表示该 IP 被其他 MAC 持有，未写入
    */
-  confirmLease(ip: string, mac: string, leaseTime: number, hostname?: string, poolId?: number): void {
+  confirmLease(ip: string, mac: string, leaseTime: number, hostname?: string, poolId?: number): boolean {
     const now = new Date();
     const leaseEnd = new Date(now.getTime() + leaseTime * 1000);
     const startStr = now.toISOString();
@@ -264,14 +288,29 @@ export class LeaseManager {
       UPDATE leases SET state = 'BOUND', lease_start = ?, lease_end = ?, hostname = ?
       WHERE ip_address = ? AND mac_address = ?
     `).run(startStr, endStr, hostname || null, ip, macUpper);
+    if (result.changes > 0) return true;
 
-    // No existing lease found (client skipped DISCOVER), create directly
-    if (result.changes === 0) {
-      this.db.prepare(`
-        INSERT INTO leases (ip_address, mac_address, hostname, state, pool_id, lease_start, lease_end)
-        VALUES (?, ?, ?, 'BOUND', ?, ?, ?)
-      `).run(ip, macUpper, hostname || null, poolId || null, startStr, endStr);
-    }
+    // 无本机租约：该 IP 可能被其他 MAC 占用，或只是有 EXPIRED/RELEASED 的历史行
+    const holder = this.db.prepare(
+      "SELECT mac_address FROM leases WHERE ip_address = ? AND state IN ('OFFERED', 'BOUND')"
+    ).get(ip) as { mac_address: string } | undefined;
+    if (holder && holder.mac_address !== macUpper) return false;
+
+    // 客户端跳过 DISCOVER 时直接创建；历史行（EXPIRED/RELEASED）用 UPSERT 覆盖，
+    // 避免 ip_address 主键冲突导致 ACK 发不出去
+    this.db.prepare(`
+      INSERT INTO leases (ip_address, mac_address, hostname, state, pool_id, lease_start, lease_end)
+      VALUES (?, ?, ?, 'BOUND', ?, ?, ?)
+      ON CONFLICT(ip_address) DO UPDATE SET
+        mac_address = excluded.mac_address,
+        hostname = excluded.hostname,
+        state = 'BOUND',
+        pool_id = excluded.pool_id,
+        lease_start = excluded.lease_start,
+        lease_end = excluded.lease_end
+    `).run(ip, macUpper, hostname || null, poolId || null, startStr, endStr);
+
+    return true;
   }
 
   /**

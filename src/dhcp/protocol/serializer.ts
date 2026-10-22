@@ -100,10 +100,17 @@ export function buildDhcpPacket(opts: DhcpPacketBuildOptions): Buffer {
 
 function writeIP(buf: Buffer, offset: number, ip: string): void {
   const parts = ip.split('.').map(Number);
-  parts.forEach((p, i) => buf.writeUInt8(p, offset + i));
+  for (let i = 0; i < 4; i++) {
+    const octet = parts[i];
+    // 非法八位组（如来自导入的脏数据）写 0，避免 writeUInt8 抛异常导致响应发不出去
+    buf.writeUInt8(Number.isInteger(octet) && octet >= 0 && octet <= 255 ? octet : 0, offset + i);
+  }
 }
 
 function writeMac(buf: Buffer, offset: number, mac: string): void {
   const parts = mac.split(/[:\-]/);
-  parts.forEach((p, i) => buf.writeUInt8(parseInt(p, 16), offset + i));
+  for (let i = 0; i < 6; i++) {
+    const byte = parseInt(parts[i] ?? '', 16);
+    buf.writeUInt8(Number.isNaN(byte) ? 0 : byte & 0xFF, offset + i);
+  }
 }

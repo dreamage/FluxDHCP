@@ -48,8 +48,9 @@ export function parseDhcpPacket(buf: Buffer): DhcpPacket {
   const siaddr = readIP(buf, 20);
   const giaddr = readIP(buf, 24);
 
-  // 解析 chaddr（取前 hlen 字节为 MAC 地址）
-  const chaddr = formatMac(buf, 28, hlen);
+  // 解析 chaddr（以太网固定 6 字节；hlen 异常时截断，避免读到 sname 区域造成 MAC 错位）
+  const macLen = Math.min(hlen, 6);
+  const chaddr = formatMac(buf, 28, macLen);
 
   // 解析 sname 和 file
   const sname = readNullTerminatedString(buf, 44, 64);
@@ -89,12 +90,19 @@ function parseOptions(buf: Buffer, offset: number): Map<number, unknown> {
     // 选项 255 (End)：终止
     if (code === 255) break;
 
-    // 读取 Length
+    // 读取 Length（必须先判界，畸形包在这里读越界会抛 RangeError）
+    if (offset >= buf.length) break;
     const len = buf.readUInt8(offset++);
+
+    // Value 长度必须落在包内，否则视为畸形包终止解析
+    if (offset + len > buf.length) break;
 
     // 读取 Value
     const valueBuf = buf.subarray(offset, offset + len);
     offset += len;
+
+    // 同一选项重复出现时保留首次出现的值（RFC 2131 不允许重复定义）
+    if (options.has(code)) continue;
 
     // 解码选项值
     options.set(code, decodeOptionValue(code, valueBuf));
@@ -112,7 +120,9 @@ function readIP(buf: Buffer, offset: number): string {
 function formatMac(buf: Buffer, offset: number, len: number): string {
   const parts: string[] = [];
   for (let i = 0; i < len; i++) {
-    parts.push(buf[offset + i].toString(16).padStart(2, '0').toUpperCase());
+    const byte = buf[offset + i];
+    if (byte === undefined) break;
+    parts.push(byte.toString(16).padStart(2, '0').toUpperCase());
   }
   return parts.join(':');
 }

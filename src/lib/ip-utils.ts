@@ -1,4 +1,10 @@
 /**
+ * 单个地址池允许的最大地址数量。
+ * 限制超大地址池（如 /8 级别）以免 IP 列表接口与分配逻辑耗尽内存。
+ */
+export const MAX_POOL_SIZE = 4096;
+
+/**
  * Convert IPv4 address string to unsigned 32-bit integer.
  */
 export function ipToNum(ip: string): number {

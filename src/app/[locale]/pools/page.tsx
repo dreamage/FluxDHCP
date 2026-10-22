@@ -41,7 +41,9 @@ export default function PoolsPage() {
   const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPool, setEditingPool] = useState<any>(null);
-  const [ipGridData, setIpGridData] = useState<Record<number, { ips: any[]; stats: any }>>({});
+  const [ipGridData, setIpGridData] = useState<Record<number, {
+    ips: any[]; stats: any; total?: number; page?: number; pageSize?: number; hasMore?: boolean;
+  }>>({});
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
   const [ipLoading, setIpLoading] = useState<Record<number, boolean>>({});
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -145,11 +147,11 @@ export default function PoolsPage() {
     }
   };
 
-  const fetchPoolIPs = async (poolId: number) => {
-    if (ipGridData[poolId]) return;
+  // 大地址池按页加载，避免一次渲染数千个格子（服务端默认每页 1024）
+  const fetchPoolIPs = async (poolId: number, page = 1) => {
     setIpLoading(prev => ({ ...prev, [poolId]: true }));
     try {
-      const res = await fetch(`/api/pools/${poolId}/ips`);
+      const res = await fetch(`/api/pools/${poolId}/ips?page=${page}`);
       const result = await res.json();
       setIpGridData(prev => ({ ...prev, [poolId]: result }));
     } finally {
@@ -186,10 +188,14 @@ export default function PoolsPage() {
     if (!gridData) return null;
 
     const { ips, stats } = gridData;
+    const total = gridData.total ?? ips.length;
+    const pageSize = gridData.pageSize ?? ips.length;
+    const page = gridData.page ?? 1;
+    const totalPages = pageSize > 0 ? Math.ceil(total / pageSize) : 1;
     return (
       <div style={{ padding: '8px 16px' }}>
         <Space wrap style={{ marginBottom: 12 }}>
-          <Tag color="default">{t('statsTotal')}: {ips.length}</Tag>
+          <Tag color="default">{t('statsTotal')}: {total}</Tag>
           <Tag color="default">{t('statsFree')}: {stats.free}</Tag>
           <Tag color="warning">{t('statsReserved')}: {stats.reserved}</Tag>
           <Tag color="success">{t('statsBound')}: {stats.bound}</Tag>
@@ -200,6 +206,15 @@ export default function PoolsPage() {
             <span style={{ display: 'inline-block', width: 12, height: 12, background: STATUS_COLORS.bound, marginRight: 4, borderRadius: 3 }} />
             <span style={{ display: 'inline-block', width: 12, height: 12, background: STATUS_COLORS.offered, marginRight: 4, borderRadius: 3 }} />
           </span>
+          {totalPages > 1 && (
+            <Space size={4} style={{ marginLeft: 'auto' }}>
+              <Button size="small" disabled={page <= 1 || !!ipLoading[record.id]}
+                onClick={() => fetchPoolIPs(record.id, page - 1)}>‹</Button>
+              <span style={{ fontFamily: 'var(--font-jetbrains-mono), monospace', fontSize: 12 }}>{page} / {totalPages}</span>
+              <Button size="small" disabled={page >= totalPages || !!ipLoading[record.id]}
+                onClick={() => fetchPoolIPs(record.id, page + 1)}>›</Button>
+            </Space>
+          )}
         </Space>
         {viewMode === 'grid' ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>

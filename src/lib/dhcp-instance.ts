@@ -14,7 +14,7 @@ import { PacketLogger } from '../dhcp/packet-logger';
 import Database from 'better-sqlite3';
 import { getDb } from './db-instance';
 
-export type DhcpServerStatus = 'running' | 'stopped';
+export type DhcpServerStatus = 'stopped' | 'starting' | 'running' | 'error';
 
 class DhcpInstance extends EventEmitter {
   private status: DhcpServerStatus = 'stopped';
@@ -29,6 +29,12 @@ class DhcpInstance extends EventEmitter {
   private t1Ratio: number = 0.5;
   private t2Ratio: number = 0.875;
   private defaultLeaseTime: number = 86400;
+  /** 最近一次启动失败的原因（供 UI 展示，不再伪装成 running） */
+  private lastError: string | null = null;
+  /** 当前 socket 实际绑定的地址，用于判断 server_ip 变更后是否需要重新 bind */
+  private boundAddress: string | null = null;
+  /** 最近一次从数据库读到的 dhcp_enabled，用于判断启停开关是否发生变化 */
+  private enabledInConfig = false;
 
   constructor() {
     super();
@@ -38,25 +44,8 @@ class DhcpInstance extends EventEmitter {
     return this.status;
   }
 
-  /**
-   * Check if UDP port 67 is actually in use (for cross-instance sync)
-   */
-  async isPortInUse(): Promise<boolean> {
-    return new Promise((resolve) => {
-      const testSocket = dgram.createSocket('udp4');
-      let settled = false;
-      const done = (result: boolean) => {
-        if (settled) return;
-        settled = true;
-        testSocket.close(() => resolve(result));
-      };
-      testSocket.on('error', (err: NodeJS.ErrnoException) => {
-        done(err.code === 'EADDRINUSE');
-      });
-      testSocket.bind(DHCP_SERVER_PORT, () => {
-        done(false);
-      });
-    });
+  getLastError(): string | null {
+    return this.lastError;
   }
 
   /**
@@ -87,8 +76,36 @@ class DhcpInstance extends EventEmitter {
     console.log('[DHCP] Config reloaded');
   }
 
+  /**
+   * 应用配置变更：重载内存参数，并在必要时重启 socket 或启停服务。
+   * 供 PUT /api/config 与配置导入使用，避免"界面保存成功但运行时不生效"。
+   */
+  async applyConfigChange(): Promise<void> {
+    this.init();
+
+    const wasEnabled = this.enabledInConfig;
+    this.loadConfig();
+
+    // 1. 启停开关变化 → 启停服务
+    if (this.enabledInConfig !== wasEnabled) {
+      if (this.enabledInConfig) {
+        if (this.status !== 'running' && this.status !== 'starting') await this.start();
+      } else if (this.status === 'running' || this.status === 'starting') {
+        await this.stop();
+      }
+      return;
+    }
+
+    // 2. 监听地址变化 → 必须重新 bind，仅改内存变量无效
+    if (this.status === 'running' && this.boundAddress !== this.bindAddress) {
+      console.log(`[DHCP] Bind address changed (${this.boundAddress} → ${this.bindAddress}), restarting socket`);
+      await this.stop();
+      await this.start();
+    }
+  }
+
   async start(): Promise<void> {
-    if (this.status === 'running') return;
+    if (this.status === 'running' || this.status === 'starting') return;
     this.init();
 
     // 读取配置
@@ -97,57 +114,103 @@ class DhcpInstance extends EventEmitter {
     // 恢复租约
     this.leaseManager.recoverLeases();
 
-    // 创建 UDP Socket
-    this.socket = dgram.createSocket('udp4');
+    this.status = 'starting';
+    this.lastError = null;
 
-    this.socket.on('message', (msg, rinfo) => {
-      this.handleMessage(msg, rinfo);
-    });
+    const socket = dgram.createSocket('udp4');
+    const bindAddress = this.bindAddress;
 
-    this.socket.on('error', (err) => {
-      console.error('[DHCP] Socket error:', err);
-    });
-
-    return new Promise((resolve, reject) => {
-      this.socket!.on('error', (err: NodeJS.ErrnoException) => {
-        if (err.code === 'EADDRINUSE') {
-          // Port already in use - likely from another module instance.
-          // Treat as already running and sync status.
-          console.warn('[DHCP] Port 67 already in use, assuming server is already running');
-          this.socket = null;
-          this.status = 'running';
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const onBindError = (err: NodeJS.ErrnoException) => {
+          socket.removeListener('error', onBindError);
+          try { socket.close(); } catch { /* ignore */ }
+          this.status = 'error';
+          this.boundAddress = null;
+          this.lastError = this.describeBindError(err);
           this.emit('status-change', this.status);
-          resolve();
-        } else if (this.status !== 'running') {
           reject(err);
-        }
-      });
+        };
 
-      this.socket!.bind(DHCP_SERVER_PORT, this.bindAddress === '0.0.0.0' ? undefined : this.bindAddress, () => {
-        this.socket!.setBroadcast(true);
-        this.status = 'running';
-        this.leaseManager.startCleanupTimer();
-        this.leaseManager.startLogCleanupTimer();
-        this.emit('status-change', this.status);
-        console.log(`[DHCP] Server listening on ${this.serverIP}:${DHCP_SERVER_PORT}`);
-        resolve();
+        socket.once('error', onBindError);
+        socket.on('message', (msg, rinfo) => {
+          this.handleMessage(msg, rinfo);
+        });
+
+        socket.bind(DHCP_SERVER_PORT, bindAddress === '0.0.0.0' ? undefined : bindAddress, () => {
+          socket.removeListener('error', onBindError);
+          // 绑定成功后的运行期错误只记录日志，不改变运行状态
+          socket.on('error', (err) => {
+            this.lastError = err.message;
+            console.error('[DHCP] Socket error:', err);
+          });
+          try {
+            socket.setBroadcast(true);
+          } catch (err) {
+            console.error('[DHCP] Failed to enable broadcast:', err);
+          }
+
+          this.socket = socket;
+          this.boundAddress = bindAddress;
+          this.status = 'running';
+          this.lastError = null;
+          socket.on('close', () => {
+            if (this.socket === socket) {
+              this.socket = null;
+              this.boundAddress = null;
+              if (this.status === 'running') {
+                this.status = 'stopped';
+                this.emit('status-change', this.status);
+              }
+            }
+          });
+
+          this.leaseManager.startCleanupTimer();
+          this.leaseManager.startLogCleanupTimer();
+          this.emit('status-change', this.status);
+          console.log(`[DHCP] Server listening on ${this.serverIP}:${DHCP_SERVER_PORT} (bind: ${bindAddress})`);
+          resolve();
+        });
       });
-    });
+    } catch (err) {
+      // 启动失败时保持 stopped/error 状态，不再伪装为 running
+      console.error('[DHCP] Failed to start DHCP server:', this.lastError);
+      throw err;
+    }
   }
 
   async stop(): Promise<void> {
-    if (this.status === 'stopped') return;
-
+    // 可能从未启动过（例如直接调用 /api/dhcp/stop），先确保依赖已初始化
+    this.init();
     this.leaseManager.stopCleanupTimer();
 
-    if (this.socket) {
-      this.socket.close();
-      this.socket = null;
-    }
-
+    const socket = this.socket;
+    this.socket = null;
+    this.boundAddress = null;
     this.status = 'stopped';
     this.emit('status-change', this.status);
+
+    if (socket) {
+      await new Promise<void>((resolve) => {
+        try {
+          socket.close(() => resolve());
+        } catch {
+          resolve();
+        }
+      });
+    }
+
     console.log('[DHCP] Server stopped');
+  }
+
+  private describeBindError(err: NodeJS.ErrnoException): string {
+    if (err.code === 'EACCES') {
+      return `Permission denied on UDP ${DHCP_SERVER_PORT} (requires root or NET_ADMIN capability)`;
+    }
+    if (err.code === 'EADDRINUSE') {
+      return `UDP ${DHCP_SERVER_PORT} is already in use by another process`;
+    }
+    return err.message || String(err);
   }
 
   /**
@@ -177,6 +240,9 @@ class DhcpInstance extends EventEmitter {
 
       const leaseTime = getConfig.get('default_lease_time') as { value: string } | undefined;
       if (leaseTime) this.defaultLeaseTime = parseInt(leaseTime.value, 10);
+
+      const enabled = getConfig.get('dhcp_enabled') as { value: string } | undefined;
+      this.enabledInConfig = enabled?.value === '1';
     } catch (err) {
       console.error('[DHCP] Failed to load config:', err);
     }
@@ -209,9 +275,16 @@ class DhcpInstance extends EventEmitter {
       // 只处理客户端请求（op = 1 BOOTREQUEST）
       if (packet.op !== 1) return;
 
-      // 必须有消息类型
-      if (!packet.messageType) {
-        console.warn('[DHCP] Received packet without message type from', packet.chaddr);
+      // chaddr 必须是合法的以太网 MAC：hlen 异常或畸形包无法正确识别客户端
+      if (!/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(packet.chaddr)) {
+        console.warn('[DHCP] Dropping packet with invalid chaddr:', packet.chaddr);
+        return;
+      }
+
+      // 必须有合法的消息类型（1..8）
+      const msgType = packet.messageType;
+      if (!msgType || !Number.isInteger(msgType) || msgType < 1 || msgType > 8) {
+        console.warn('[DHCP] Received packet without valid message type from', packet.chaddr);
         return;
       }
 
@@ -222,7 +295,7 @@ class DhcpInstance extends EventEmitter {
       if (blocked) {
         console.log(`[DHCP] Blocked: ${packet.chaddr} (reason: ${blocked.reason || 'blacklisted'})`);
         this.packetLogger.logServerResponse(
-          packet.messageType, packet.chaddr, '0.0.0.0', packet.xid,
+          msgType, packet.chaddr, '0.0.0.0', packet.xid,
           undefined, `SR|BLOCKED|${blocked.reason || 'blacklisted'}`,
           undefined, undefined, this.serverIP, packet.giaddr,
         );
@@ -231,7 +304,7 @@ class DhcpInstance extends EventEmitter {
 
       this.packetLogger.logPacket(packet);
 
-      switch (packet.messageType) {
+      switch (msgType) {
         case DhcpMessageType.DISCOVER:
           this.handleDiscover(packet);
           break;
@@ -393,6 +466,13 @@ class DhcpInstance extends EventEmitter {
       return;
     }
 
+    // 检查该 IP 是否被其他 MAC 保留：保留地址不可被非保留设备抢占
+    const ipReservation = this.poolManager.findReservationByIP(targetIP);
+    if (ipReservation && ipReservation.mac_address !== mac.toUpperCase()) {
+      this.sendNak(packet, `SR|NAK|IP_RESERVED|${targetIP}`);
+      return;
+    }
+
     // 检查 IP 是否已被其他客户端占用
     const ipHolder = this.leaseManager.findLeaseByIP(targetIP);
     if (ipHolder && ipHolder.mac_address !== mac.toUpperCase()) {
@@ -497,10 +577,15 @@ class DhcpInstance extends EventEmitter {
     const vendorClass = packet.options.get(60) as string | undefined;
     const requestedIP = packet.options.get(50) as string | undefined;
 
-    this.leaseManager.createOfferedLease(
+    // 该 IP 仍被其他 MAC 持有时不发送 OFFER，避免把同一 IP 发给两台设备
+    const created = this.leaseManager.createOfferedLease(
       ip, mac, pool.id, leaseTime, packet.xid.toString(16),
       hostname, clientId, vendorClass, requestedIP,
     );
+    if (!created) {
+      console.warn(`[DHCP] Skip OFFER ${ip} → ${mac}: IP is still leased to another device`);
+      return;
+    }
 
     // 构建响应选项
     const options = this.optionManager.buildResponseOptions(
@@ -539,8 +624,13 @@ class DhcpInstance extends EventEmitter {
     const leaseTime = pool.lease_time || this.defaultLeaseTime;
     const hostname = packet.options.get(12) as string | undefined;
 
-    // 确认租约
-    this.leaseManager.confirmLease(ip, mac, leaseTime, hostname, pool.id);
+    // 确认租约（若该 IP 已被其他 MAC 占用则拒绝，避免抢租约）
+    const confirmed = this.leaseManager.confirmLease(ip, mac, leaseTime, hostname, pool.id);
+    if (!confirmed) {
+      console.warn(`[DHCP] Refuse ACK ${ip} → ${mac}: IP is still leased to another device`);
+      this.sendNak(packet, `SR|NAK|LEASE_CONFLICT|${ip}`);
+      return;
+    }
 
     // 构建响应选项
     const options = this.optionManager.buildResponseOptions(
