@@ -140,7 +140,16 @@ FluxDHCP 把 API 暴露成 MCP 工具，通过 Streamable HTTP 挂在 `POST /api
 - 共 26 个工具：12 个只读、11 个写入、3 个服务与配置。只读 key 调用写工具会得到 `403 API_KEY_READ_ONLY`。
 - 端点是无状态的，且**只接受 API Key**——工具调用会把同一份凭据转发给内部 API，浏览器会话无法这样转发，也不应该用它驱动 agent。
 - `service_stop` 和 `config_import` 额外要求 `confirm=true`，否则工具在本地直接拒绝。
-- 配合仓库内的 skill 使用（`.codebuddy/skills/fluxdhcp/SKILL.md`，中文对照见 `SKILL.zh-CN.md`），agent 会按推荐顺序操作，而不是即兴发挥。
+- 配合仓库内的 skill 使用，agent 会按推荐顺序操作，而不是即兴发挥。没有仓库副本的机器可以直接从接口安装：
+
+  ```bash
+  mkdir -p ~/.codebuddy/skills/fluxdhcp
+  curl -fsSL -H "Authorization: Bearer fdx_xxxxxxxxxxxxxxxx" \
+    http://your-host:3000/api/skills/fluxdhcp \
+    -o ~/.codebuddy/skills/fluxdhcp/SKILL.md
+  ```
+
+  加 `?lang=zh` 取中文参考版。源文件在 `resources/skills/fluxdhcp/`，也可以在 API 访问页面直接预览。
 
 ## Webhook 模板变量
 

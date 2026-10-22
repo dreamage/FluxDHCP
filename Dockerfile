@@ -41,6 +41,9 @@ COPY --from=builder /app/dist ./dist
 # --- 复制 i18n 资源（运行时加载） ---
 COPY --from=builder /app/i18n ./i18n
 
+# --- 复制 skill（/api/skills/fluxdhcp 运行时读取） ---
+COPY --from=builder /app/resources ./resources
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 --home /home/nextjs nextjs && \
     mkdir -p /home/nextjs && chown nextjs:nodejs /home/nextjs

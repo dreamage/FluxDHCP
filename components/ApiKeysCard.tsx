@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, Card, Collapse, Form, Input, Modal, Popconfirm, Radio, Space, Switch, Table, Tag, Typography } from 'antd';
+import { Button, Card, Collapse, Form, Input, Modal, Popconfirm, Radio, Space, Spin, Switch, Table, Tag, Typography } from 'antd';
 import { PlusOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { apiErrorMessage } from '@/lib/api-error';
@@ -58,6 +58,47 @@ export default function ApiKeysCard() {
       },
     },
   }, null, 2);
+
+  const skillCommand = (apiKey: string) =>
+    `mkdir -p ~/.codebuddy/skills/fluxdhcp\n` +
+    `curl -fsSL -H "Authorization: Bearer ${apiKey}" \\\n` +
+    `  "${origin}/api/skills/fluxdhcp" \\\n` +
+    `  -o ~/.codebuddy/skills/fluxdhcp/SKILL.md`;
+
+  const [skillPreview, setSkillPreview] = useState<{ open: boolean; loading: boolean; text: string }>({
+    open: false,
+    loading: false,
+    text: '',
+  });
+
+  const loadSkill = async () => {
+    setSkillPreview({ open: true, loading: true, text: '' });
+    try {
+      const res = await fetch('/api/skills/fluxdhcp');
+      const text = res.ok ? await res.text() : '';
+      setSkillPreview({ open: true, loading: false, text });
+    } catch {
+      setSkillPreview({ open: true, loading: false, text: '' });
+    }
+  };
+
+  const downloadSkill = async () => {
+    try {
+      const res = await fetch('/api/skills/fluxdhcp');
+      if (!res.ok) {
+        notify.error(null);
+        return;
+      }
+      const url = URL.createObjectURL(await res.blob());
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'SKILL.md';
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      notify.error(null);
+    }
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -185,6 +226,22 @@ export default function ApiKeysCard() {
         {t('apiUsageCopy')}
       </Button>
 
+      <Paragraph strong style={{ marginTop: 18, marginBottom: 4 }}>{t('apiUsageSkillTitle')}</Paragraph>
+      <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
+        {t('apiUsageSkillHint')}
+      </Paragraph>
+
+      <Space wrap style={{ marginBottom: 4 }}>
+        <Button size="small" onClick={loadSkill}>{t('apiUsageSkillView')}</Button>
+        <Button size="small" onClick={downloadSkill}>{t('apiUsageSkillDownload')}</Button>
+      </Space>
+
+      <pre style={codeStyle}>{skillCommand('fdx_xxxxxxxxxxxxxxxx')}</pre>
+
+      <Button size="small" icon={<CopyOutlined />} onClick={() => copy(skillCommand('fdx_xxxxxxxxxxxxxxxx'))}>
+        {t('apiUsageSkillCopy')}
+      </Button>
+
       <Paragraph type="secondary" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
         {t('apiUsageKeyHint')}
       </Paragraph>
@@ -277,6 +334,24 @@ export default function ApiKeysCard() {
             {t('apiUsageCopy')}
           </Button>
         </div>
+      </Modal>
+
+      <Modal
+        title={t('apiUsageSkillTitle')}
+        open={skillPreview.open}
+        onCancel={() => setSkillPreview({ open: false, loading: false, text: '' })}
+        footer={null}
+        width={760}
+      >
+        {skillPreview.loading ? (
+          <div style={{ padding: 24, textAlign: 'center' }}><Spin /></div>
+        ) : skillPreview.text ? (
+          <pre style={{ ...codeStyle, maxHeight: '60vh', overflow: 'auto', whiteSpace: 'pre-wrap' }}>
+            {skillPreview.text}
+          </pre>
+        ) : (
+          <Paragraph type="secondary">{t('apiUsageSkillMissing')}</Paragraph>
+        )}
       </Modal>
     </Card>
   );

@@ -140,7 +140,16 @@ Notes:
 - 26 tools: 12 read-only, 11 write, 3 service/config. Read-only keys get `403 API_KEY_READ_ONLY` on any write tool.
 - The endpoint is stateless and accepts **API keys only** — browser sessions are rejected, because tool calls forward the same key to the internal API.
 - `service_stop` and `config_import` additionally require `confirm=true`; the tool refuses locally otherwise.
-- Pair it with the bundled skill (`.codebuddy/skills/fluxdhcp/SKILL.md`, with a Chinese reference at `SKILL.zh-CN.md`) so the agent follows safe ordering instead of improvising.
+- Pair it with the bundled skill so the agent follows safe ordering instead of improvising. Machines without a repo checkout can install it over the API:
+
+  ```bash
+  mkdir -p ~/.codebuddy/skills/fluxdhcp
+  curl -fsSL -H "Authorization: Bearer fdx_xxxxxxxxxxxxxxxx" \
+    http://your-host:3000/api/skills/fluxdhcp \
+    -o ~/.codebuddy/skills/fluxdhcp/SKILL.md
+  ```
+
+  Append `?lang=zh` for the Chinese reference. The source lives in `resources/skills/fluxdhcp/` and is also previewable from the API Access page.
 
 ## Webhook Template Variables
 
