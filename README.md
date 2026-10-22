@@ -98,7 +98,7 @@ All four are optional. With no environment variables set, the server listens on 
 | **MAC Notes** | MAC address labels and notes, sortable columns, page size selector |
 | **Webhooks** | Webhook CRUD, event subscription, template variables, custom headers, SSRF-protected URLs, test button |
 | **DHCP Logs** | Millisecond timestamps, direction indicator, 60+ option code translations, column visibility selector, auto-refresh (3/5/10/30/60s, default 10s), MAC/IP autocomplete filters, clear-all button with total count, page size selector |
-| **API Access** | API keys for AI agents and scripts: read/write scopes, prefix-only display, one-time plaintext, enable/disable, last-used time, plus copyable MCP client configuration and skill download |
+| **API Access** | API keys for AI agents and scripts: read/write scopes, prefix-only display, one-time plaintext, enable/disable, last-used time, plus a ready-to-send setup prompt (MCP config and skill URL) that wires up both in one copy |
 | **Settings** | DHCP service control, server config (IP/listen interface/web port/default lease time), T1/T2 ratios with tooltips, DHCP log retention days, DECLINE blacklist duration, webhook timeout, IP allocation order (sequential/random), honor-client-requested-IP toggle, config import/export, plus account security (password change, session revocation) |
 
 ## Config Import/Export
@@ -142,15 +142,9 @@ Notes:
 - 33 tools: 15 read-only, 18 write. Read-only keys get `403 API_KEY_READ_ONLY` on any write tool.
 - The endpoint is stateless and accepts **API keys only** — browser sessions are rejected, because tool calls forward the same key to the internal API.
 - Starting/stopping the DHCP service, importing a configuration and changing server settings are **not exposed to MCP**. They can take a whole subnet offline in one call, so they stay in the web UI.
-- Pair it with the bundled skill so the agent follows safe ordering instead of improvising. The skill is served publicly (static documentation, no instance data), so a machine without a repository checkout can install it directly:
-
-  ```bash
-  mkdir -p ~/.codebuddy/skills/fluxdhcp
-  curl -fsSL http://your-host:3000/api/skills/fluxdhcp \
-    -o ~/.codebuddy/skills/fluxdhcp/SKILL.md
-  ```
-
-  Append `?lang=zh` for the Chinese reference. The source lives in `resources/skills/fluxdhcp/` and is also previewable from the API Access page. Restart the client afterwards so the skill is loaded.
+- Pair it with the bundled skill so the agent follows safe ordering instead of improvising. The skill is served publicly as static documentation (no instance data) at `http://your-host:3000/api/skills/fluxdhcp`; append `?lang=zh` for the Chinese reference.
+- The **Connect an AI agent** section on the API Access page already bundles the MCP config and that URL into a single prompt — send it to the agent and it adds the MCP server to its own configuration and installs the skill into its skills directory, with no shell commands to type.
+- The source lives in `resources/skills/fluxdhcp/` and is also previewable or downloadable from the API Access page. Restart the client afterwards so the skill is loaded.
 
 ## Webhook Template Variables
 

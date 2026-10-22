@@ -98,7 +98,7 @@ npm run dev
 | **MAC 备注** | 独立页面管理 MAC 地址的备注标签，支持增删改查和排序，每页条数选择器 |
 | **Webhook** | Webhook 增删改查，支持事件订阅、模板变量、自定义请求头、SSRF 防护、测试按钮 |
 | **DHCP日志** | 毫秒级时间戳，方向标识，60+ DHCP 选项码翻译，列显示选择器，自动刷新（3/5/10/30/60 秒，默认 10 秒），MAC/IP 自动补全搜索，IP 筛选支持所有 IP 列，清空全部按钮（带总数显示），每页条数选择器 |
-| **API 访问** | 供 AI agent 和外部脚本使用的 API 密钥：只读/读写权限、仅显示前缀、明文只出现一次、启用开关、最后使用时间，并附可直接复制的 MCP 客户端配置与 skill 下载 |
+| **API 访问** | 供 AI agent 和外部脚本使用的 API 密钥：只读/读写权限、仅显示前缀、明文只出现一次、启用开关、最后使用时间，并附一段可直接发给 AI 的接入说明（MCP 配置 + skill 地址），复制一次即可完成接入 |
 | **设置** | DHCP 服务控制、服务器配置（服务器 IP/监听网卡/Web 端口/默认租约时间）、T1/T2 参数（带说明）、DHCP 日志保留天数、DECLINE 黑名单时长、Webhook 超时、IP 分配顺序（顺序/随机）、优先分配客户端请求 IP 开关、配置导入导出，以及账号安全（修改密码、注销会话） |
 
 ## 配置导入导出
@@ -142,15 +142,9 @@ FluxDHCP 把 API 暴露成 MCP 工具，通过 Streamable HTTP 挂在 `POST /api
 - 共 33 个工具：15 个只读、18 个写入。只读 key 调用写工具会得到 `403 API_KEY_READ_ONLY`。
 - 端点是无状态的，且**只接受 API Key**——工具调用会把同一份凭据转发给内部 API，浏览器会话无法这样转发，也不应该用它驱动 agent。
 - 启停 DHCP 服务、导入配置、修改服务器设置**都不通过 MCP 开放**。它们一次调用就能让整个网段断网，只在 Web 界面提供。
-- 配合仓库内的 skill 使用，agent 会按推荐顺序操作，而不是即兴发挥。skill 是公开的静态文档（不含任何实例数据），没有仓库副本的机器可以直接下载：
-
-  ```bash
-  mkdir -p ~/.codebuddy/skills/fluxdhcp
-  curl -fsSL http://your-host:3000/api/skills/fluxdhcp \
-    -o ~/.codebuddy/skills/fluxdhcp/SKILL.md
-  ```
-
-  加 `?lang=zh` 取中文参考版。源文件在 `resources/skills/fluxdhcp/`，也可以在 API 访问页面直接预览。下载后需重启客户端才会加载。
+- 配合仓库内的 skill 使用，agent 会按推荐顺序操作，而不是即兴发挥。skill 是公开的静态文档（不含任何实例数据），地址为 `http://your-host:3000/api/skills/fluxdhcp`，加 `?lang=zh` 取中文参考版。
+- API 访问页面的 **接入 AI Agent** 已经把 MCP 配置和这个地址拼成一段提示词，复制后发给 AI 即可：由它自己把 MCP 服务加进配置、把 skill 装到自己的 skills 目录，不需要手敲命令。
+- 源文件在 `resources/skills/fluxdhcp/`，也可以在 API 访问页面直接预览或下载。装好后需重启客户端才会加载。
 
 ## Webhook 模板变量
 
