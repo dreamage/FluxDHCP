@@ -311,7 +311,7 @@
     "itemsCount": "{count} items",
     "selectedSummary": "{count} selected",
     "apiAccess": "API Access",
-    "apiAccessDesc": "API keys let AI agents and scripts call this server. Requests carrying a key are validated and limited to the key's scope; requests without a key are still allowed, so this controls delegation rather than access.",
+    "apiAccessDesc": "API keys let external scripts, monitoring and AI agents call this server — they are ordinary Bearer credentials. Every API request must carry a key or a signed-in browser session; each key is limited to read or write scope and can be disabled or deleted at any time.",
     "apiKeyCreate": "New Key",
     "apiKeyName": "Name",
     "apiKeyNamePlaceholder": "e.g. claude-code",

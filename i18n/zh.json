@@ -311,7 +311,7 @@
     "itemsCount": "{count} 项",
     "selectedSummary": "已选 {count} 项",
     "apiAccess": "API 访问",
-    "apiAccessDesc": "API 密钥供 AI agent 和脚本调用本服务。携带密钥的请求会被校验并限制在密钥权限内；未携带密钥的请求仍然放行，因此这里管理的是可撤销的授权凭据，而不是访问控制。",
+    "apiAccessDesc": "API 密钥供外部脚本、监控系统和 AI agent 调用本服务，本质就是标准的 Bearer 凭据。所有 API 请求都必须携带密钥或已登录的浏览器会话；密钥按只读/读写限制权限，可随时停用或删除。",
     "apiKeyCreate": "新建密钥",
     "apiKeyName": "名称",
     "apiKeyNamePlaceholder": "例如 claude-code",
