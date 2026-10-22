@@ -1,29 +1,39 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { normalizeMac } from '@/lib/mac-utils';
+import { apiError, serializeRow, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
-export async function GET(_request: Request, { params }: { params: Promise<{ mac: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ mac: string }> }) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const { mac: rawMac } = await params;
     const mac = normalizeMac(rawMac);
     if (!mac) {
-      return NextResponse.json({ error: 'Invalid MAC address format' }, { status: 400 });
+      return apiError('INVALID_MAC', 'Invalid MAC address format', 400, { details: { value: rawMac } });
     }
     const db = getDb();
-    const row = db.prepare('SELECT * FROM mac_blacklist WHERE mac_address = ?').get(mac);
-    return NextResponse.json(row || null);
+    const row = db.prepare('SELECT * FROM mac_blacklist WHERE mac_address = ?').get(mac) as any;
+    if (!row) {
+      return apiError('MAC_BLACKLIST_NOT_FOUND', 'MAC blacklist entry not found', 404, { details: { mac_address: mac } });
+    }
+    return NextResponse.json(serializeRow(row));
   } catch (error) {
-    console.error('[API] GET /mac-blacklist/:mac:', error);
-    return NextResponse.json({ error: 'Failed to fetch MAC blacklist entry' }, { status: 500 });
+    return serverError('GET /mac-blacklist/:mac', error, 'Failed to fetch MAC blacklist entry');
   }
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ mac: string }> }) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const { mac: rawMac } = await params;
     const mac = normalizeMac(rawMac);
     if (!mac) {
-      return NextResponse.json({ error: 'Invalid MAC address format' }, { status: 400 });
+      return apiError('INVALID_MAC', 'Invalid MAC address format', 400, { details: { value: rawMac } });
     }
     const db = getDb();
     const body = await request.json();
@@ -42,7 +52,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ mac:
     }
 
     if (sets.length === 0) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return apiError('MISSING_REQUIRED_FIELDS', 'Missing required fields', 400, {
+        details: { required: ['reason', 'enabled'] },
+      });
     }
 
     sets.push("updated_at = datetime('now')");
@@ -53,28 +65,33 @@ export async function PUT(request: Request, { params }: { params: Promise<{ mac:
     ).run(...values);
 
     if (result.changes === 0) {
-      return NextResponse.json({ error: 'MAC blacklist entry not found' }, { status: 404 });
+      return apiError('MAC_BLACKLIST_NOT_FOUND', 'MAC blacklist entry not found', 404, { details: { mac_address: mac } });
     }
 
-    return NextResponse.json({ message: 'Blacklist entry updated' });
+    const row = db.prepare('SELECT * FROM mac_blacklist WHERE mac_address = ?').get(mac) as any;
+    return NextResponse.json(serializeRow(row));
   } catch (error) {
-    console.error('[API] PUT /mac-blacklist/:mac:', error);
-    return NextResponse.json({ error: 'Failed to update MAC blacklist entry' }, { status: 500 });
+    return serverError('PUT /mac-blacklist/:mac', error, 'Failed to update MAC blacklist entry');
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ mac: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ mac: string }> }) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const { mac: rawMac } = await params;
     const mac = normalizeMac(rawMac);
     if (!mac) {
-      return NextResponse.json({ error: 'Invalid MAC address format' }, { status: 400 });
+      return apiError('INVALID_MAC', 'Invalid MAC address format', 400, { details: { value: rawMac } });
     }
     const db = getDb();
-    db.prepare('DELETE FROM mac_blacklist WHERE mac_address = ?').run(mac);
-    return NextResponse.json({ message: 'Blacklist entry deleted' });
+    const result = db.prepare('DELETE FROM mac_blacklist WHERE mac_address = ?').run(mac);
+    if (result.changes === 0) {
+      return apiError('MAC_BLACKLIST_NOT_FOUND', 'MAC blacklist entry not found', 404, { details: { mac_address: mac } });
+    }
+    return NextResponse.json({ deleted: true, mac_address: mac });
   } catch (error) {
-    console.error('[API] DELETE /mac-blacklist/:mac:', error);
-    return NextResponse.json({ error: 'Failed to delete MAC blacklist entry' }, { status: 500 });
+    return serverError('DELETE /mac-blacklist/:mac', error, 'Failed to delete MAC blacklist entry');
   }
 }

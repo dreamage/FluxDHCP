@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { numToIp } from '../lib/ip-utils';
 import {
   PRAGMA_STATEMENTS,
   CREATE_TABLE_POOLS,
@@ -14,6 +15,8 @@ import {
   CREATE_TABLE_MAC_BLACKLIST,
   CREATE_TABLE_DECLINED_IPS,
   CREATE_TABLE_WEBHOOK_DELIVERIES,
+  CREATE_TABLE_API_KEYS,
+  CREATE_TABLE_ADMIN_SESSIONS,
   CREATE_INDEXES,
   SEED_CONFIG,
 } from './schema';
@@ -61,6 +64,8 @@ export function getDatabase(dbPath?: string): Database.Database {
   db.exec(CREATE_TABLE_MAC_BLACKLIST);
   db.exec(CREATE_TABLE_DECLINED_IPS);
   db.exec(CREATE_TABLE_WEBHOOK_DELIVERIES);
+  db.exec(CREATE_TABLE_API_KEYS);
+  db.exec(CREATE_TABLE_ADMIN_SESSIONS);
 
   // Migration: add body_mode column to webhooks if missing
   try {
@@ -82,6 +87,30 @@ export function getDatabase(dbPath?: string): Database.Database {
 
   // Migration: rename log_retention_days → dhcp_log_retention_days
   try { db.exec("UPDATE config SET key = 'dhcp_log_retention_days' WHERE key = 'log_retention_days'"); } catch { /* already migrated */ }
+
+  // Migration: 纯数字 netmask（CIDR 前缀，如 24）转点分十进制，
+  // 否则这类历史地址池过不了 isValidIPv4 校验，在界面上无法编辑。
+  try {
+    const legacy = db.prepare(
+      "SELECT id, name, netmask FROM pools WHERE netmask GLOB '[0-9]*' AND netmask NOT LIKE '%.%'"
+    ).all() as Array<{ id: number; name: string; netmask: string }>;
+
+    if (legacy.length > 0) {
+      const updateNetmask = db.prepare("UPDATE pools SET netmask = ?, updated_at = datetime('now') WHERE id = ?");
+      for (const pool of legacy) {
+        const prefix = Number(pool.netmask);
+        if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) {
+          console.warn(`[FluxDHCP] Pool "${pool.name}" has an unrecognized netmask "${pool.netmask}", left unchanged`);
+          continue;
+        }
+        const mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+        updateNetmask.run(numToIp(mask), pool.id);
+        console.log(`[FluxDHCP] Migrated netmask of pool "${pool.name}": ${pool.netmask} -> ${numToIp(mask)}`);
+      }
+    }
+  } catch (err) {
+    console.error('[FluxDHCP] Failed to migrate numeric netmask values:', err);
+  }
 
   // Migration: remove deprecated language config key
   try { db.exec("DELETE FROM config WHERE key = 'language'"); } catch { /* no-op */ }

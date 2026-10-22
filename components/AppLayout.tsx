@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Layout, Menu, Select, Tabs, Dropdown } from 'antd';
+import { Layout, Menu, Select, Tabs, Dropdown, Spin, Button } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   DashboardOutlined, PartitionOutlined, PushpinOutlined, FileTextOutlined,
   SettingOutlined, HistoryOutlined, ToolOutlined, ApiOutlined,
   MenuFoldOutlined, MenuUnfoldOutlined, MenuOutlined,
   CloseOutlined, ColumnWidthOutlined, ReloadOutlined, TagOutlined,
-  SunOutlined, MoonOutlined, DesktopOutlined, StopOutlined,
+  SunOutlined, MoonOutlined, DesktopOutlined, StopOutlined, LogoutOutlined,
 } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -35,6 +35,52 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   // Extract locale from pathname (e.g. /en/dashboard -> en)
   const locale = pathname?.split('/')[1] || 'en';
+  const isLoginPage = pathname?.endsWith('/login') ?? false;
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // 会话校验：未登录一律送回登录页（真实校验在 API 侧，这里只做引导）
+  useEffect(() => {
+    if (isLoginPage) { setAuthChecked(true); return; }
+
+    let cancelled = false;
+    fetch('/api/auth/state')
+      .then(res => res.json())
+      .then(state => {
+        if (cancelled) return;
+        if (state.authenticated) setAuthChecked(true);
+        else router.replace(`/${locale}/login`);
+      })
+      .catch(() => {
+        if (!cancelled) router.replace(`/${locale}/login`);
+      });
+
+    return () => { cancelled = true; };
+  }, [isLoginPage, locale, router]);
+
+  // 会话中途失效时统一跳转，避免每个页面各自处理 401
+  useEffect(() => {
+    const original = window.fetch;
+    window.fetch = async (...args: Parameters<typeof fetch>) => {
+      const response = await original(...args);
+      if (response.status === 401) {
+        const raw = args[0];
+        const url = typeof raw === 'string' ? raw : raw instanceof Request ? raw.url : '';
+        if (url.includes('/api/') && !url.includes('/api/auth/')) {
+          router.replace(`/${locale}/login`);
+        }
+      }
+      return response;
+    };
+    return () => { window.fetch = original; };
+  }, [locale, router]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      router.replace(`/${locale}/login`);
+    }
+  };
 
   // Set lang attribute on <html> for accessibility
   useEffect(() => {
@@ -241,6 +287,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
     </>
   );
 
+  if (isLoginPage) return <>{children}</>;
+
+  if (!authChecked) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <Layout style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
       {/* Skip to content link for keyboard navigation */}
@@ -301,6 +357,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 options={themeOptions} popupMatchSelectWidth={false} />
               <Select value={locale} onChange={handleLocaleChange} style={{ width: 110 }} size="small" variant="borderless"
                 options={[{ value: 'en', label: 'English' }, { value: 'zh', label: '中文' }]} />
+              <Button type="text" size="small" icon={<LogoutOutlined />} onClick={handleLogout}
+                title={t('logout')} aria-label={t('logout')} />
             </div>
           </div>
         </div>

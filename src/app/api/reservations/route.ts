@@ -2,8 +2,19 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { normalizeMac } from '@/lib/mac-utils';
 import { isValidIPv4, isIPInSubnet, ipToNum } from '@/lib/ip-utils';
+import { apiError, isUniqueViolation, parsePage, pageResult, serializeRow, serializeRows, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
+
+const SELECT_WITH_POOL = `
+  SELECT r.*, p.name as pool_name
+  FROM reservations r
+  LEFT JOIN pools p ON r.pool_id = p.id
+`;
 
 export async function GET(request: Request) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const db = getDb();
     const { searchParams } = new URL(request.url);
@@ -13,6 +24,7 @@ export async function GET(request: Request) {
     const ipEnd = searchParams.get('ip_end');
     const mac = searchParams.get('mac');
     const hostname = searchParams.get('hostname');
+    const page = parsePage(searchParams, { defaultPageSize: 50, maxPageSize: 1000 });
 
     const conditions: string[] = [];
     const params: any[] = [];
@@ -40,60 +52,81 @@ export async function GET(request: Request) {
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
+    const total = db.prepare(
+      `SELECT COUNT(*) as count FROM reservations r ${whereClause}`
+    ).get(...params) as { count: number };
+
     const reservations = db.prepare(`
-      SELECT r.*, p.name as pool_name
-      FROM reservations r
-      LEFT JOIN pools p ON r.pool_id = p.id
+      ${SELECT_WITH_POOL}
       ${whereClause}
       ORDER BY r.id
-    `).all(...params);
-    return NextResponse.json(reservations);
+      LIMIT ? OFFSET ?
+    `).all(...params, page.pageSize, page.offset) as any[];
+
+    return NextResponse.json(pageResult(serializeRows(reservations), page, total.count));
   } catch (error) {
-    console.error('[API] GET /reservations:', error);
-    return NextResponse.json({ error: 'Failed to fetch reservations' }, { status: 500 });
+    return serverError('GET /reservations', error, 'Failed to fetch reservations');
   }
 }
 
 export async function POST(request: Request) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const db = getDb();
     const body = await request.json();
     const { mac_address, ip_address, hostname, pool_id, description } = body;
 
     if (!mac_address || !ip_address || !pool_id) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return apiError('MISSING_REQUIRED_FIELDS', 'Missing required fields', 400, {
+        details: { required: ['mac_address', 'ip_address', 'pool_id'] },
+      });
     }
 
     // 校验 MAC 格式
     const mac = normalizeMac(mac_address);
     if (!mac) {
-      return NextResponse.json({ error: 'Invalid MAC address format. Use AA:BB:CC:DD:EE:FF' }, { status: 400 });
+      return apiError('INVALID_MAC', 'Invalid MAC address format. Use AA:BB:CC:DD:EE:FF', 400, {
+        details: { value: mac_address },
+        hint: 'Use colon-separated hex, e.g. AA:BB:CC:DD:EE:FF.',
+      });
     }
 
     // 校验 IP 格式
     if (!isValidIPv4(ip_address)) {
-      return NextResponse.json({ error: 'Invalid IP address format' }, { status: 400 });
+      return apiError('INVALID_IP', 'Invalid IP address format', 400, {
+        details: { value: ip_address },
+        hint: 'Use dotted-decimal IPv4 notation, e.g. 192.168.1.100.',
+      });
     }
 
     // 校验 IP 在子网范围内
     const pool = db.prepare('SELECT * FROM pools WHERE id = ?').get(pool_id) as any;
     if (!pool) {
-      return NextResponse.json({ error: 'Pool not found' }, { status: 404 });
+      return apiError('POOL_NOT_FOUND', 'Pool not found', 404, { details: { pool_id } });
     }
     if (!isIPInSubnet(ip_address, pool.subnet, pool.netmask)) {
-      return NextResponse.json({ error: 'IP address is not within the subnet' }, { status: 400 });
+      return apiError('IP_OUT_OF_SUBNET', 'IP address is not within the subnet', 400, {
+        details: { ip_address, subnet: pool.subnet, netmask: pool.netmask },
+        hint: 'Pick an IP inside the selected pool subnet.',
+      });
     }
 
     // 校验 MAC 唯一
-    const existingMAC = db.prepare('SELECT id FROM reservations WHERE mac_address = ?').get(mac);
+    const existingMAC = db.prepare('SELECT id FROM reservations WHERE mac_address = ?').get(mac) as { id: number } | undefined;
     if (existingMAC) {
-      return NextResponse.json({ error: 'MAC address already reserved' }, { status: 409 });
+      return apiError('RESERVATION_MAC_EXISTS', 'MAC address already reserved', 409, {
+        details: { reservationId: existingMAC.id, mac_address: mac },
+      });
     }
 
     // 校验 IP 唯一
-    const existingIP = db.prepare('SELECT id FROM reservations WHERE ip_address = ?').get(ip_address);
+    const existingIP = db.prepare('SELECT id FROM reservations WHERE ip_address = ?').get(ip_address) as { id: number } | undefined;
     if (existingIP) {
-      return NextResponse.json({ error: 'IP address already reserved' }, { status: 409 });
+      return apiError('RESERVATION_IP_EXISTS', 'IP address already reserved', 409, {
+        details: { reservationId: existingIP.id, ip_address },
+      });
     }
 
     // 校验 IP 是否被其他设备活跃占用
@@ -101,7 +134,10 @@ export async function POST(request: Request) {
       "SELECT mac_address FROM leases WHERE ip_address = ? AND state IN ('BOUND', 'OFFERED')"
     ).get(ip_address) as { mac_address: string } | undefined;
     if (activeLease && activeLease.mac_address !== mac) {
-      return NextResponse.json({ error: 'IP address is currently leased to another device' }, { status: 409 });
+      return apiError('IP_LEASED_TO_OTHER', 'IP address is currently leased to another device', 409, {
+        details: { ip_address, leasedTo: activeLease.mac_address },
+        hint: 'Release the lease first, so the reservation does not fight an active client.',
+      });
     }
 
     const result = db.prepare(`
@@ -109,9 +145,14 @@ export async function POST(request: Request) {
       VALUES (?, ?, ?, ?, ?)
     `).run(mac, ip_address, hostname || null, pool_id, description || null);
 
-    return NextResponse.json({ id: result.lastInsertRowid, message: 'Reservation created' }, { status: 201 });
+    const created = db.prepare(`${SELECT_WITH_POOL} WHERE r.id = ?`).get(result.lastInsertRowid) as any;
+    return NextResponse.json(serializeRow(created), { status: 201 });
   } catch (error) {
-    console.error('[API] POST /reservations:', error);
-    return NextResponse.json({ error: 'Failed to create reservation' }, { status: 500 });
+    if (isUniqueViolation(error)) {
+      return apiError('RESERVATION_CONFLICT', 'MAC address or IP address already reserved', 409, {
+        hint: 'Check existing reservations for this MAC/IP.',
+      });
+    }
+    return serverError('POST /reservations', error, 'Failed to create reservation');
   }
 }

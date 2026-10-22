@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { DEFAULT_EXPORT_KEYS, CATEGORY_TABLES } from '@/lib/config-categories';
+import { serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
 // 各类别对应的查询 SQL(部分表排除敏感字段)
 const QUERY_SQL: Record<string, string> = {
@@ -16,6 +18,9 @@ const QUERY_SQL: Record<string, string> = {
 };
 
 export async function GET(request: Request) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const db = getDb();
     const { searchParams } = new URL(request.url);
@@ -40,7 +45,6 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error('[API] GET /config/export:', error);
-    return NextResponse.json({ error: 'Failed to export config' }, { status: 500 });
+    return serverError('GET /config/export', error, 'Failed to export config');
   }
 }

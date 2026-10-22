@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { ipToNum, numToIp, MAX_POOL_SIZE } from '@/lib/ip-utils';
+import { apiError, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
 const DEFAULT_PAGE_SIZE = 1024;
 
@@ -10,12 +12,15 @@ const DEFAULT_PAGE_SIZE = 1024;
  * 因此按 page/pageSize 分页返回，统计值走 SQL 计数（与池大小无关）。
  */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const db = getDb();
     const pool = db.prepare('SELECT * FROM pools WHERE id = ?').get(id) as any;
     if (!pool) {
-      return NextResponse.json({ error: 'Pool not found' }, { status: 404 });
+      return apiError('POOL_NOT_FOUND', 'Pool not found', 404, { details: { id } });
     }
 
     // 分页参数（pageSize 上限与地址池上限一致，避免单次响应过大）
@@ -134,7 +139,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       hasMore: offset + ips.length < total,
     });
   } catch (error) {
-    console.error('[API] GET /pools/:id/ips:', error);
-    return NextResponse.json({ error: 'Failed to fetch pool IPs' }, { status: 500 });
+    return serverError('GET /pools/:id/ips', error, 'Failed to fetch pool IPs');
   }
 }

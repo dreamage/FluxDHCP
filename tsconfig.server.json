@@ -16,6 +16,6 @@
     },
     "baseUrl": "."
   },
-  "include": ["src/server.ts", "src/dhcp/**/*.ts", "src/db/**/*.ts", "src/lib/**/*.ts"],
+  "include": ["src/server.ts", "src/dhcp/**/*.ts", "src/db/**/*.ts", "src/lib/**/*.ts", "src/scripts/**/*.ts"],
   "exclude": ["node_modules"]
 }

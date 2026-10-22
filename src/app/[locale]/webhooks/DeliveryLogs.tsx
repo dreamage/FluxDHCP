@@ -55,7 +55,7 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
       if (logsWebhookFilter) params.set('webhook_id', logsWebhookFilter);
       const res = await fetch(`/api/webhooks/deliveries?${params}`);
       const json = await res.json();
-      setLogs(json.data || []);
+      setLogs(json.items || []);
       setLogsTotal(json.total || 0);
     } finally { setLogsLoading(false); }
   }, [logsPage, logsPageSize, logsStatusFilter, logsWebhookFilter]);

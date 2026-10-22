@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
+import { apiError, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ ip: string }> }) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const { ip } = await params;
     const url = new URL(request.url);
@@ -15,10 +20,13 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       `).run(ip);
 
       if (result.changes === 0) {
-        return NextResponse.json({ error: 'No released/expired lease found for this IP' }, { status: 404 });
+        return apiError('LEASE_NOT_PURGEABLE', 'No released/expired lease found for this IP', 404, {
+          details: { ip_address: ip },
+          hint: 'Only leases in RELEASED or EXPIRED state can be purged.',
+        });
       }
 
-      return NextResponse.json({ message: 'Lease deleted' });
+      return NextResponse.json({ deleted: true, ip_address: ip });
     }
 
     // Default: release (change state to RELEASED)
@@ -28,12 +36,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     `).run(ip);
 
     if (result.changes === 0) {
-      return NextResponse.json({ error: 'No active lease found for this IP' }, { status: 404 });
+      return apiError('LEASE_NOT_ACTIVE', 'No active lease found for this IP', 404, {
+        details: { ip_address: ip },
+        hint: 'Only leases in BOUND or OFFERED state can be released.',
+      });
     }
 
-    return NextResponse.json({ message: 'Lease released' });
+    return NextResponse.json({ released: true, ip_address: ip, state: 'RELEASED' });
   } catch (error) {
-    console.error('[API] POST /leases/:ip:', error);
-    return NextResponse.json({ error: 'Failed to process lease' }, { status: 500 });
+    return serverError('DELETE /leases/:ip', error, 'Failed to process lease');
   }
 }

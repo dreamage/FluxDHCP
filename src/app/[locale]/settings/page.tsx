@@ -7,8 +7,11 @@ import { CheckCircleFilled, CloseCircleFilled, SaveOutlined, PlayCircleOutlined,
 import { useNotify } from '@/hooks/useNotify';
 import { ipRule } from '@/lib/validators';
 import { translateError } from '@/lib/error-map';
+import { apiErrorMessage } from '@/lib/api-error';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
 import { CONFIG_CATEGORIES, DEFAULT_EXPORT_KEYS } from '@/lib/config-categories';
+import ApiKeysCard from '@/components/ApiKeysCard';
+import SecurityCard from '@/components/SecurityCard';
 
 const { Title, Text } = Typography;
 
@@ -77,7 +80,7 @@ export default function SettingsPage() {
         applyConfig(form, config);
 
         setDhcpStatus(status.status);
-        setDhcpError(status.error || '');
+        setDhcpError(status.lastError || '');
         setDbPath(config.db_path || '');
       } finally {
         setLoading(false);
@@ -110,7 +113,7 @@ export default function SettingsPage() {
           setDhcpError(result.warning || '');
         }
       } else {
-        notify.error(translateError(result.error, tc));
+        notify.error(translateError(apiErrorMessage(result), tc));
       }
     } catch (err: any) {
       if (err?.errorFields) {
@@ -209,7 +212,7 @@ export default function SettingsPage() {
         const config = await configRes.json();
         applyConfig(form, config);
       } else {
-        notify.error(translateError(result.error, tc));
+        notify.error(translateError(apiErrorMessage(result), tc));
       }
     } catch {
       notify.error(null);
@@ -226,8 +229,8 @@ export default function SettingsPage() {
         notify.success(t('dhcpStarted'));
       } else {
         setDhcpStatus('error');
-        setDhcpError(data.detail || data.error || '');
-        notify.fatal(t('dhcpService'), data.error);
+        setDhcpError(data?.error?.details?.lastError || apiErrorMessage(data));
+        notify.fatal(t('dhcpService'), apiErrorMessage(data));
       }
     } catch (err: any) {
       notify.fatal(t('dhcpService'), err?.message || null);
@@ -243,7 +246,7 @@ export default function SettingsPage() {
         setDhcpError('');
         notify.success(t('dhcpStopped'));
       } else {
-        notify.fatal(t('dhcpService'), data.error);
+        notify.fatal(t('dhcpService'), apiErrorMessage(data));
       }
     } catch (err: any) {
       notify.fatal(t('dhcpService'), err?.message || null);
@@ -416,6 +419,12 @@ export default function SettingsPage() {
           <Text type="secondary" style={{ fontSize: 13 }}>{t('importExportHelp')}</Text>
         </div>
       </Card>
+
+      {/* API Access */}
+      <ApiKeysCard />
+
+      {/* Security */}
+      <SecurityCard />
 
       {/* Actions */}
       <Card>

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { ipToNum } from '@/lib/ip-utils';
 import { dhcpInstance } from '@/lib/dhcp-instance';
+import { serializeRows, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
 type TrendUnit = 'hour' | 'day';
 
@@ -74,7 +76,10 @@ function queryTrend(db: ReturnType<typeof getDb>, unit: TrendUnit, count: number
   });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const db = getDb();
 
@@ -115,10 +120,10 @@ export async function GET() {
     });
 
     // 最近 10 条事件
-    const recentEvents = db.prepare(`
+    const recentEvents = serializeRows(db.prepare(`
       SELECT timestamp, message_type, client_mac, hostname, server_response, direction
       FROM dhcp_logs ORDER BY id DESC LIMIT 10
-    `).all();
+    `).all() as any[]);
 
     // ===== DHCP 服务运行状态 =====
     // 直接使用单例状态机（globalThis 单例保证进程内唯一），
@@ -220,7 +225,6 @@ export async function GET() {
       topClients,
     });
   } catch (error) {
-    console.error('[API] Dashboard error:', error);
-    return NextResponse.json({ error: 'Failed to fetch dashboard data' }, { status: 500 });
+    return serverError('GET /dashboard', error, 'Failed to fetch dashboard data');
   }
 }

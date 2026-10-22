@@ -1,13 +1,21 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { dhcpInstance } from '@/lib/dhcp-instance';
+import { apiError, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
 export async function POST(request: Request) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const body = await request.json();
 
     if (!body.version) {
-      return NextResponse.json({ error: 'Invalid config file format' }, { status: 400 });
+      return apiError('CONFIG_INVALID_FORMAT', 'Invalid config file format', 400, {
+        details: { required: ['version'] },
+        hint: 'Supply a file produced by GET /api/config/export.',
+      });
     }
 
     const db = getDb();
@@ -140,7 +148,6 @@ export async function POST(request: Request) {
       ...(dhcpWarning ? { warning: `Config imported but DHCP server did not apply it: ${dhcpWarning}` } : {}),
     });
   } catch (error) {
-    console.error('[API] Config import error:', error);
-    return NextResponse.json({ error: 'Failed to import config' }, { status: 500 });
+    return serverError('POST /config/import', error, 'Failed to import config');
   }
 }

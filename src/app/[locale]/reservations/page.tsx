@@ -7,6 +7,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined, UpOutlined } 
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { translateError } from '@/lib/error-map';
+import { apiErrorMessage } from '@/lib/api-error';
 import { useMacNotes } from '@/hooks/useMacNotes';
 import { useNotify } from '@/hooks/useNotify';
 import { isValidIPv4, ipToNum } from '@/lib/ip-utils';
@@ -47,13 +48,13 @@ export default function ReservationsPage() {
       if (activeFilters.mac) searchParams.set('mac', activeFilters.mac);
       if (activeFilters.hostname) searchParams.set('hostname', activeFilters.hostname);
       const [resRes, poolRes] = await Promise.all([
-        fetch(`/api/reservations?${searchParams}`),
-        fetch('/api/pools'),
+        fetch(`/api/reservations?${searchParams}&pageSize=1000`),
+        fetch('/api/pools?pageSize=1000'),
       ]);
       const resData = await resRes.json();
       const poolData = await poolRes.json();
-      setData(Array.isArray(resData) ? resData : []);
-      setPools(Array.isArray(poolData) ? poolData : []);
+      setData(Array.isArray(resData.items) ? resData.items : []);
+      setPools(Array.isArray(poolData.items) ? poolData.items : []);
       setError('');
     } catch {
       setError(tc('errFailedFetch'));
@@ -113,7 +114,7 @@ export default function ReservationsPage() {
 
       const result = await res.json();
       if (!res.ok) {
-        const errMsg = translateError(result.error, tc) || tc('error');
+        const errMsg = translateError(apiErrorMessage(result), tc) || tc('error');
         setSubmitError(errMsg);
         return;
       }

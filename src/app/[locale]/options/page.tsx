@@ -8,6 +8,7 @@ import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { useNotify } from '@/hooks/useNotify';
 import { translateError } from '@/lib/error-map';
+import { apiErrorMessage } from '@/lib/api-error';
 import { useMacNotes } from '@/hooks/useMacNotes';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import FilterPanel from '@/components/FilterPanel';
@@ -49,9 +50,9 @@ export default function OptionsPage() {
       if (activeFilters.mac) searchParams.set('mac', activeFilters.mac);
       if (activeFilters.option_code) searchParams.set('option_code', activeFilters.option_code);
       if (activeFilters.option_value) searchParams.set('option_value', activeFilters.option_value);
-      const res = await fetch(`/api/options?${searchParams}`);
+      const res = await fetch(`/api/options?${searchParams}&pageSize=1000`);
       const result = await res.json();
-      setData(Array.isArray(result) ? result : []);
+      setData(Array.isArray(result.items) ? result.items : []);
       setError('');
     } catch {
       setError(tc('errFailedFetch'));
@@ -86,7 +87,7 @@ export default function OptionsPage() {
       });
 
       const result = await res.json();
-      if (!res.ok) { notify.error(translateError(result.error, tc)); return; }
+      if (!res.ok) { notify.error(translateError(apiErrorMessage(result), tc)); return; }
 
       notify.success(editingRecord ? tc('updateSuccess') : tc('createSuccess'));
       setModalOpen(false);
@@ -97,7 +98,7 @@ export default function OptionsPage() {
   const handleDelete = async (id: number) => {
     const res = await fetch(`/api/options/${id}`, { method: 'DELETE' });
     const result = await res.json().catch(() => ({}));
-    if (!res.ok) { notify.error(translateError(result.error, tc)); return; }
+    if (!res.ok) { notify.error(translateError(apiErrorMessage(result), tc)); return; }
     notify.success(tc('deleteSuccess'));
     fetchData();
   };

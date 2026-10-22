@@ -24,7 +24,8 @@
 - **多标签页导航** - 底部对齐 Tab 栏，右键菜单支持刷新、关闭、关闭其它、关闭右侧、关闭所有
 - **加载动画** - 感知深色模式的纯 CSS 启动屏幕，消除页面加载时的无样式闪烁
 - **国际化** - 完整的中英文支持，包括 DHCP 选项码、服务器响应消息、NAK 原因码，浏览器语言自动检测
-- **安全** - API 请求 Origin 校验（CSRF 防护）、Webhook URL SSRF 防护、IPv4 格式校验
+- **安全** - 管理密码登录（scrypt，7 天会话，可逐条吊销，CLI 重置）、API Key（只读/读写、只存哈希）、API 请求 Origin 校验（CSRF 防护）、Webhook URL SSRF 防护、IPv4 格式校验
+- **AI 智能体接入** - MCP server 同时提供 HTTP（`POST /api/mcp`）与 stdio（`dist/mcp/stdio.js`）两种传输，26 个工具按读写权限管控，危险操作需显式确认，并附配套 skill
 - **无障碍** - focus-visible 键盘导航样式，React Error Boundary 崩溃恢复
 - **Docker 一键部署** - 使用 Docker Compose 快速启动
 
@@ -51,6 +52,9 @@ docker-compose up -d
 
 在浏览器中打开 `http://localhost:3000`。
 
+> 首次打开会要求设置管理密码（至少 8 位）。忘记密码时在服务器上执行 `npm run reset-password` 重置，重置后回到首次设置状态。
+> 也可以通过环境变量 `ADMIN_PASSWORD` 在首次启动时直接初始化，避免任何“先到先得”的窗口期。
+
 ### 手动安装
 
 ```bash
@@ -76,6 +80,8 @@ npm run dev
 |------|--------|------|
 | `DB_PATH` | `./data/fluxdhcp.db` | SQLite 数据库文件路径 |
 | `WEB_PORT` | `3000` | Web 管理界面端口 |
+| `ADMIN_PASSWORD` | — | 可选。首次启动时初始化管理密码，消除“先访问者先设置”的窗口期；已设置密码后忽略 |
+| `FLUXDHCP_INTERNAL_URL` | `http://127.0.0.1:$WEB_PORT` | MCP HTTP 端点回调自身 API 使用的地址 |
 
 ## 页面说明
 
@@ -109,6 +115,54 @@ npm run dev
 - `dhcp_logs` - DHCP 数据包日志（可选导出）
 
 导入后 DHCP 配置自动热加载，无需重启服务。
+
+## AI 智能体接入（MCP）
+
+FluxDHCP 把 API 暴露成 MCP 工具，agent 可以在与服务端相同的校验和权限下检查和修改配置。两种传输共用同一份工具定义，不会出现能力差异：
+
+| 传输方式 | 端点 | 要求 |
+|---|---|---|
+| **HTTP**（推荐） | `POST /api/mcp` | 无需安装任何东西，agent 只要能访问本服务并持有密钥 |
+| **stdio** | `dist/mcp/stdio.js` | 本机需 Node 18+ 和本项目代码，并已执行 `npm run build` |
+
+密钥在 **设置 → API 访问** 创建。排查类任务用只读 key，只有确实要改配置时才用读写 key。API Key 永远不能管理其他 API Key。
+
+HTTP 客户端配置：
+
+```json
+{
+  "mcpServers": {
+    "fluxdhcp": {
+      "type": "http",
+      "url": "http://your-host:3000/api/mcp",
+      "headers": { "Authorization": "Bearer fdx_xxxxxxxxxxxxxxxx" }
+    }
+  }
+}
+```
+
+stdio 客户端配置：
+
+```json
+{
+  "mcpServers": {
+    "fluxdhcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/FluxDHCP/dist/mcp/stdio.js"],
+      "env": {
+        "FLUXDHCP_URL": "http://127.0.0.1:3000",
+        "FLUXDHCP_API_KEY": "fdx_xxxxxxxxxxxxxxxx"
+      }
+    }
+  }
+}
+```
+
+几点说明：
+
+- HTTP 端点是无状态的，且**只接受 API Key**——工具调用会把同一份凭据转发给内部 API，浏览器会话无法这样转发，也不应该用它驱动 agent。
+- `service_stop` 和 `config_import` 额外要求 `confirm=true`，否则工具在本地直接拒绝。
+- 配合仓库内的 skill 使用（`.codebuddy/skills/fluxdhcp/SKILL.md`，中文对照见 `SKILL.zh-CN.md`），agent 会按推荐顺序操作，而不是即兴发挥。
 
 ## Webhook 模板变量
 

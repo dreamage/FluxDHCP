@@ -8,6 +8,7 @@ import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
 import { translateError } from '@/lib/error-map';
+import { apiErrorMessage } from '@/lib/api-error';
 import { useMacNotes } from '@/hooks/useMacNotes';
 import { useNotify } from '@/hooks/useNotify';
 import { useTableFilters } from '@/hooks/useTableFilters';
@@ -68,17 +69,17 @@ export default function LeasesPage() {
       if (activeFilters.hostname) searchParams.set('hostname', activeFilters.hostname);
       const [res, resRes, poolRes] = await Promise.all([
         fetch(`/api/leases?${searchParams}`),
-        fetch('/api/reservations'),
-        fetch('/api/pools'),
+        fetch('/api/reservations?pageSize=1000'),
+        fetch('/api/pools?pageSize=1000'),
       ]);
       const json = await res.json();
-      setData(json.data || []);
+      setData(json.items || []);
       setTotal(json.total || 0);
       const resData = await resRes.json();
-      const resList = Array.isArray(resData) ? resData : [];
+      const resList = Array.isArray(resData.items) ? resData.items : [];
       setReservedMacs(new Set(resList.map((r: any) => (r.mac_address || '').toUpperCase())));
       const poolData = await poolRes.json();
-      setPools(Array.isArray(poolData) ? poolData : []);
+      setPools(Array.isArray(poolData.items) ? poolData.items : []);
       setError('');
     } catch {
       setError(tc('errFailedFetch'));
@@ -129,7 +130,7 @@ export default function LeasesPage() {
       });
       const result = await res.json();
       if (!res.ok) {
-        const errMsg = translateError(result.error, tc) || tc('error');
+        const errMsg = translateError(apiErrorMessage(result), tc) || tc('error');
         setResError(errMsg);
         return;
       }

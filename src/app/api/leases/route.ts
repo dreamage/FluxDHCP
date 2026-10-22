@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { ipToNum } from '@/lib/ip-utils';
+import { parsePage, pageResult, serializeRows, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
 const ALLOWED_SORT_FIELDS: Record<string, string> = {
   ip_address: 'l.ip_address',
@@ -13,6 +15,9 @@ const ALLOWED_SORT_FIELDS: Record<string, string> = {
 };
 
 export async function GET(request: Request) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const db = getDb();
     const { searchParams } = new URL(request.url);
@@ -22,8 +27,7 @@ export async function GET(request: Request) {
     const ipEnd = searchParams.get('ip_end');
     const mac = searchParams.get('mac');
     const hostname = searchParams.get('hostname');
-    const page = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1);
-    const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '20', 10) || 20, 500);
+    const page = parsePage(searchParams, { defaultPageSize: 20, maxPageSize: 500 });
     const sortField = searchParams.get('sort') || 'lease_end';
     const sortOrder = searchParams.get('order') === 'asc' ? 'ASC' : 'DESC';
 
@@ -65,16 +69,10 @@ export async function GET(request: Request) {
       ${whereClause}
       ORDER BY ${orderColumn} ${sortOrder}
       LIMIT ? OFFSET ?
-    `).all(...params, pageSize, (page - 1) * pageSize);
+    `).all(...params, page.pageSize, page.offset) as any[];
 
-    return NextResponse.json({
-      total: total.count,
-      page,
-      pageSize,
-      data: leases,
-    });
+    return NextResponse.json(pageResult(serializeRows(leases), page, total.count));
   } catch (error) {
-    console.error('[API] GET /leases:', error);
-    return NextResponse.json({ error: 'Failed to fetch leases' }, { status: 500 });
+    return serverError('GET /leases', error, 'Failed to fetch leases');
   }
 }

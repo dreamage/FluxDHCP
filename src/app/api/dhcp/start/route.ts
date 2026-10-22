@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { dhcpInstance } from '@/lib/dhcp-instance';
 import { getDb } from '@/lib/db-instance';
+import { apiError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
-export async function POST() {
+export async function POST(request: Request) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     // 先持久化开关状态，再启动，保证 start() 内部读到的配置与 DB 一致
     try {
@@ -18,9 +23,13 @@ export async function POST() {
     return NextResponse.json({ status: dhcpInstance.getStatus(), message: 'DHCP server started' });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to start DHCP server';
-    return NextResponse.json(
-      { error: message, status: dhcpInstance.getStatus(), detail: dhcpInstance.getLastError() },
-      { status: 500 },
-    );
+    return apiError('DHCP_START_FAILED', message, 500, {
+      details: {
+        dhcpStatus: dhcpInstance.getStatus(),
+        lastError: dhcpInstance.getLastError(),
+        code: (error as { code?: string } | null)?.code,
+      },
+      hint: 'Check whether UDP 67 is already in use or requires root/NET_ADMIN.',
+    });
   }
 }

@@ -21,9 +21,14 @@ const MacInput = forwardRef<any, MacInputProps>(({ value, onChange, onSelect, pl
   }));
 
   useEffect(() => {
-    fetch('/api/mac-notes')
-      .then(res => res.ok ? res.json() : {})
-      .then(setMacNotes)
+    fetch('/api/mac-notes?pageSize=1000')
+      .then(res => res.ok ? res.json() : { items: [] })
+      .then(json => {
+        const items: Array<{ mac_address: string; note: string }> = Array.isArray(json.items) ? json.items : [];
+        const map: Record<string, string> = {};
+        for (const row of items) map[row.mac_address] = row.note;
+        setMacNotes(map);
+      })
       .catch(() => {});
   }, []);
 

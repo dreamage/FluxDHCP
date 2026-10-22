@@ -1,18 +1,25 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { normalizeMac } from '@/lib/mac-utils';
+import { apiError, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
 export async function GET(request: Request) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const rawMac = searchParams.get('mac');
     if (!rawMac) {
-      return NextResponse.json({ error: 'MAC address is required' }, { status: 400 });
+      return apiError('MISSING_REQUIRED_FIELDS', 'MAC address is required', 400, {
+        details: { required: ['mac'] },
+      });
     }
 
     const mac = normalizeMac(rawMac);
     if (!mac) {
-      return NextResponse.json({ error: 'Invalid MAC address format' }, { status: 400 });
+      return apiError('INVALID_MAC', 'Invalid MAC address format', 400, { details: { value: rawMac } });
     }
 
     const db = getDb();
@@ -45,7 +52,6 @@ export async function GET(request: Request) {
       source: reservation ? 'reservation' : lease ? 'lease' : null,
     });
   } catch (error) {
-    console.error('[API] GET /mac-info:', error);
-    return NextResponse.json({ error: 'Failed to fetch MAC info' }, { status: 500 });
+    return serverError('GET /mac-info', error, 'Failed to fetch MAC info');
   }
 }

@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
+import { parsePage, pageResult, serializeRows, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
 export async function GET(request: Request) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const db = getDb();
     const { searchParams } = new URL(request.url);
     const webhookId = searchParams.get('webhook_id');
     const status = searchParams.get('status');
-    const page = Math.min(parseInt(searchParams.get('page') || '1', 10), 1000);
-    const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '50', 10), 200);
+    const page = parsePage(searchParams, { defaultPageSize: 50, maxPageSize: 200 });
 
     const conditions: string[] = [];
     const params: any[] = [];
@@ -33,27 +37,23 @@ export async function GET(request: Request) {
       ${whereClause}
       ORDER BY id DESC
       LIMIT ? OFFSET ?
-    `).all(...params, pageSize, (page - 1) * pageSize);
+    `).all(...params, page.pageSize, page.offset) as any[];
 
-    return NextResponse.json({
-      total: total.count,
-      page,
-      pageSize,
-      data: deliveries,
-    });
+    return NextResponse.json(pageResult(serializeRows(deliveries), page, total.count));
   } catch (error) {
-    console.error('[API] GET /webhooks/deliveries:', error);
-    return NextResponse.json({ error: 'Failed to fetch webhook deliveries' }, { status: 500 });
+    return serverError('GET /webhooks/deliveries', error, 'Failed to fetch webhook deliveries');
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const db = getDb();
     const result = db.prepare('DELETE FROM webhook_deliveries').run();
-    return NextResponse.json({ message: 'Webhook delivery logs cleared', deleted: result.changes });
+    return NextResponse.json({ deleted: true, deletedCount: result.changes });
   } catch (error) {
-    console.error('[API] DELETE /webhooks/deliveries:', error);
-    return NextResponse.json({ error: 'Failed to clear webhook deliveries' }, { status: 500 });
+    return serverError('DELETE /webhooks/deliveries', error, 'Failed to clear webhook deliveries');
   }
 }

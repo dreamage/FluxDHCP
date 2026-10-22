@@ -32,9 +32,9 @@ export default function WebhooksPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/webhooks');
+      const res = await fetch('/api/webhooks?pageSize=1000');
       const result = await res.json();
-      setData(Array.isArray(result) ? result : []);
+      setData(Array.isArray(result.items) ? result.items : []);
       setError('');
     } catch {
       setError(tc('errFailedFetch'));

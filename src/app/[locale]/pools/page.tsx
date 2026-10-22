@@ -63,9 +63,9 @@ export default function PoolsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/pools');
+      const res = await fetch('/api/pools?pageSize=1000');
       const result = await res.json();
-      const pools = Array.isArray(result) ? result : [];
+      const pools = Array.isArray(result.items) ? result.items : [];
       setData(pools);
       setError('');
     } catch {

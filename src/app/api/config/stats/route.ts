@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { CATEGORY_TABLES } from '@/lib/config-categories';
+import { serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const db = getDb();
     const counts: Record<string, number> = {};
@@ -12,7 +17,6 @@ export async function GET() {
     }
     return NextResponse.json(counts);
   } catch (error) {
-    console.error('[API] GET /config/stats:', error);
-    return NextResponse.json({ error: 'Failed to fetch config stats' }, { status: 500 });
+    return serverError('GET /config/stats', error, 'Failed to fetch config stats');
   }
 }

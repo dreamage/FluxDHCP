@@ -42,10 +42,10 @@ export default function MacBlacklistPage() {
       if (activeFilters.mac) searchParams.set('mac', activeFilters.mac);
       if (activeFilters.reason) searchParams.set('reason', activeFilters.reason);
       if (activeFilters.enabled !== 'ALL') searchParams.set('enabled', activeFilters.enabled);
-      const res = await fetch(`/api/mac-blacklist?${searchParams}`);
+      const res = await fetch(`/api/mac-blacklist?${searchParams}&pageSize=1000`);
       if (res.ok) {
-        const rows = await res.json();
-        setData(rows);
+        const result = await res.json();
+        setData(Array.isArray(result.items) ? result.items : []);
       }
       setError('');
     } catch {

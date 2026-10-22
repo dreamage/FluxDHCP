@@ -38,11 +38,11 @@ export default function MacNotesPage() {
       const searchParams = new URLSearchParams();
       if (activeFilters.mac) searchParams.set('mac', activeFilters.mac);
       if (activeFilters.note) searchParams.set('note', activeFilters.note);
-      searchParams.set('format', 'full');
+      searchParams.set('pageSize', '1000');
       const res = await fetch(`/api/mac-notes?${searchParams}`);
       if (res.ok) {
-        const rows = await res.json();
-        setData(Array.isArray(rows) ? rows : []);
+        const result = await res.json();
+        setData(Array.isArray(result.items) ? result.items : []);
       }
       setError('');
     } catch {

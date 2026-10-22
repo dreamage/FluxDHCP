@@ -101,7 +101,7 @@ export default function LogsPage() {
       const res = await fetch('/api/leases?pageSize=500');
       if (res.ok) {
         const json = await res.json();
-        setKnownIps([...new Set((json.data || []).map((l: any) => l.ip_address).filter(Boolean))] as string[]);
+        setKnownIps([...new Set((json.items || []).map((l: any) => l.ip_address).filter(Boolean))] as string[]);
       }
     } catch { /* ignore */ }
   }, []);
@@ -109,7 +109,7 @@ export default function LogsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), includeRaw: '1' });
       if (messageType) params.set('messageType', messageType);
       if (mac) params.set('mac', mac);
       if (ip) params.set('ip', ip);
@@ -119,7 +119,7 @@ export default function LogsPage() {
         return;
       }
       const json = await res.json();
-      setData(json.data || []);
+      setData(json.items || []);
       setTotal(json.total || 0);
       hasNotified.current = false;
     } catch {

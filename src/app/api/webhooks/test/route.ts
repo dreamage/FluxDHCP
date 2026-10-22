@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { validateWebhookUrl } from '@/lib/url-validate';
+import { apiError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
 export async function POST(request: Request) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const body = await request.json();
     const { id } = body;
@@ -10,12 +15,15 @@ export async function POST(request: Request) {
     const db = getDb();
     const webhook = db.prepare('SELECT * FROM webhooks WHERE id = ?').get(id) as any;
     if (!webhook) {
-      return NextResponse.json({ error: 'Webhook not found' }, { status: 404 });
+      return apiError('WEBHOOK_NOT_FOUND', 'Webhook not found', 404, { details: { id } });
     }
 
     const urlValidation = validateWebhookUrl(webhook.url);
     if (!urlValidation.valid) {
-      return NextResponse.json({ error: urlValidation.error }, { status: 400 });
+      return apiError('INVALID_WEBHOOK_URL', urlValidation.error || 'Invalid webhook URL', 400, {
+        details: { url: webhook.url },
+        hint: 'Fix the webhook URL before testing.',
+      });
     }
 
     // Read configurable timeout
@@ -83,10 +91,14 @@ export async function POST(request: Request) {
       message: res.ok ? 'Test sent successfully' : `HTTP ${res.status}: ${res.statusText}`,
     });
   } catch (error) {
+    // 投递失败属于业务结果而非 API 故障：返回 200 + success=false，便于调用方区分
     console.error('[API] POST /webhooks/test:', error);
+    const message = error instanceof Error ? error.message : 'Test failed';
     return NextResponse.json({
       success: false,
-      message: error instanceof Error ? error.message : 'Test failed',
-    }, { status: 500 });
+      status: 0,
+      statusText: '',
+      message,
+    });
   }
 }

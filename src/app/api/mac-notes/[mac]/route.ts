@@ -1,36 +1,46 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { normalizeMac } from '@/lib/mac-utils';
+import { apiError, serializeRow, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
-export async function GET(_request: Request, { params }: { params: Promise<{ mac: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ mac: string }> }) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const { mac: rawMac } = await params;
     const mac = normalizeMac(rawMac);
     if (!mac) {
-      return NextResponse.json({ error: 'Invalid MAC address format' }, { status: 400 });
+      return apiError('INVALID_MAC', 'Invalid MAC address format', 400, { details: { value: rawMac } });
     }
     const db = getDb();
-    const row = db.prepare('SELECT * FROM mac_notes WHERE mac_address = ?').get(mac);
-    return NextResponse.json(row || null);
+    const row = db.prepare('SELECT * FROM mac_notes WHERE mac_address = ?').get(mac) as any;
+    if (!row) {
+      return apiError('MAC_NOTE_NOT_FOUND', 'MAC note not found', 404, { details: { mac_address: mac } });
+    }
+    return NextResponse.json(serializeRow(row));
   } catch (error) {
-    console.error('[API] GET /mac-notes/:mac:', error);
-    return NextResponse.json({ error: 'Failed to fetch MAC note' }, { status: 500 });
+    return serverError('GET /mac-notes/:mac', error, 'Failed to fetch MAC note');
   }
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ mac: string }> }) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const { mac: rawMac } = await params;
     const mac = normalizeMac(rawMac);
     if (!mac) {
-      return NextResponse.json({ error: 'Invalid MAC address format' }, { status: 400 });
+      return apiError('INVALID_MAC', 'Invalid MAC address format', 400, { details: { value: rawMac } });
     }
     const db = getDb();
     const body = await request.json();
     const { note } = body;
 
     if (!note?.trim()) {
-      return NextResponse.json({ error: 'Note is required' }, { status: 400 });
+      return apiError('NOTE_REQUIRED', 'Note is required', 400, { details: { mac_address: mac } });
     }
 
     const result = db.prepare(
@@ -38,28 +48,33 @@ export async function PUT(request: Request, { params }: { params: Promise<{ mac:
     ).run(note.trim(), mac);
 
     if (result.changes === 0) {
-      return NextResponse.json({ error: 'MAC note not found' }, { status: 404 });
+      return apiError('MAC_NOTE_NOT_FOUND', 'MAC note not found', 404, { details: { mac_address: mac } });
     }
 
-    return NextResponse.json({ message: 'Note updated' });
+    const row = db.prepare('SELECT * FROM mac_notes WHERE mac_address = ?').get(mac) as any;
+    return NextResponse.json(serializeRow(row));
   } catch (error) {
-    console.error('[API] PUT /mac-notes/:mac:', error);
-    return NextResponse.json({ error: 'Failed to update MAC note' }, { status: 500 });
+    return serverError('PUT /mac-notes/:mac', error, 'Failed to update MAC note');
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ mac: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ mac: string }> }) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const { mac: rawMac } = await params;
     const mac = normalizeMac(rawMac);
     if (!mac) {
-      return NextResponse.json({ error: 'Invalid MAC address format' }, { status: 400 });
+      return apiError('INVALID_MAC', 'Invalid MAC address format', 400, { details: { value: rawMac } });
     }
     const db = getDb();
-    db.prepare('DELETE FROM mac_notes WHERE mac_address = ?').run(mac);
-    return NextResponse.json({ message: 'Note deleted' });
+    const result = db.prepare('DELETE FROM mac_notes WHERE mac_address = ?').run(mac);
+    if (result.changes === 0) {
+      return apiError('MAC_NOTE_NOT_FOUND', 'MAC note not found', 404, { details: { mac_address: mac } });
+    }
+    return NextResponse.json({ deleted: true, mac_address: mac });
   } catch (error) {
-    console.error('[API] DELETE /mac-notes/:mac:', error);
-    return NextResponse.json({ error: 'Failed to delete MAC note' }, { status: 500 });
+    return serverError('DELETE /mac-notes/:mac', error, 'Failed to delete MAC note');
   }
 }

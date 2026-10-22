@@ -1,23 +1,43 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { validateWebhookUrl } from '@/lib/url-validate';
+import { apiError, serializeRow, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+function serializeWebhook(row: any) {
+  const parse = (v: unknown, fallback: any) => {
+    if (typeof v !== 'string') return v ?? fallback;
+    try { return JSON.parse(v); } catch { return fallback; }
+  };
+  return {
+    ...serializeRow(row),
+    events: parse(row.events, []),
+    fields: parse(row.fields, []),
+    headers: parse(row.headers, {}),
+  };
+}
+
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const db = getDb();
-    const webhook = db.prepare('SELECT * FROM webhooks WHERE id = ?').get(id);
+    const webhook = db.prepare('SELECT * FROM webhooks WHERE id = ?').get(id) as any;
     if (!webhook) {
-      return NextResponse.json({ error: 'Webhook not found' }, { status: 404 });
+      return apiError('WEBHOOK_NOT_FOUND', 'Webhook not found', 404, { details: { id } });
     }
-    return NextResponse.json(webhook);
+    return NextResponse.json(serializeWebhook(webhook));
   } catch (error) {
-    console.error('[API] GET /webhooks/:id:', error);
-    return NextResponse.json({ error: 'Failed to fetch webhook' }, { status: 500 });
+    return serverError('GET /webhooks/:id', error, 'Failed to fetch webhook');
   }
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const db = getDb();
@@ -26,13 +46,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const existing = db.prepare('SELECT * FROM webhooks WHERE id = ?').get(id) as any;
     if (!existing) {
-      return NextResponse.json({ error: 'Webhook not found' }, { status: 404 });
+      return apiError('WEBHOOK_NOT_FOUND', 'Webhook not found', 404, { details: { id } });
     }
 
     if (url) {
       const validation = validateWebhookUrl(url);
       if (!validation.valid) {
-        return NextResponse.json({ error: validation.error }, { status: 400 });
+        return apiError('INVALID_WEBHOOK_URL', validation.error || 'Invalid webhook URL', 400, {
+          details: { url },
+          hint: 'Use an http(s) URL that resolves to a public address (SSRF protection).',
+        });
       }
     }
 
@@ -53,21 +76,26 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       id,
     );
 
-    return NextResponse.json({ message: 'Webhook updated' });
+    const updated = db.prepare('SELECT * FROM webhooks WHERE id = ?').get(id) as any;
+    return NextResponse.json(serializeWebhook(updated));
   } catch (error) {
-    console.error('[API] PUT /webhooks/:id:', error);
-    return NextResponse.json({ error: 'Failed to update webhook' }, { status: 500 });
+    return serverError('PUT /webhooks/:id', error, 'Failed to update webhook');
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const db = getDb();
-    db.prepare('DELETE FROM webhooks WHERE id = ?').run(id);
-    return NextResponse.json({ message: 'Webhook deleted' });
+    const result = db.prepare('DELETE FROM webhooks WHERE id = ?').run(id);
+    if (result.changes === 0) {
+      return apiError('WEBHOOK_NOT_FOUND', 'Webhook not found', 404, { details: { id } });
+    }
+    return NextResponse.json({ deleted: true, id: Number(id) });
   } catch (error) {
-    console.error('[API] DELETE /webhooks/:id:', error);
-    return NextResponse.json({ error: 'Failed to delete webhook' }, { status: 500 });
+    return serverError('DELETE /webhooks/:id', error, 'Failed to delete webhook');
   }
 }

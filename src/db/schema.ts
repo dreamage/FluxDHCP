@@ -150,8 +150,29 @@ CREATE TABLE IF NOT EXISTS webhook_deliveries (
   completed_at TEXT
 )`;
 
-// ===== 索引语句 =====
+export const CREATE_TABLE_API_KEYS = `
+CREATE TABLE IF NOT EXISTS api_keys (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  name         TEXT    NOT NULL,
+  key_prefix   TEXT    NOT NULL,
+  key_hash     TEXT    NOT NULL UNIQUE,
+  scope        TEXT    NOT NULL DEFAULT 'read',
+  enabled      INTEGER NOT NULL DEFAULT 1,
+  last_used_at TEXT,
+  created_at   TEXT    DEFAULT (datetime('now'))
+)`;
 
+export const CREATE_TABLE_ADMIN_SESSIONS = `
+CREATE TABLE IF NOT EXISTS admin_sessions (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  token_hash   TEXT    NOT NULL UNIQUE,
+  created_at   TEXT    NOT NULL,
+  last_seen_at TEXT,
+  expires_at   TEXT    NOT NULL,
+  user_agent   TEXT
+)`;
+
+// ===== 索引语句 =====
 export const CREATE_INDEXES: string[] = [
   'CREATE INDEX IF NOT EXISTS idx_reservations_mac ON reservations(mac_address)',
   'CREATE INDEX IF NOT EXISTS idx_reservations_ip ON reservations(ip_address)',

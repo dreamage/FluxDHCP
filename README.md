@@ -24,7 +24,8 @@
 - **Multi-tab Navigation** - Grounded tab bar with right-click context menu (refresh, close, close others, close right, close all)
 - **Loading Splash Screen** - Dark-mode-aware CSS splash screen eliminates flash of unstyled content during initial load
 - **i18n Support** - Full English and Chinese localization including DHCP option codes, server response messages, NAK reason codes, and browser locale detection
-- **Security** - Origin header validation on API mutations (CSRF protection), SSRF-protected webhook URLs, IP format validation
+- **Security** - Admin password login (scrypt, 7-day sessions, per-session revocation, CLI reset), API keys with read/write scopes stored as hashes, Origin header validation on API mutations (CSRF protection), SSRF-protected webhook URLs, IP format validation
+- **AI Agent Access** - MCP server exposed over HTTP (`POST /api/mcp`) and stdio (`dist/mcp/stdio.js`), 26 tools with read/write scopes, confirmation gates on destructive actions, plus a companion skill
 - **Accessibility** - Focus-visible styles for keyboard navigation, error boundary for crash recovery
 - **Docker Ready** - One-command deployment with Docker Compose
 
@@ -51,6 +52,9 @@ docker-compose up -d
 
 Open `http://localhost:3000` in your browser.
 
+> On first launch you will be asked to set an admin password (8+ characters). If you lose it, run `npm run reset-password` on the server — this returns the app to the first-run state.
+> Set `ADMIN_PASSWORD` on first boot to initialize immediately and avoid a first-visitor window.
+
 ### Manual Installation
 
 ```bash
@@ -76,6 +80,8 @@ npm run dev
 |----------|---------|-------------|
 | `DB_PATH` | `./data/fluxdhcp.db` | SQLite database file path |
 | `WEB_PORT` | `3000` | Web UI port |
+| `ADMIN_PASSWORD` | — | Optional. Initializes the admin password on first boot, removing the first-visitor window. Ignored once a password exists |
+| `FLUXDHCP_INTERNAL_URL` | `http://127.0.0.1:$WEB_PORT` | Base URL the MCP HTTP endpoint uses to call its own API |
 
 ## Pages
 
@@ -109,6 +115,54 @@ Export configuration to a JSON file with selectable categories (leases and logs 
 - `dhcp_logs` - DHCP packet logs (optional export)
 
 DHCP config is automatically hot-reloaded after import (no service restart needed).
+
+## AI Agent Access (MCP)
+
+FluxDHCP exposes its API as MCP tools, so an agent can inspect the server and make changes with the same validation and permission checks as the web UI. Both transports share one tool definition, so they never diverge:
+
+| Transport | Endpoint | Requirements |
+|-----------|----------|--------------|
+| **HTTP** (recommended) | `POST /api/mcp` | Nothing to install — the agent only needs network access and an API key |
+| **stdio** | `dist/mcp/stdio.js` | Node 18+ and this repository locally, after `npm run build` |
+
+Create a key in **Settings → API access**. A read-only key covers troubleshooting; switch to read/write only when the agent must change configuration. API keys can never manage other API keys.
+
+HTTP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "fluxdhcp": {
+      "type": "http",
+      "url": "http://your-host:3000/api/mcp",
+      "headers": { "Authorization": "Bearer fdx_xxxxxxxxxxxxxxxx" }
+    }
+  }
+}
+```
+
+stdio client configuration:
+
+```json
+{
+  "mcpServers": {
+    "fluxdhcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/FluxDHCP/dist/mcp/stdio.js"],
+      "env": {
+        "FLUXDHCP_URL": "http://127.0.0.1:3000",
+        "FLUXDHCP_API_KEY": "fdx_xxxxxxxxxxxxxxxx"
+      }
+    }
+  }
+}
+```
+
+Notes:
+
+- The HTTP endpoint is stateless and accepts **API keys only** — browser sessions are rejected, because tool calls forward the same key to the internal API.
+- `service_stop` and `config_import` additionally require `confirm=true`; the tool refuses locally otherwise.
+- Pair it with the bundled skill (`.codebuddy/skills/fluxdhcp/SKILL.md`, with a Chinese reference at `SKILL.zh-CN.md`) so the agent follows safe ordering instead of improvising.
 
 ## Webhook Template Variables
 

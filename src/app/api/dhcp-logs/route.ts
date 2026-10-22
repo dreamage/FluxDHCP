@@ -1,18 +1,24 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db-instance';
 import { MESSAGE_TYPE_NAMES, DhcpMessageType } from '@/dhcp/protocol/constants';
+import { parsePage, pageResult, serializeRows, serverError } from '@/lib/api-response';
+import { authorize } from '@/lib/api-auth';
 
 export async function GET(request: Request) {
+  const denied = authorize(request, 'read');
+  if (denied) return denied;
+
   try {
     const db = getDb();
     const { searchParams } = new URL(request.url);
-    const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
-    const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '20', 10) || 20, 500);
+    const page = parsePage(searchParams, { defaultPageSize: 20, maxPageSize: 500 });
     const messageType = searchParams.get('messageType');
     const mac = searchParams.get('mac');
     const ip = searchParams.get('ip');
     const startTime = searchParams.get('startTime');
     const endTime = searchParams.get('endTime');
+    // raw_options 体积大，默认不返回；需要时显式开启
+    const includeRaw = searchParams.get('includeRaw') === '1' || searchParams.get('includeRaw') === 'true';
 
     const conditions: string[] = [];
     const params: any[] = [];
@@ -46,28 +52,32 @@ export async function GET(request: Request) {
       SELECT * FROM dhcp_logs ${whereClause}
       ORDER BY id DESC
       LIMIT ? OFFSET ?
-    `).all(...params, pageSize, (page - 1) * pageSize);
+    `).all(...params, page.pageSize, page.offset) as any[];
 
-    const data = (logs as any[]).map(log => ({
-      ...log,
-      messageTypeName: MESSAGE_TYPE_NAMES[log.message_type as DhcpMessageType] || `UNKNOWN(${log.message_type})`,
-      raw_options: log.raw_options ? JSON.parse(log.raw_options) : null,
-    }));
+    const items = serializeRows(logs).map((log: any) => {
+      const { raw_options, ...rest } = log;
+      return {
+        ...rest,
+        messageTypeName: MESSAGE_TYPE_NAMES[log.message_type as DhcpMessageType] || `UNKNOWN(${log.message_type})`,
+        ...(includeRaw ? { raw_options: raw_options ? JSON.parse(raw_options) : null } : {}),
+      };
+    });
 
-    return NextResponse.json({ total: total.count, page, pageSize, data });
+    return NextResponse.json(pageResult(items, page, total.count));
   } catch (error) {
-    console.error('[API] GET /dhcp-logs:', error);
-    return NextResponse.json({ error: 'Failed to fetch logs' }, { status: 500 });
+    return serverError('GET /dhcp-logs', error, 'Failed to fetch logs');
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
+  const denied = authorize(request, 'write');
+  if (denied) return denied;
+
   try {
     const db = getDb();
     const result = db.prepare('DELETE FROM dhcp_logs').run();
-    return NextResponse.json({ message: 'All logs cleared', deleted: result.changes });
+    return NextResponse.json({ deleted: true, deletedCount: result.changes });
   } catch (error) {
-    console.error('[API] DELETE /dhcp-logs:', error);
-    return NextResponse.json({ error: 'Failed to clear logs' }, { status: 500 });
+    return serverError('DELETE /dhcp-logs', error, 'Failed to clear logs');
   }
 }
