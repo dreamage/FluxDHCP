@@ -83,6 +83,8 @@ npm run dev
 | `ADMIN_PASSWORD` | — | Optional. Initializes the admin password on first boot, removing the first-visitor window. Ignored once a password exists |
 | `FLUXDHCP_INTERNAL_URL` | `http://127.0.0.1:$WEB_PORT` | Base URL the MCP HTTP endpoint uses to call its own API |
 
+All four are optional. With no environment variables set, the server listens on `:3000` and keeps its data in `./data/fluxdhcp.db`. The Docker image already sets `DB_PATH=/data/fluxdhcp.db`, so the volume survives container rebuilds without extra configuration.
+
 ## Pages
 
 | Page | Description |
