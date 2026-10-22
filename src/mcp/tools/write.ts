@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { FluxApiError, type FluxClient } from '../client';
-import { runTool } from '../tool-result';
+import { refused, runTool } from '../tool-result';
 
 const ip = z.string().describe('Dotted-decimal IPv4, e.g. 192.168.1.10');
 const mac = z.string().describe('MAC address, e.g. AA:BB:CC:DD:EE:FF');
@@ -157,4 +157,53 @@ export function registerWriteTools(server: McpServer, client: FluxClient) {
     inputSchema: { id: z.number().int().positive().describe('Webhook id') },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, ({ id }) => runTool(() => client.request('POST', '/api/webhooks/test', { body: { id } })));
+
+  server.registerTool('reservation_update', {
+    title: 'Update a static reservation',
+    description:
+      'Partially update a reservation by id; omitted fields keep their current value. The same constraints as creation apply after merging: ' +
+      'MAC and IP stay unique (409), the IP must be inside the target pool subnet (400), and an IP currently leased to another device is rejected (409 IP_LEASED_TO_OTHER). ' +
+      'Returns the updated row.',
+    inputSchema: {
+      id: z.number().int().positive(),
+      mac_address: mac.optional(),
+      ip_address: ip.optional(),
+      hostname: z.string().optional(),
+      pool_id: z.number().int().positive().optional(),
+      description: z.string().optional(),
+      enabled: z.boolean().optional(),
+    },
+    annotations: { ...WRITE, idempotentHint: true },
+  }, ({ id, ...body }) => runTool(() => client.request('PUT', `/api/reservations/${id}`, { body })));
+
+  server.registerTool('option_delete', {
+    title: 'Delete a per-device DHCP option',
+    description: 'Delete one device option by id. Use option_list to find the id first — the id is not the option code.',
+    inputSchema: { id: z.number().int().positive().describe('device_options row id') },
+    annotations: DESTRUCTIVE,
+  }, ({ id }) => runTool(() => client.request('DELETE', `/api/options/${id}`)));
+
+  server.registerTool('note_delete', {
+    title: 'Delete a MAC note',
+    description: 'Delete the note attached to a MAC address. The reservation, lease and blacklist entry for that MAC are untouched.',
+    inputSchema: { mac_address: mac },
+    annotations: DESTRUCTIVE,
+  }, ({ mac_address }) => runTool(() => client.request('DELETE', `/api/mac-notes/${encodeURIComponent(mac_address)}`)));
+
+  server.registerTool('logs_clear', {
+    title: 'Clear all DHCP logs',
+    description:
+      'Permanently delete every DHCP packet log. This destroys the troubleshooting trail and cannot be undone. ' +
+      'Requires confirm=true; the request is refused locally otherwise.',
+    inputSchema: { confirm: z.boolean().optional().describe('Must be true; the call is refused otherwise') },
+    annotations: DESTRUCTIVE,
+  }, async ({ confirm }) => {
+    if (confirm !== true) {
+      return refused(
+        'Clearing DHCP logs requires explicit confirmation',
+        'Call again with confirm=true only after the user agrees to lose the packet history.',
+      );
+    }
+    return runTool(() => client.request('DELETE', '/api/dhcp-logs'));
+  });
 }

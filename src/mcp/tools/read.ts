@@ -8,6 +8,8 @@ const page = {
   pageSize: z.number().int().positive().optional().describe('Rows per page (server default 50, max 1000 for config tables)'),
 };
 
+const mac = z.string().describe('MAC address, e.g. AA:BB:CC:DD:EE:FF');
+
 const READ = { readOnlyHint: true, openWorldHint: false } as const;
 
 export function registerReadTools(server: McpServer, client: FluxClient) {
@@ -169,4 +171,35 @@ export function registerReadTools(server: McpServer, client: FluxClient) {
   }, ({ categories }) => runTool(() => client.request('GET', '/api/config/export', {
     query: categories?.length ? { categories: categories.join(',') } : undefined,
   })));
+
+  server.registerTool('config_get', {
+    title: 'Read server configuration',
+    description:
+      'Read current server settings. Values come back as strings, e.g. default_lease_time "86400", t1_ratio "0.5", ip_allocation_order "sequential", honor_requested_ip "1". ' +
+      'Read-only: changing settings is not exposed through MCP — ask the user to edit them in the web UI.',
+    inputSchema: {},
+    annotations: READ,
+  }, () => runTool(() => client.request('GET', '/api/config')));
+
+  server.registerTool('mac_info', {
+    title: 'Look up a MAC address',
+    description:
+      'Resolve one MAC to its current state in a single call: reserved or leased IP, pool, hostname, description and note. ' +
+      'source is "reservation", "lease" or null when the device is unknown. Usually the fastest first step when someone asks about a specific device.',
+    inputSchema: { mac },
+    annotations: READ,
+  }, ({ mac }) => runTool(() => client.request('GET', '/api/mac-info', { query: { mac } })));
+
+  server.registerTool('webhook_deliveries', {
+    title: 'Webhook delivery history',
+    description:
+      'Inspect recent webhook deliveries: event type, URL, HTTP status, request body, response and error. ' +
+      'Filter by webhook_id or status (success|failed|error|pending). Use this to explain missing notifications.',
+    inputSchema: {
+      webhook_id: z.number().int().positive().optional(),
+      status: z.enum(['success', 'failed', 'error', 'pending']).optional(),
+      ...page,
+    },
+    annotations: READ,
+  }, (args) => runTool(() => client.request('GET', '/api/webhooks/deliveries', { query: args })));
 }

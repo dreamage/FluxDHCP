@@ -20,7 +20,8 @@ The server rejects anonymous requests. Any tool returning `AUTH_REQUIRED` means 
 | Question | Tool |
 |---|---|
 | Is the service up? How full are the pools? | `dhcp_status` |
-| Which pools exist? | `pool_list` / `pool_get` |
+| What is this device, and what address does it have? | `mac_info` |
+| Which pools exist? Which settings are active? | `pool_list` / `pool_get` / `config_get` |
 | Which IPs in a pool are taken? | `pool_ips` |
 | Who holds which address? | `lease_list` |
 | Which devices have fixed addresses? | `reservation_list` |
@@ -28,6 +29,7 @@ The server rejects anonymous requests. Any tool returning `AUTH_REQUIRED` means 
 | What happened when a device tried to get an address? | `logs_query` |
 | Which custom options are sent to a device? | `option_list` |
 | What is this MAC's note? | `note_list` |
+| Why did a webhook not fire? | `webhook_deliveries` |
 
 Read before writing. Before any write, confirm the current state with a read tool.
 
@@ -36,6 +38,8 @@ Read before writing. Before any write, confirm the current state with a read too
 ### A. A device cannot get an IP
 
 Narrow it down in order; each step may already answer the question. Do not start with raw logs.
+
+Start with `mac_info mac=<mac>` — it returns the reserved or leased IP, pool, hostname and note in one call.
 
 1. `blacklist_list` filtered by the MAC — a blocked device receives **no** DHCP response at all, which is the most common cause
 2. `dhcp_status` — if the service is stopped, nothing gets a lease
@@ -76,6 +80,7 @@ Before shrinking a range, verify no active lease sits in the portion being remov
 - Never delete a pool while it has active leases. The server returns 409 — do not work around it by deleting leases.
 - Do not batch-delete reservations, blacklist entries or options. One at a time, each individually reversible.
 - `netmask` is always dotted decimal (`255.255.255.0`), never `/24`.
+- `logs_clear` wipes the entire packet history. Only call it when the user explicitly asks, and warn that past troubleshooting evidence is lost.
 - On a write failure, read `error.code` and `error.hint`, adjust, and retry at most twice. If the same error repeats, stop and ask.
 
 ## Stop and ask the user when

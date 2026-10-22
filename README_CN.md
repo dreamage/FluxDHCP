@@ -25,7 +25,7 @@
 - **加载动画** - 感知深色模式的纯 CSS 启动屏幕，消除页面加载时的无样式闪烁
 - **国际化** - 完整的中英文支持，包括 DHCP 选项码、服务器响应消息、NAK 原因码，浏览器语言自动检测
 - **安全** - 管理密码登录（scrypt，7 天会话，可逐条吊销，CLI 重置）、API Key（只读/读写、只存哈希）、API 请求 Origin 校验（CSRF 防护）、Webhook URL SSRF 防护、IPv4 格式校验
-- **AI 智能体接入** - MCP server 通过 Streamable HTTP（`POST /api/mcp`）暴露 26 个工具，按读写权限管控，危险操作需显式确认，并附配套 skill
+- **AI 智能体接入** - MCP server 通过 Streamable HTTP（`POST /api/mcp`）暴露 33 个工具，按读写权限管控，危险操作需显式确认，并附配套 skill
 - **无障碍** - focus-visible 键盘导航样式，React Error Boundary 崩溃恢复
 - **Docker 一键部署** - 使用 Docker Compose 快速启动
 
@@ -137,7 +137,7 @@ FluxDHCP 把 API 暴露成 MCP 工具，通过 Streamable HTTP 挂在 `POST /api
 
 几点说明：
 
-- 共 26 个工具：12 个只读、11 个写入、3 个服务与配置。只读 key 调用写工具会得到 `403 API_KEY_READ_ONLY`。
+- 共 33 个工具：15 个只读、15 个写入、3 个服务与配置。只读 key 调用写工具会得到 `403 API_KEY_READ_ONLY`。
 - 端点是无状态的，且**只接受 API Key**——工具调用会把同一份凭据转发给内部 API，浏览器会话无法这样转发，也不应该用它驱动 agent。
 - `service_stop` 和 `config_import` 额外要求 `confirm=true`，否则工具在本地直接拒绝。
 - 配合仓库内的 skill 使用，agent 会按推荐顺序操作，而不是即兴发挥。skill 是公开的静态文档（不含任何实例数据），没有仓库副本的机器可以直接下载：
