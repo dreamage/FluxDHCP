@@ -25,7 +25,7 @@
 - **Loading Splash Screen** - Dark-mode-aware CSS splash screen eliminates flash of unstyled content during initial load
 - **i18n Support** - Full English and Chinese localization including DHCP option codes, server response messages, NAK reason codes, and browser locale detection
 - **Security** - Admin password login (scrypt, 7-day sessions, per-session revocation, CLI reset), API keys with read/write scopes stored as hashes, Origin header validation on API mutations (CSRF protection), SSRF-protected webhook URLs, IP format validation
-- **AI Agent Access** - MCP server over Streamable HTTP (`POST /api/mcp`) exposing 36 tools with read/write scopes and confirmation gates on destructive actions, plus a companion skill
+- **AI Agent Access** - MCP server over Streamable HTTP (`POST /api/mcp`) exposing 33 tools with read/write scopes and confirmation gates on destructive actions, plus a companion skill
 - **Accessibility** - Focus-visible styles for keyboard navigation, error boundary for crash recovery
 - **Docker Ready** - One-command deployment with Docker Compose
 
@@ -137,9 +137,9 @@ Create a key on the **API Access** page (sidebar). A read-only key covers troubl
 
 Notes:
 
-- 36 tools: 15 read-only, 18 write, 3 service/config. Read-only keys get `403 API_KEY_READ_ONLY` on any write tool.
+- 33 tools: 15 read-only, 18 write. Service start/stop and config import stay web-only. Read-only keys get `403 API_KEY_READ_ONLY` on any write tool.
 - The endpoint is stateless and accepts **API keys only** — browser sessions are rejected, because tool calls forward the same key to the internal API.
-- `service_stop` and `config_import` additionally require `confirm=true`; the tool refuses locally otherwise.
+- Starting/stopping the DHCP service and importing a configuration are **not exposed to MCP**. They can take a whole subnet offline in one call, so they stay in the web UI.
 - Pair it with the bundled skill so the agent follows safe ordering instead of improvising. The skill is served publicly (static documentation, no instance data), so a machine without a repository checkout can install it directly:
 
   ```bash

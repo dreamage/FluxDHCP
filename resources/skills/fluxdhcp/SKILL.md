@@ -76,8 +76,7 @@ Before shrinking a range, verify no active lease sits in the portion being remov
 
 ## Hard constraints
 
-- **Never call `service_stop`** unless the user explicitly asks to take DHCP down. Even then, restate the impact (every client will fail to renew) before doing it.
-- **Never call `config_import`** unless the user supplied a file and approved each category to overwrite. It deletes existing rows first.
+- Taking the DHCP service down and importing a configuration are **not available to you** — they are web-UI only, by design. If a task needs either, say so plainly and ask the user to do it there; do not look for a workaround.
 - Never delete a pool while it has active leases. The server returns 409 — do not work around it by deleting leases.
 - Do not batch-delete reservations, blacklist entries or options. One at a time, each individually reversible.
 - `netmask` is always dotted decimal (`255.255.255.0`), never `/24`.
