@@ -337,7 +337,7 @@
     "apiUsageStep3": "Optional: download the skill in a terminal on the agent's machine, then restart the client.",
     "apiUsageCopy": "Copy config",
     "apiUsageSkillTitle": "Install the skill (optional)",
-    "apiUsageSkillHint": "Run this in a terminal on the agent's machine — not through the agent itself. Restart the client or start a new session afterwards so the skill is loaded. Other clients use their own skills directory.",
+    "apiUsageSkillHint": "No key needed. Run this in a terminal on the agent's machine — not through the agent itself. Restart the client or start a new session afterwards so the skill is loaded. Other clients use their own skills directory.",
     "apiUsageSkillCopy": "Copy command",
     "apiUsageSkillView": "View full text",
     "apiUsageSkillDownload": "Download SKILL.md",

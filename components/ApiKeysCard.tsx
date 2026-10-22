@@ -59,10 +59,9 @@ export default function ApiKeysCard() {
     },
   }, null, 2);
 
-  const skillCommand = (apiKey: string) =>
+  const skillCommand = () =>
     `mkdir -p ~/.codebuddy/skills/fluxdhcp\n` +
-    `curl -fsSL -H "Authorization: Bearer ${apiKey}" \\\n` +
-    `  "${origin}/api/skills/fluxdhcp" \\\n` +
+    `curl -fsSL "${origin}/api/skills/fluxdhcp" \\\n` +
     `  -o ~/.codebuddy/skills/fluxdhcp/SKILL.md`;
 
   const [skillPreview, setSkillPreview] = useState<{ open: boolean; loading: boolean; text: string }>({
@@ -226,6 +225,10 @@ export default function ApiKeysCard() {
         {t('apiUsageCopy')}
       </Button>
 
+      <Paragraph type="secondary" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
+        {t('apiUsageKeyHint')}
+      </Paragraph>
+
       <Paragraph strong style={{ marginTop: 18, marginBottom: 4 }}>{t('apiUsageSkillTitle')}</Paragraph>
       <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
         {t('apiUsageSkillHint')}
@@ -236,15 +239,11 @@ export default function ApiKeysCard() {
         <Button size="small" onClick={downloadSkill}>{t('apiUsageSkillDownload')}</Button>
       </Space>
 
-      <pre style={codeStyle}>{skillCommand('fdx_xxxxxxxxxxxxxxxx')}</pre>
+      <pre style={codeStyle}>{skillCommand()}</pre>
 
-      <Button size="small" icon={<CopyOutlined />} onClick={() => copy(skillCommand('fdx_xxxxxxxxxxxxxxxx'))}>
+      <Button size="small" icon={<CopyOutlined />} onClick={() => copy(skillCommand())}>
         {t('apiUsageSkillCopy')}
       </Button>
-
-      <Paragraph type="secondary" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
-        {t('apiUsageKeyHint')}
-      </Paragraph>
     </div>
   );
 

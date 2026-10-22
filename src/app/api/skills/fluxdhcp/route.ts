@@ -1,16 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
-import { authorize } from '@/lib/api-auth';
 import { apiError, serverError } from '@/lib/api-response';
 
 /**
- * 让没有仓库副本的机器也能安装 skill。
+ * 公开的 skill 下载端点——无需 API Key。
  *
- *   curl -H "Authorization: Bearer <key>" http://host:3000/api/skills/fluxdhcp \
+ *   curl -fsSL http://host:3000/api/skills/fluxdhcp \
  *     -o ~/.codebuddy/skills/fluxdhcp/SKILL.md
  *
- * 传入 ?lang=zh 返回中文参考版。
+ * 这是整套 API 里唯一的匿名端点：它只返回随程序分发的静态文档，
+ * 不读取数据库、不暴露任何实例数据。传入 ?lang=zh 返回中文参考版。
  */
 
 export const runtime = 'nodejs';
@@ -22,9 +22,6 @@ const FILES = {
 } as const;
 
 export async function GET(request: Request) {
-  const denied = authorize(request, 'read');
-  if (denied) return denied;
-
   try {
     const lang = new URL(request.url).searchParams.get('lang') === 'zh' ? 'zh' : 'en';
     const file = path.join(process.cwd(), 'resources', 'skills', 'fluxdhcp', FILES[lang]);

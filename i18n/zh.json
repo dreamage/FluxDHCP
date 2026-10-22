@@ -337,7 +337,7 @@
     "apiUsageStep3": "可选：在 agent 所在机器的终端里下载 skill，重启客户端后生效。",
     "apiUsageCopy": "复制配置",
     "apiUsageSkillTitle": "安装 Skill（可选）",
-    "apiUsageSkillHint": "在 agent 所在机器的终端执行（不是让 agent 自己执行）。下载完成后需重启客户端或新建会话，skill 才会被加载。其他客户端请改用各自的 skills 目录。",
+    "apiUsageSkillHint": "无需密钥，直接在 agent 所在机器的终端执行（不是让 agent 自己执行）。下载后需重启客户端或新建会话才会加载。其他客户端请改用各自的 skills 目录。",
     "apiUsageSkillCopy": "复制命令",
     "apiUsageSkillView": "查看全文",
     "apiUsageSkillDownload": "下载 SKILL.md",
