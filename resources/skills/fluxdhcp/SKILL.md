@@ -30,6 +30,7 @@ The server rejects anonymous requests. Any tool returning `AUTH_REQUIRED` means 
 | Which custom options are sent to a device? | `option_list` |
 | What is this MAC's note? | `note_list` |
 | Why did a webhook not fire? | `webhook_deliveries` |
+| Create or change a webhook | `webhook_create` / `webhook_update` / `webhook_delete` |
 
 Read before writing. Before any write, confirm the current state with a read tool.
 
@@ -81,6 +82,7 @@ Before shrinking a range, verify no active lease sits in the portion being remov
 - Do not batch-delete reservations, blacklist entries or options. One at a time, each individually reversible.
 - `netmask` is always dotted decimal (`255.255.255.0`), never `/24`.
 - `logs_clear` wipes the entire packet history. Only call it when the user explicitly asks, and warn that past troubleshooting evidence is lost.
+- Creating a webhook opens an outbound channel that can carry lease data. Only do it on explicit request, and say which URL and events you configured.
 - On a write failure, read `error.code` and `error.hint`, adjust, and retry at most twice. If the same error repeats, stop and ask.
 
 ## Stop and ask the user when

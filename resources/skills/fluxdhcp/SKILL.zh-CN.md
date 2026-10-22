@@ -27,6 +27,7 @@
 | 给某台设备下发的自定义选项 | `option_list` |
 | 设备备注 | `note_list` |
 | 某个 webhook 为什么没发出去 | `webhook_deliveries` |
+| 新建或修改 webhook | `webhook_create` / `webhook_update` / `webhook_delete` |
 
 先读后写。任何写操作前，先用读工具确认当前状态。
 
@@ -78,6 +79,7 @@
 - 不要批量删除 reservation / blacklist / options。逐条来，每条都能单独回滚。
 - `netmask` 一律点分十进制（`255.255.255.0`），不要写 `/24`。
 - `logs_clear` 会清空全部数据包日志。只在用户明确要求时调用，并提醒历史排查记录会丢失。
+- 新建 webhook 等于给服务器开一个外发通道，可能把租约数据带出去。只在用户明确要求时创建，并说明配置了哪个 URL 和哪些事件。
 - 写操作失败时读 `error.code` 和 `error.hint` 调整参数再试，最多重试两次；同一个错误重复出现就停下来问用户。
 
 ## 停下来问人的情况

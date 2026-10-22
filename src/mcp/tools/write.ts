@@ -6,6 +6,11 @@ import { refused, runTool } from '../tool-result';
 const ip = z.string().describe('Dotted-decimal IPv4, e.g. 192.168.1.10');
 const mac = z.string().describe('MAC address, e.g. AA:BB:CC:DD:EE:FF');
 
+const webhookEvent = z.enum([
+  'dhcp_discover', 'dhcp_offer', 'dhcp_request', 'dhcp_ack',
+  'dhcp_nak', 'dhcp_release', 'dhcp_inform', 'dhcp_decline',
+]);
+
 const WRITE = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false } as const;
 const DESTRUCTIVE = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false } as const;
 
@@ -206,4 +211,47 @@ export function registerWriteTools(server: McpServer, client: FluxClient) {
     }
     return runTool(() => client.request('DELETE', '/api/dhcp-logs'));
   });
+
+  server.registerTool('webhook_create', {
+    title: 'Create a webhook',
+    description:
+      'Create an outbound webhook. events must contain at least one type; fields are template pairs such as {name:"{{mac_address}}", value:"{{ip_address}}"}. ' +
+      'The server rejects private/internal URLs (localhost, 10/8, 172.16/12, 192.168/16, 169.254.169.254) to limit SSRF. ' +
+      'A webhook opens an outbound channel from this server and can carry lease data — only create one when the user asked for it.',
+    inputSchema: {
+      name: z.string(),
+      url: z.string().describe('http(s) URL; private/internal addresses are rejected'),
+      method: z.enum(['POST', 'GET']),
+      events: z.array(webhookEvent).min(1),
+      fields: z.array(z.object({ name: z.string(), value: z.string() })).optional(),
+      body_mode: z.enum(['json', 'form']).optional().describe('POST body format, default json'),
+      headers: z.record(z.string()).optional().describe('Extra request headers'),
+    },
+    annotations: { ...WRITE, openWorldHint: true },
+  }, (args) => runTool(() => client.request('POST', '/api/webhooks', { body: args })));
+
+  server.registerTool('webhook_update', {
+    title: 'Update a webhook',
+    description:
+      'Partially update a webhook by id; omitted fields keep their value. The URL is revalidated whenever it changes. Returns the updated row.',
+    inputSchema: {
+      id: z.number().int().positive(),
+      name: z.string().optional(),
+      url: z.string().optional(),
+      method: z.enum(['POST', 'GET']).optional(),
+      events: z.array(webhookEvent).min(1).optional(),
+      fields: z.array(z.object({ name: z.string(), value: z.string() })).optional(),
+      body_mode: z.enum(['json', 'form']).optional(),
+      headers: z.record(z.string()).optional(),
+      enabled: z.boolean().optional(),
+    },
+    annotations: { ...WRITE, idempotentHint: true, openWorldHint: true },
+  }, ({ id, ...body }) => runTool(() => client.request('PUT', `/api/webhooks/${id}`, { body })));
+
+  server.registerTool('webhook_delete', {
+    title: 'Delete a webhook',
+    description: 'Delete a webhook by id. Future events stop being delivered; existing delivery logs are kept for inspection.',
+    inputSchema: { id: z.number().int().positive() },
+    annotations: { ...DESTRUCTIVE, openWorldHint: true },
+  }, ({ id }) => runTool(() => client.request('DELETE', `/api/webhooks/${id}`)));
 }
