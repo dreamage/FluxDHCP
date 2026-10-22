@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Button, Card, Collapse, Form, Input, Modal, Popconfirm, Radio, Space, Spin, Switch, Table, Tag, Typography } from 'antd';
 import { PlusOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
+import { copyText } from '@/lib/clipboard';
 import { apiErrorMessage } from '@/lib/api-error';
 import { formatLocalTimeNoMs } from '@/lib/format-time';
 
@@ -59,10 +60,16 @@ export default function ApiKeysCard() {
     },
   }, null, 2);
 
-  const skillCommand = () =>
-    `mkdir -p ~/.codebuddy/skills/fluxdhcp\n` +
-    `curl -fsSL "${origin}/api/skills/fluxdhcp" \\\n` +
-    `  -o ~/.codebuddy/skills/fluxdhcp/SKILL.md`;
+  // 一段可以直接丢给 AI 的接入说明:MCP 配置 + skill 地址,由 AI 自己决定装在哪
+  const agentPrompt = (apiKey: string) => [
+    t('apiAgentPromptLead'),
+    '',
+    t('apiAgentPromptMcp'),
+    httpConfig(apiKey),
+    '',
+    t('apiAgentPromptSkill'),
+    `${origin}/api/skills/fluxdhcp`,
+  ].join('\n');
 
   const [skillPreview, setSkillPreview] = useState<{ open: boolean; loading: boolean; text: string }>({
     open: false,
@@ -114,12 +121,11 @@ export default function ApiKeysCard() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const copy = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      notify.success(t('apiKeyCopied'));
-    } catch {
-      notify.error(null);
+  const copy = async (text: string, successText: string) => {
+    if (await copyText(text)) {
+      notify.success(successText);
+    } else {
+      notify.error(tc('copyFailed'));
     }
   };
 
@@ -213,37 +219,25 @@ export default function ApiKeysCard() {
 
   const usage = (
     <div style={{ fontSize: 13 }}>
-      <ol style={{ paddingLeft: 18, margin: '0 0 12px', lineHeight: 1.9 }}>
-        <li>{t('apiUsageStep1')}</li>
-        <li>{t('apiUsageStep2')}</li>
-        <li>{t('apiUsageStep3')}</li>
-      </ol>
+      <Paragraph type="secondary" style={{ margin: '0 0 8px' }}>
+        {t('apiAgentHint')}
+      </Paragraph>
 
-      <pre style={codeStyle}>{httpConfig('fdx_xxxxxxxxxxxxxxxx')}</pre>
+      <pre style={codeStyle}>{agentPrompt('fdx_xxxxxxxxxxxxxxxx')}</pre>
 
-      <Button size="small" icon={<CopyOutlined />} onClick={() => copy(httpConfig('fdx_xxxxxxxxxxxxxxxx'))}>
-        {t('apiUsageCopy')}
+      <Button size="small" icon={<CopyOutlined />} onClick={() => copy(agentPrompt('fdx_xxxxxxxxxxxxxxxx'), t('apiAgentCopied'))}>
+        {t('apiAgentCopy')}
       </Button>
 
       <Paragraph type="secondary" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
         {t('apiUsageKeyHint')}
       </Paragraph>
 
-      <Paragraph strong style={{ marginTop: 18, marginBottom: 4 }}>{t('apiUsageSkillTitle')}</Paragraph>
-      <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
-        {t('apiUsageSkillHint')}
-      </Paragraph>
-
-      <Space wrap style={{ marginBottom: 4 }}>
+      <Space wrap style={{ marginTop: 14 }}>
+        <span style={{ fontSize: 12, opacity: 0.65 }}>{t('apiUsageSkillHint')}</span>
         <Button size="small" onClick={loadSkill}>{t('apiUsageSkillView')}</Button>
         <Button size="small" onClick={downloadSkill}>{t('apiUsageSkillDownload')}</Button>
       </Space>
-
-      <pre style={codeStyle}>{skillCommand()}</pre>
-
-      <Button size="small" icon={<CopyOutlined />} onClick={() => copy(skillCommand())}>
-        {t('apiUsageSkillCopy')}
-      </Button>
     </div>
   );
 
@@ -310,7 +304,7 @@ export default function ApiKeysCard() {
         width={620}
         onCancel={() => setCreatedKey(null)}
         footer={[
-          <Button key="copy" icon={<CopyOutlined />} onClick={() => createdKey && copy(createdKey.key)}>{t('apiKeyCopy')}</Button>,
+          <Button key="copy" icon={<CopyOutlined />} onClick={() => createdKey && copy(createdKey.key, t('apiKeyCopied'))}>{t('apiKeyCopy')}</Button>,
           <Button key="close" type="primary" onClick={() => setCreatedKey(null)}>{t('apiKeySaved')}</Button>,
         ]}
       >
@@ -328,9 +322,9 @@ export default function ApiKeysCard() {
           <Paragraph type="secondary" style={{ fontSize: 12, margin: '4px 0 0' }}>
             {t('apiKeyConfigHint')}
           </Paragraph>
-          <pre style={codeStyle}>{httpConfig(createdKey?.key ?? '')}</pre>
-          <Button size="small" icon={<CopyOutlined />} onClick={() => createdKey && copy(httpConfig(createdKey.key))}>
-            {t('apiUsageCopy')}
+          <pre style={codeStyle}>{agentPrompt(createdKey?.key ?? '')}</pre>
+          <Button size="small" icon={<CopyOutlined />} onClick={() => createdKey && copy(agentPrompt(createdKey.key), t('apiAgentCopied'))}>
+            {t('apiAgentCopy')}
           </Button>
         </div>
       </Modal>
