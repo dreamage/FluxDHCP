@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Typography, Form, InputNumber, Input, Button, Popconfirm, Space, Card, Row, Col, Upload, Modal, Checkbox, Select, Switch } from 'antd';
-import { CheckCircleFilled, CloseCircleFilled, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined, AppstoreOutlined, EnvironmentOutlined, ControlOutlined, StopOutlined, FileTextOutlined, BellOutlined, ToolOutlined, FieldTimeOutlined, ProfileOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { CheckCircleFilled, CloseCircleFilled, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined, AppstoreOutlined, EnvironmentOutlined, ControlOutlined, StopOutlined, FileTextOutlined, BellOutlined, ToolOutlined, FieldTimeOutlined, ProfileOutlined, ClockCircleOutlined, KeyOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { ipRule } from '@/lib/validators';
 import { translateError } from '@/lib/error-map';
@@ -23,6 +23,7 @@ const CATEGORY_META: Record<string, { icon: React.ReactNode; color: string }> = 
   mac_notes: { icon: <FileTextOutlined />, color: '#f59e0b' },
   webhooks: { icon: <BellOutlined />, color: '#ec4899' },
   config: { icon: <ToolOutlined />, color: '#64748b' },
+  api_keys: { icon: <KeyOutlined />, color: '#a855f7' },
   leases: { icon: <FieldTimeOutlined />, color: '#6366f1' },
   dhcp_logs: { icon: <ProfileOutlined />, color: '#84cc16' },
 };
@@ -45,7 +46,7 @@ function applyConfig(form: ReturnType<typeof Form.useForm>[0], config: Record<st
 }
 
 // Categories that overwrite live data — flagged as dangerous on import
-const DANGEROUS_CATS = ['leases', 'dhcp_logs'];
+const DANGEROUS_CATS = ['api_keys', 'leases', 'dhcp_logs'];
 
 export default function SettingsPage() {
   const t = useTranslations('settings');

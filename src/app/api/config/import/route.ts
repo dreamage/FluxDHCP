@@ -103,7 +103,17 @@ export async function POST(request: Request) {
         imported.webhooks = body.webhooks.length;
       }
 
-      // 8. Leases
+      // 8. API keys
+      if (categories.includes('api_keys') && Array.isArray(body.api_keys)) {
+        db.prepare('DELETE FROM api_keys').run();
+        const ins = db.prepare(`INSERT INTO api_keys (id, name, key_prefix, key_hash, scope, enabled, last_used_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+        for (const k of body.api_keys) {
+          ins.run(k.id, k.name, k.key_prefix, k.key_hash, k.scope || 'read', k.enabled ?? 1, k.last_used_at || null, k.created_at || null);
+        }
+        imported.api_keys = body.api_keys.length;
+      }
+
+      // 9. Leases
       if (categories.includes('leases') && Array.isArray(body.leases)) {
         db.prepare('DELETE FROM leases').run();
         db.prepare('DELETE FROM declined_ips').run();
@@ -114,7 +124,7 @@ export async function POST(request: Request) {
         imported.leases = body.leases.length;
       }
 
-      // 9. DHCP logs
+      // 10. DHCP logs
       if (categories.includes('dhcp_logs') && Array.isArray(body.dhcp_logs)) {
         db.prepare('DELETE FROM dhcp_logs').run();
         const ins = db.prepare(`INSERT INTO dhcp_logs (timestamp, message_type, client_mac, client_ip, yiaddr, siaddr, giaddr, requested_ip, hostname, client_id, vendor_class, xid, raw_options, pool_id, server_response, direction) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);

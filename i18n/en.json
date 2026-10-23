@@ -304,6 +304,7 @@
     "catMacNotes": "MAC Notes",
     "catWebhooks": "Webhooks",
     "catConfig": "Settings",
+    "catApiKeys": "API Access Keys",
     "catLeases": "Leases",
     "catDhcpLogs": "DHCP Logs",
     "selectAll": "Select all",

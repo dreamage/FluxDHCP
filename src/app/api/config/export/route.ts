@@ -13,6 +13,7 @@ const QUERY_SQL: Record<string, string> = {
   mac_notes: 'SELECT * FROM mac_notes',
   webhooks: 'SELECT id, name, url, method, events, fields, body_mode, headers, enabled, created_at, updated_at FROM webhooks',
   config: 'SELECT key, value FROM config',
+  api_keys: 'SELECT id, name, key_prefix, key_hash, scope, enabled, last_used_at, created_at FROM api_keys',
   leases: 'SELECT * FROM leases',
   dhcp_logs: 'SELECT * FROM dhcp_logs',
 };

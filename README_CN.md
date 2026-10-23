@@ -108,6 +108,7 @@ npm run dev
 - `version` - 配置文件格式版本
 - `exported_at` - 导出时间（ISO 8601）
 - `config` - 服务器设置（IP、端口、租约时间、T1/T2 比例等）
+- `api_keys` - API 访问密钥（仅哈希，密钥本身不可还原）
 - `pools` - 地址池定义
 - `reservations` - 静态 MAC-IP 绑定
 - `device_options` - 设备级 DHCP 选项覆盖

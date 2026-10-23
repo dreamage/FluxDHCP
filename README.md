@@ -108,6 +108,7 @@ Export configuration to a JSON file with selectable categories (leases and logs 
 - `version` - Config file format version
 - `exported_at` - Export timestamp (ISO 8601)
 - `config` - Server settings
+- `api_keys` - API access keys (hashes only, never the keys themselves)
 - `pools` - Address pool definitions
 - `reservations` - Static MAC-IP bindings
 - `device_options` - Per-device DHCP options

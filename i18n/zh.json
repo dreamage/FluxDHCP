@@ -304,6 +304,7 @@
     "catMacNotes": "MAC备注",
     "catWebhooks": "Webhook",
     "catConfig": "设置",
+    "catApiKeys": "API 访问密钥",
     "catLeases": "租约",
     "catDhcpLogs": "DHCP日志",
     "selectAll": "全选",
