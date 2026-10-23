@@ -21,9 +21,9 @@ const CATEGORY_META: Record<string, { icon: React.ReactNode; color: string }> = 
   device_options: { icon: <ControlOutlined />, color: '#14b8a6' },
   mac_blacklist: { icon: <StopOutlined />, color: '#ef4444' },
   mac_notes: { icon: <FileTextOutlined />, color: '#f59e0b' },
+  api_keys: { icon: <KeyOutlined />, color: '#06b6d4' },
   webhooks: { icon: <BellOutlined />, color: '#ec4899' },
   config: { icon: <ToolOutlined />, color: '#64748b' },
-  api_keys: { icon: <KeyOutlined />, color: '#a855f7' },
   leases: { icon: <FieldTimeOutlined />, color: '#6366f1' },
   dhcp_logs: { icon: <ProfileOutlined />, color: '#84cc16' },
 };

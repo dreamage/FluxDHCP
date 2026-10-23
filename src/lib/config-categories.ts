@@ -5,9 +5,9 @@ export const CONFIG_CATEGORIES = [
   { key: 'device_options', label: 'catDeviceOptions' },
   { key: 'mac_blacklist', label: 'catMacBlacklist' },
   { key: 'mac_notes', label: 'catMacNotes' },
+  { key: 'api_keys', label: 'catApiKeys' },
   { key: 'webhooks', label: 'catWebhooks' },
   { key: 'config', label: 'catConfig' },
-  { key: 'api_keys', label: 'catApiKeys' },
   { key: 'leases', label: 'catLeases' },
   { key: 'dhcp_logs', label: 'catDhcpLogs' },
 ];
