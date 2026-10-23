@@ -342,6 +342,8 @@
     "apiUsageSkillTitle": "Install the skill",
     "apiUsageSkillHint": "You can also view or download SKILL.md yourself and put it in your client's skills directory.",
     "apiUsageSkillView": "View full text",
+    "apiUsageSkillCopy": "Copy full text",
+    "apiUsageSkillCopied": "Copied to clipboard",
     "apiUsageSkillDownload": "Download SKILL.md",
     "apiUsageSkillMissing": "The server does not ship the skill file (resources/skills is missing).",
     "apiUsageKeyHint": "The key is shown only once. The snippet above uses a placeholder — replace it with your real key.",

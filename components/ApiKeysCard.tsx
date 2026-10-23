@@ -333,7 +333,16 @@ export default function ApiKeysCard() {
         title={t('apiUsageSkillTitle')}
         open={skillPreview.open}
         onCancel={() => setSkillPreview({ open: false, loading: false, text: '' })}
-        footer={null}
+        footer={[
+          <Button
+            key="copy"
+            icon={<CopyOutlined />}
+            disabled={skillPreview.loading || !skillPreview.text}
+            onClick={() => copy(skillPreview.text, t('apiUsageSkillCopied'))}
+          >
+            {t('apiUsageSkillCopy')}
+          </Button>,
+        ]}
         width={760}
       >
         {skillPreview.loading ? (

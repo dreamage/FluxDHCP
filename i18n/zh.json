@@ -342,6 +342,8 @@
     "apiUsageSkillTitle": "安装 Skill",
     "apiUsageSkillHint": "也可以自行查看或下载 SKILL.md，放进客户端的 skills 目录。",
     "apiUsageSkillView": "查看全文",
+    "apiUsageSkillCopy": "复制全文",
+    "apiUsageSkillCopied": "全文已复制到剪贴板",
     "apiUsageSkillDownload": "下载 SKILL.md",
     "apiUsageSkillMissing": "服务端未包含 skill 文件（resources/skills 目录缺失）。",
     "apiUsageKeyHint": "密钥只在创建时显示一次。上面的示例使用占位符，请替换成你的真实密钥。",
