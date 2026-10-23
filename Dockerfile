@@ -1,5 +1,5 @@
 # ===== Stage 1: 系统依赖 + 安装依赖 =====
-FROM node:20-slim AS deps
+FROM node:24-slim AS deps
 WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends python3 make g++ && \
@@ -15,7 +15,7 @@ RUN npm run build
 
 # ===== Stage 3: 生产镜像（干净基础，仅 COPY 必要文件）=====
 # 关键优化：不再 FROM builder，避免继承全部构建层
-FROM node:20-slim AS runner
+FROM node:24-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

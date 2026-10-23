@@ -33,7 +33,7 @@
 
 | 层级 | 技术 |
 |------|------|
-| 运行环境 | Node.js 20+ |
+| 运行环境 | Node.js 24 LTS（>= 24.22.1）|
 | 前端 | Next.js 15、React 19、Ant Design 5 |
 | 后端 | Node.js 自定义服务器、UDP Socket（端口 67）|
 | 数据库 | SQLite（better-sqlite3）|

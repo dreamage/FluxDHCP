@@ -2,6 +2,9 @@
   "name": "fluxdhcp",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24.22.1"
+  },
   "scripts": {
     "dev": "tsx src/server.ts",
     "build": "next build && tsc -p tsconfig.server.json",
@@ -14,7 +17,7 @@
     "@ant-design/nextjs-registry": "^1.0.0",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "antd": "^5.22.0",
-    "better-sqlite3": "^11.7.0",
+    "better-sqlite3": "^13.0.3",
     "next": "^15.1.0",
     "next-intl": "^3.26.0",
     "react": "^19.0.0",
@@ -23,7 +26,7 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.0",
-    "@types/node": "^22.0.0",
+    "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",

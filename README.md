@@ -33,7 +33,7 @@
 
 | Layer | Technology |
 |-------|-----------|
-| Runtime | Node.js 20+ |
+| Runtime | Node.js 24 LTS (>= 24.22.1) |
 | Frontend | Next.js 15, React 19, Ant Design 5 |
 | Backend | Node.js custom server, UDP socket (port 67) |
 | Database | SQLite via better-sqlite3 |
