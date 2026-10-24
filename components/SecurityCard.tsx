@@ -155,7 +155,7 @@ export default function SecurityCard() {
         </Button>
       </Form>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '20px 0 8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, margin: '20px 0 8px' }}>
         <Text strong>{t('sessionsTitle')}</Text>
         <Space>
           <Button size="small" onClick={fetchSessions} loading={loading}>{t('sessionRefresh')}</Button>

@@ -504,11 +504,43 @@ code, pre, .mono {
   .ant-descriptions-item-label,
   .ant-descriptions-item-content { padding: 8px 12px !important; }
   h3.ant-typography { font-size: 18px !important; margin-top: 0 !important; }
+
+  /* Title bar: keep the heading on one line and move the actions below it.
+     Without this the flex row squeezes the heading to one character per line. */
+  .page-title-bar { flex-wrap: wrap; row-gap: 10px; }
+  .page-title-bar h3 {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .page-title-bar > .ant-space {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    row-gap: 8px;
+    justify-content: flex-start;
+  }
+  .page-title-bar .ant-btn > span:not(.anticon) { white-space: nowrap; }
+
+  /* Card headers with extra actions stack instead of squeezing the title */
+  .ant-card-head { flex-wrap: wrap; row-gap: 6px; }
+  .ant-card-head .ant-card-extra { margin-left: 0; }
+
+  /* Dashboard stat cards: 2 per row is tight, shrink the glyphs to fit */
+  .stat-card .stat-icon { width: 36px !important; height: 36px !important; font-size: 16px !important; }
+  .stat-card .stat-value { font-size: 20px !important; }
+  .stat-card .stat-value .stat-suffix { font-size: 12px !important; }
+
+  /* Dashboard timeline: keep the tag/MAC line together and drop the time below */
+  .tl-meta { flex-direction: column; align-items: flex-start !important; }
+  .tl-meta .tl-time { align-self: flex-start; }
 }
 
 @media (max-width: 480px) {
   .ant-table { font-size: 12px; }
   .ant-tabs-tab { padding: 4px 6px !important; font-size: 11px !important; }
+  .stat-card .stat-value { font-size: 18px !important; }
 }
 
 /* ========== Dashboard Charts ========== */

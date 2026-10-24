@@ -51,7 +51,7 @@ export default function BarList({ items, max, minPercent = 2, emptyText = '' }: 
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 5 }}>
               <span style={{
-                fontSize: 13, color: 'var(--color-text)',
+                fontSize: 13, color: 'var(--color-text)', flex: 1, minWidth: 0,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>
                 {item.label}

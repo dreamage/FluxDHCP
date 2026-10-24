@@ -126,9 +126,10 @@ export default function OptionsPage() {
     { title: t('optionName'), dataIndex: 'option_name', key: 'option_name', width: 120 },
     { title: t('optionValue'), dataIndex: 'option_value', key: 'option_value' },
     {
-      title: t('enabled'), dataIndex: 'enabled', key: 'enabled', width: 90, align: 'center' as const,
+      title: t('status'), dataIndex: 'enabled', key: 'enabled', width: 100, align: 'center' as const,
       render: (enabled: number, r: any) => (
-        <Switch size="small" checked={!!enabled} onChange={v => handleToggle(r, v)} />
+        <Switch size="small" checked={!!enabled} onChange={v => handleToggle(r, v)}
+          checkedChildren={t('enabled')} unCheckedChildren={t('disabled')} />
       ),
     },
     {

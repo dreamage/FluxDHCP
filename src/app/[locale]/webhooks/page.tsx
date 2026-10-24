@@ -146,8 +146,11 @@ export default function WebhooksPage() {
         })}</Space>;
       },
     },
-    { title: t('enabled'), key: 'enabled', width: 80,
-      render: (_: any, r: any) => <Switch checked={!!r.enabled} onChange={(v) => handleToggleEnabled(r.id, v)} size="small" />,
+    { title: t('status'), key: 'enabled', width: 100, align: 'center' as const,
+      render: (_: any, r: any) => (
+        <Switch checked={!!r.enabled} onChange={(v) => handleToggleEnabled(r.id, v)} size="small"
+          checkedChildren={t('enabled')} unCheckedChildren={t('disabled')} />
+      ),
     },
     { title: tc('actions'), key: 'actions', width: 120, fixed: 'right' as const,
       render: (_: any, r: any) => (

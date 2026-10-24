@@ -78,7 +78,7 @@ function StatCard({ icon, color, title, value, suffix, bgColor }: StatCardProps)
     <Card variant="borderless" className="stat-card card-rise" style={{ borderRadius: 12, height: '100%', padding: 0, overflow: 'hidden' }}>
       <div className="stat-card-top-bar" style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0 0' }}>
-        <div style={{
+        <div className="stat-icon" style={{
           width: 46, height: 46, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: bgColor || `linear-gradient(135deg, ${color}, ${color}bb)`, color: '#fff', fontSize: 20, flexShrink: 0,
         }}>
@@ -86,8 +86,8 @@ function StatCard({ icon, color, title, value, suffix, bgColor }: StatCardProps)
         </div>
         <div style={{ minWidth: 0, overflow: 'hidden' }}>
           <Text type="secondary" style={{ fontSize: 12, lineHeight: 1.3, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</Text>
-          <div className="tabular-nums" style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.2, color: 'var(--color-text)', whiteSpace: 'nowrap' }}>
-            {value}{suffix && <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--color-text-secondary)', marginLeft: 4 }}>{suffix}</span>}
+          <div className="tabular-nums stat-value" style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.2, color: 'var(--color-text)', whiteSpace: 'nowrap' }}>
+            {value}{suffix && <span className="stat-suffix" style={{ fontSize: 13, fontWeight: 400, color: 'var(--color-text-secondary)', marginLeft: 4 }}>{suffix}</span>}
           </div>
         </div>
       </div>
@@ -271,7 +271,7 @@ export default function DashboardPage() {
     <>
       <div className="page-title-bar">
         <Title level={3} style={{ margin: 0 }}>{t('title')}</Title>
-        <Space size={12}>
+        <Space size={12} wrap>
           {data && lastUpdated && (
             <Text type="secondary" style={{ fontSize: 12 }}>{t('lastUpdated', { time: lastUpdated })}</Text>
           )}
@@ -535,16 +535,16 @@ export default function DashboardPage() {
                         {!isLast && <div style={{ width: 1, flex: 1, background: 'var(--color-border)', marginTop: 4, opacity: 0.5 }} />}
                       </div>
                       {/* Content */}
-                      <div style={{ flex: 1, paddingBottom: isLast ? 0 : 12 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4 }}>
-                          <Space size={4}>
+                      <div style={{ flex: 1, minWidth: 0, paddingBottom: isLast ? 0 : 12 }}>
+                        <div className="tl-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4 }}>
+                          <Space size={4} wrap style={{ minWidth: 0 }}>
                             <Tag color={MSG_TYPE_TAG_COLORS[event.message_type] || 'default'} style={{ margin: 0, fontSize: 11 }}>
                               {tMsg(String(event.message_type))}
                             </Tag>
                             <MacAddress mac={event.client_mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} />
                             {event.hostname && <Text type="secondary" style={{ fontSize: 12 }}>({event.hostname})</Text>}
                           </Space>
-                          <Text type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{formatLocalTimeNoMs(event.timestamp)}</Text>
+                          <Text className="tl-time" type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{formatLocalTimeNoMs(event.timestamp)}</Text>
                         </div>
                         {event.server_response ? (
                           <Tooltip title={translateServerResponse(event.server_response, tSr)}>

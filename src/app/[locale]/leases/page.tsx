@@ -12,6 +12,7 @@ import { apiErrorMessage } from '@/lib/api-error';
 import { useMacNotes } from '@/hooks/useMacNotes';
 import { useNotify } from '@/hooks/useNotify';
 import { useTableFilters } from '@/hooks/useTableFilters';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import FilterPanel from '@/components/FilterPanel';
 import { isValidIPv4, ipToNum } from '@/lib/ip-utils';
 import { ipRule, ipRangeRules } from '@/lib/validators';
@@ -45,6 +46,7 @@ export default function LeasesPage() {
   const [sortField, setSortField] = useState('lease_end');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const { macNotes, fetchMacNotes } = useMacNotes();
+  const isMobile = useIsMobile();
 
   // Reservation modal state
   const [pools, setPools] = useState<any[]>([]);
@@ -161,28 +163,33 @@ export default function LeasesPage() {
       render: (v: string) => formatLocalTimeNoMs(v) },
     { title: t('pool'), dataIndex: 'pool_name', key: 'pool_name', width: 100, sorter: true },
     {
-      title: tc('actions'), key: 'actions', width: 220, fixed: 'right' as const,
+      title: tc('actions'), key: 'actions', width: isMobile ? 96 : 220, fixed: 'right' as const,
       render: (_: any, r: any) => {
         const isReserved = reservedMacs.has((r.mac_address || '').toUpperCase());
         const buttons: React.ReactNode[] = [];
         if ((r.state === 'BOUND' || r.state === 'OFFERED') && !isReserved) {
           buttons.push(
             <Popconfirm key="release" title={t('releaseConfirm')} onConfirm={() => handleRelease(r.ip_address)}>
-              <Button icon={<UndoOutlined />} size="small" type="default">{t('release')}</Button>
+              <Button icon={<UndoOutlined />} size="small" type="default" title={t('release')} aria-label={t('release')}>
+                {!isMobile && t('release')}
+              </Button>
             </Popconfirm>
           );
         }
         if (r.state === 'RELEASED' || r.state === 'EXPIRED') {
           buttons.push(
             <Popconfirm key="delete" title={t('deleteConfirm')} onConfirm={() => handleDelete(r.ip_address)}>
-              <Button icon={<DeleteOutlined />} size="small" danger>{tc('delete')}</Button>
+              <Button icon={<DeleteOutlined />} size="small" danger title={tc('delete')} aria-label={tc('delete')}>
+                {!isMobile && tc('delete')}
+              </Button>
             </Popconfirm>
           );
         }
         if (!isReserved) {
           buttons.push(
-            <Button key="reserve" icon={<PlusOutlined />} size="small" onClick={() => handleAddReservation(r)}>
-              {tr('addReservation')}
+            <Button key="reserve" icon={<PlusOutlined />} size="small" onClick={() => handleAddReservation(r)}
+              title={tr('addReservation')} aria-label={tr('addReservation')}>
+              {!isMobile && tr('addReservation')}
             </Button>
           );
         }

@@ -306,7 +306,7 @@ export default function SettingsPage() {
 
       {/* DHCP Service */}
       <Card style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {dhcpStatus === null ? (
               <div style={{ width: 22, height: 22 }} />
@@ -446,7 +446,7 @@ export default function SettingsPage() {
         confirmLoading={exporting}
       >
         <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>{t('exportDesc')}</Text>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
           <Space size="small">
             <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setExportCats(CONFIG_CATEGORIES.map(c => c.key))}>{t('selectAll')}</Button>
             <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setExportCats([])}>{t('selectNone')}</Button>
@@ -481,7 +481,7 @@ export default function SettingsPage() {
                 <Text strong style={{ fontFamily: 'var(--font-mono)' }}>{formatLocalTimeNoMs(pendingImportData.exported_at)}</Text>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
               <Space size="small">
                 <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setImportCats(Object.keys(importFileStats))}>{t('selectAll')}</Button>
                 <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setImportCats([])}>{t('selectNone')}</Button>

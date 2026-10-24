@@ -284,7 +284,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
       </div>
       <Menu mode="inline" selectedKeys={[pageKey]} items={menuItems}
         onClick={handleMenuClick}
-        style={{ background: 'transparent', border: 'none', padding: '8px 0' }} />
+        style={{ background: 'transparent', border: 'none', padding: '8px 0', flex: 1, minHeight: 0, overflowY: 'auto' }} />
+      {/* Theme / language live in the drawer on mobile — the top bar has no room for them */}
+      {isMobile && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, borderTop: '1px solid var(--color-sidebar-border)' }}>
+          <Select value={themeMode} onChange={setThemeMode} size="small" style={{ width: '100%' }} options={themeOptions} />
+          <Select value={locale} onChange={handleLocaleChange} size="small" style={{ width: '100%' }}
+            options={[{ value: 'en', label: 'English' }, { value: 'zh', label: '中文' }]} />
+        </div>
+      )}
     </>
   );
 
@@ -323,8 +331,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile drawer sidebar */}
       {isMobile && !mobileDrawer && (
         <div onClick={() => setMobileDrawer(true)}
-          style={{ position: 'fixed', top: 12, left: 12, zIndex: 1100, cursor: 'pointer',
-            background: 'var(--color-hamburger-bg)', borderRadius: 8, padding: '8px 10px', boxShadow: `0 2px 8px var(--color-hamburger-shadow)` }}>
+          style={{ position: 'fixed', top: 4, left: 8, zIndex: 1100, cursor: 'pointer', height: 32,
+            display: 'flex', alignItems: 'center',
+            background: 'var(--color-hamburger-bg)', borderRadius: 8, padding: '0 8px', boxShadow: `0 2px 8px var(--color-hamburger-shadow)` }}>
           <MenuOutlined style={{ fontSize: 18, color: 'var(--color-text-secondary)' }} />
         </div>
       )}
@@ -333,6 +342,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <div onClick={() => setMobileDrawer(false)}
             style={{ position: 'fixed', inset: 0, background: 'var(--color-mobile-overlay)', zIndex: 1099 }} />
           <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 220, zIndex: 1100,
+            display: 'flex', flexDirection: 'column',
             borderRight: '1px solid var(--color-sidebar-border)', boxShadow: '4px 0 12px rgba(0,0,0,0.1)' }}
             className="sidebar-glass">
             {sidebarContent}
@@ -353,11 +363,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 tabBarStyle={{ marginBottom: 0 }} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
-              <Select value={themeMode} onChange={setThemeMode}
-                style={{ width: 130 }} size="small" variant="borderless"
-                options={themeOptions} popupMatchSelectWidth={false} />
-              <Select value={locale} onChange={handleLocaleChange} style={{ width: 110 }} size="small" variant="borderless"
-                options={[{ value: 'en', label: 'English' }, { value: 'zh', label: '中文' }]} />
+              {!isMobile && (
+                <>
+                  <Select value={themeMode} onChange={setThemeMode}
+                    style={{ width: 130 }} size="small" variant="borderless"
+                    options={themeOptions} popupMatchSelectWidth={false} />
+                  <Select value={locale} onChange={handleLocaleChange} style={{ width: 110 }} size="small" variant="borderless"
+                    options={[{ value: 'en', label: 'English' }, { value: 'zh', label: '中文' }]} />
+                </>
+              )}
               <Button type="text" size="small" icon={<LogoutOutlined />} onClick={handleLogout}
                 title={t('logout')} aria-label={t('logout')} />
             </div>

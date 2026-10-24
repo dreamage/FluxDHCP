@@ -202,9 +202,10 @@ export default function ApiKeysCard() {
       render: (v: string) => formatLocalTimeNoMs(v),
     },
     {
-      title: t('apiKeyEnabled'), dataIndex: 'enabled', key: 'enabled', width: 90, align: 'center' as const,
+      title: t('status'), dataIndex: 'enabled', key: 'enabled', width: 100, align: 'center' as const,
       render: (enabled: number, row: ApiKeyRow) => (
-        <Switch size="small" checked={!!enabled} onChange={v => handleToggle(row, v)} />
+        <Switch size="small" checked={!!enabled} onChange={v => handleToggle(row, v)}
+          checkedChildren={t('enabled')} unCheckedChildren={t('disabled')} />
       ),
     },
     {

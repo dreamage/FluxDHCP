@@ -91,9 +91,13 @@ export default function MacAddress({ mac, macNotes, onNoteUpdate }: MacAddressPr
   );
 
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-      <span>{mac}</span>
-      {note && <span style={{ color: '#1890ff', fontSize: 12 }}>({note})</span>}
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', minWidth: 0, maxWidth: '100%' }}>
+      <span style={{ whiteSpace: 'nowrap' }}>{mac}</span>
+      {note && (
+        <span style={{ color: '#1890ff', fontSize: 12, whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          ({note})
+        </span>
+      )}
       <Popover
         content={popoverContent}
         title={note ? t('editNote') : t('addNote')}
