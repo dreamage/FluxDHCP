@@ -126,6 +126,9 @@ export function registerWriteTools(server: McpServer, client: FluxClient) {
       option_code: z.number().int().min(1).max(254),
       option_value: z.string(),
       option_name: z.string().optional(),
+      enabled: z.boolean().optional().describe(
+        'Default true. Set false to stop sending this option to the device: the row is kept but the pool default applies again. Omit to leave an existing row unchanged.',
+      ),
     },
     annotations: { ...WRITE, idempotentHint: true },
   }, async (args) => runTool(async () => {
@@ -141,9 +144,9 @@ export function registerWriteTools(server: McpServer, client: FluxClient) {
           && String(row.mac_address).toUpperCase() === args.mac_address.toUpperCase(),
       );
       if (!existing) throw error;
-      return client.request('PUT', `/api/options/${existing.id}`, {
-        body: { option_value: args.option_value, option_name: args.option_name },
-      });
+      // Forward every argument: the PUT handler ignores mac_address/option_code, and
+      // hand-listing fields here silently dropped new ones (e.g. enabled) on update.
+      return client.request('PUT', `/api/options/${existing.id}`, { body: args });
     }
   }));
 
@@ -183,7 +186,7 @@ export function registerWriteTools(server: McpServer, client: FluxClient) {
 
   server.registerTool('option_delete', {
     title: 'Delete a per-device DHCP option',
-    description: 'Delete one device option by id. Use option_list to find the id first — the id is not the option code.',
+    description: 'Delete one device option by id. Use option_list to find the id first — the id is not the option code. To keep the row but stop sending it to the device, call option_set with enabled:false instead.',
     inputSchema: { id: z.number().int().positive().describe('device_options row id') },
     annotations: DESTRUCTIVE,
   }, ({ id }) => runTool(() => client.request('DELETE', `/api/options/${id}`)));

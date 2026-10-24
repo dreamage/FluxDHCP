@@ -28,7 +28,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const db = getDb();
     const body = await request.json();
-    const { option_value, option_name } = body;
+    const { option_value, option_name, enabled } = body;
 
     const existing = db.prepare('SELECT * FROM device_options WHERE id = ?').get(id) as any;
     if (!existing) {
@@ -43,9 +43,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       });
     }
 
-    db.prepare('UPDATE device_options SET option_value = ?, option_name = ? WHERE id = ?').run(
+    db.prepare('UPDATE device_options SET option_value = ?, option_name = ?, enabled = ? WHERE id = ?').run(
       newValue,
       option_name !== undefined ? option_name : existing.option_name,
+      enabled !== undefined ? (enabled ? 1 : 0) : existing.enabled,
       id,
     );
 

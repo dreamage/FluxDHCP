@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS device_options (
   option_code  INTEGER NOT NULL,
   option_value TEXT    NOT NULL,
   option_name  TEXT,
+  enabled      INTEGER NOT NULL DEFAULT 1,
   created_at   TEXT    DEFAULT (datetime('now')),
   UNIQUE(mac_address, option_code)
 )`;

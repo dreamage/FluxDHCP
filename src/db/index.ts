@@ -85,6 +85,9 @@ export function getDatabase(dbPath?: string): Database.Database {
   // Migration: add request_body column to webhook_deliveries if missing
   try { db.exec("ALTER TABLE webhook_deliveries ADD COLUMN request_body TEXT"); } catch { /* column already exists */ }
 
+  // Migration: add enabled column to device_options if missing (disabled options stay stored but are not sent)
+  try { db.exec("ALTER TABLE device_options ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1"); } catch { /* column already exists */ }
+
   // Migration: rename log_retention_days → dhcp_log_retention_days
   try { db.exec("UPDATE config SET key = 'dhcp_log_retention_days' WHERE key = 'log_retention_days'"); } catch { /* already migrated */ }
 

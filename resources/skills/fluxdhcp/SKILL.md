@@ -81,6 +81,7 @@ Before shrinking a range, verify no active lease sits in the portion being remov
 - Changing server settings (lease time, T1/T2, allocation order, log retention, ports) is **also web-UI only**. There is no write tool for it; hand the request back instead of trying `config_get` twice.
 - Never delete a pool while it has active leases. The server returns 409 — do not work around it by deleting leases.
 - Do not batch-delete reservations, blacklist entries or options. One at a time, each individually reversible.
+- To stop sending an option without losing it, call `option_set` with `enabled: false` instead of deleting it. The row stays, `option_list` still returns it with `enabled: 0`, and the device falls back to the pool default.
 - `netmask` is always dotted decimal (`255.255.255.0`), never `/24`.
 - `logs_clear` wipes the entire packet history. Only call it when the user explicitly asks, and warn that past troubleshooting evidence is lost.
 - Creating a webhook opens an outbound channel that can carry lease data. Only do it on explicit request, and say which URL and events you configured.

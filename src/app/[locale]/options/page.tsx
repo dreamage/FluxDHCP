@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, InputNumber, Popconfirm, Select, Space, Alert } from 'antd';
+import { Typography, Table, Button, Modal, Form, Input, InputNumber, Popconfirm, Select, Space, Switch, Alert } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
@@ -95,6 +95,17 @@ export default function OptionsPage() {
     } catch { /* validation */ }
   };
 
+  const handleToggle = async (row: any, enabled: boolean) => {
+    const res = await fetch(`/api/options/${row.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled }),
+    });
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) { notify.error(translateError(apiErrorMessage(result), tc)); return; }
+    fetchData();
+  };
+
   const handleDelete = async (id: number) => {
     const res = await fetch(`/api/options/${id}`, { method: 'DELETE' });
     const result = await res.json().catch(() => ({}));
@@ -114,6 +125,12 @@ export default function OptionsPage() {
       } },
     { title: t('optionName'), dataIndex: 'option_name', key: 'option_name', width: 120 },
     { title: t('optionValue'), dataIndex: 'option_value', key: 'option_value' },
+    {
+      title: t('enabled'), dataIndex: 'enabled', key: 'enabled', width: 90, align: 'center' as const,
+      render: (enabled: number, r: any) => (
+        <Switch size="small" checked={!!enabled} onChange={v => handleToggle(r, v)} />
+      ),
+    },
     {
       title: tc('actions'), key: 'actions', width: 100, fixed: 'right' as const,
       render: (_: any, r: any) => (

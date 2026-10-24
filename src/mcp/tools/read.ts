@@ -114,7 +114,7 @@ export function registerReadTools(server: McpServer, client: FluxClient) {
 
   server.registerTool('option_list', {
     title: 'List per-device DHCP options',
-    description: 'List custom DHCP options bound to individual MAC addresses. option_code is 1-254.',
+    description: 'List custom DHCP options bound to individual MAC addresses. option_code is 1-254. Each row carries enabled: 1 means it is sent, 0 means the row is kept but skipped, so the pool default applies.',
     inputSchema: {
       mac: z.string().optional(),
       option_code: z.number().int().min(1).max(254).optional(),

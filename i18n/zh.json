@@ -204,6 +204,7 @@
     "optionCode": "选项码",
     "optionName": "选项名称",
     "optionValue": "选项值",
+    "enabled": "状态",
     "addOption": "新增选项",
     "editOption": "编辑选项",
     "deleteOption": "删除选项",

@@ -66,9 +66,10 @@ export async function POST(request: Request) {
       // 4. Device options
       if (categories.includes('device_options') && Array.isArray(body.device_options)) {
         db.prepare('DELETE FROM device_options').run();
-        const ins = db.prepare(`INSERT INTO device_options (id, mac_address, option_code, option_value, option_name, created_at) VALUES (?, ?, ?, ?, ?, ?)`);
+        const ins = db.prepare(`INSERT INTO device_options (id, mac_address, option_code, option_value, option_name, enabled, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`);
         for (const o of body.device_options) {
-          ins.run(o.id, o.mac_address, o.option_code, o.option_value, o.option_name || null, o.created_at || null);
+          // Files exported before the enabled flag existed have no such field; treat those as enabled.
+          ins.run(o.id, o.mac_address, o.option_code, o.option_value, o.option_name || null, o.enabled ?? 1, o.created_at || null);
         }
         imported.device_options = body.device_options.length;
       }

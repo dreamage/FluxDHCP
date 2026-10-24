@@ -9,6 +9,8 @@ export interface DeviceOption {
   option_code: number;
   option_value: string;
   option_name: string | null;
+  /** 0 表示该选项已停用：保留记录但不下发，设备回落到地址池默认值 */
+  enabled: number;
 }
 
 export class OptionManager {
@@ -19,11 +21,11 @@ export class OptionManager {
   }
 
   /**
-   * 获取指定 MAC 地址的 per-device DHCP 选项
+   * 获取指定 MAC 地址的 per-device DHCP 选项（仅启用的）
    */
   getDeviceOptions(mac: string): DeviceOption[] {
     return this.db.prepare(
-      'SELECT * FROM device_options WHERE mac_address = ?'
+      'SELECT * FROM device_options WHERE mac_address = ? AND enabled = 1'
     ).all(mac.toUpperCase()) as DeviceOption[];
   }
 

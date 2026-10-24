@@ -204,6 +204,7 @@
     "optionCode": "Option Code",
     "optionName": "Option Name",
     "optionValue": "Option Value",
+    "enabled": "Status",
     "addOption": "Add Option",
     "editOption": "Edit Option",
     "deleteOption": "Delete Option",
