@@ -18,7 +18,7 @@ import BarList from '@/components/charts/BarList';
 import type { TrendPoint } from '@/components/charts/TrendAreaChart';
 import type { DonutSlice } from '@/components/charts/DonutChart';
 import type { BarItem } from '@/components/charts/BarList';
-import { formatLocalTimeNoMs } from '@/lib/format-time';
+import { formatLocalTime } from '@/lib/format-time';
 import { translateServerResponse } from '@/lib/server-response';
 import { useMacNotes } from '@/hooks/useMacNotes';
 import { useNotify } from '@/hooks/useNotify';
@@ -544,7 +544,7 @@ export default function DashboardPage() {
                             <MacAddress mac={event.client_mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} />
                             {event.hostname && <Text type="secondary" style={{ fontSize: 12 }}>({event.hostname})</Text>}
                           </Space>
-                          <Text className="tl-time" type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{formatLocalTimeNoMs(event.timestamp)}</Text>
+                          <Text className="tl-time" type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{formatLocalTime(event.timestamp)}</Text>
                         </div>
                         {event.server_response ? (
                           <Tooltip title={translateServerResponse(event.server_response, tSr)}>

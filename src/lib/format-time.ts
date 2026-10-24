@@ -1,6 +1,9 @@
 /**
- * Format a datetime string from the database (UTC) to local time with milliseconds.
+ * Format a datetime string from the database (UTC) to local time, to the second.
  * Supports both old format (YYYY-MM-DD HH:MM:SS) and new ISO format (YYYY-MM-DDTHH:MM:SS.sssZ).
+ *
+ * Milliseconds are deliberately dropped: every surface shows the same
+ * resolution, so the same event never looks different on two pages.
  */
 export function formatLocalTime(v: string | null | undefined): string {
   if (!v) return '-';
@@ -11,7 +14,6 @@ export function formatLocalTime(v: string | null | undefined): string {
     // Old format without timezone: treat as UTC
     date = new Date(v + 'Z');
   }
-  // Format with milliseconds
   const pad = (n: number, len = 2) => String(n).padStart(len, '0');
   const y = date.getFullYear();
   const m = pad(date.getMonth() + 1);
@@ -19,13 +21,5 @@ export function formatLocalTime(v: string | null | undefined): string {
   const h = pad(date.getHours());
   const min = pad(date.getMinutes());
   const s = pad(date.getSeconds());
-  const ms = pad(date.getMilliseconds(), 3);
-  return `${y}-${m}-${d} ${h}:${min}:${s}.${ms}`;
-}
-
-/**
- * Format a datetime string from the database (UTC) to local time without milliseconds.
- */
-export function formatLocalTimeNoMs(v: string | null | undefined): string {
-  return formatLocalTime(v).replace(/\.\d{3}$/, '');
+  return `${y}-${m}-${d} ${h}:${min}:${s}`;
 }

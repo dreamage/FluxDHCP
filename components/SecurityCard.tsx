@@ -6,7 +6,7 @@ import { Button, Card, Form, Input, Popconfirm, Space, Table, Tag, Typography } 
 import { LockOutlined, SafetyOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { apiErrorMessage } from '@/lib/api-error';
-import { formatLocalTimeNoMs } from '@/lib/format-time';
+import { formatLocalTime } from '@/lib/format-time';
 
 const { Text, Paragraph } = Typography;
 
@@ -94,15 +94,15 @@ export default function SecurityCard() {
   const columns = [
     {
       title: t('sessionCreated'), dataIndex: 'created_at', key: 'created_at', width: 170,
-      render: (v: string) => formatLocalTimeNoMs(v),
+      render: (v: string) => formatLocalTime(v),
     },
     {
       title: t('sessionLastSeen'), dataIndex: 'last_seen_at', key: 'last_seen_at', width: 170,
-      render: (v: string | null) => v ? formatLocalTimeNoMs(v) : '-',
+      render: (v: string | null) => v ? formatLocalTime(v) : '-',
     },
     {
       title: t('sessionExpires'), dataIndex: 'expires_at', key: 'expires_at', width: 170,
-      render: (v: string) => formatLocalTimeNoMs(v),
+      render: (v: string) => formatLocalTime(v),
     },
     {
       title: t('sessionAgent'), dataIndex: 'user_agent', key: 'user_agent', ellipsis: true,

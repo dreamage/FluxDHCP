@@ -1,6 +1,6 @@
 import { getDb } from './db-instance';
 import { validateWebhookUrl } from './url-validate';
-import { formatLocalTimeNoMs } from './format-time';
+import { formatLocalTime } from './format-time';
 
 const EVENT_MAP: Record<number, string> = {
   1: 'dhcp_discover',
@@ -56,7 +56,7 @@ function buildTemplateVars(data: Record<string, any>, eventName: string): Record
     pool_name: poolName,
     mac_note: macNote,
     timestamp: new Date().toISOString(),
-    datetime: formatLocalTimeNoMs(new Date().toISOString()),
+    datetime: formatLocalTime(new Date().toISOString()),
   };
 }
 

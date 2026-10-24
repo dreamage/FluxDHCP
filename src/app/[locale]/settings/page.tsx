@@ -8,7 +8,7 @@ import { useNotify } from '@/hooks/useNotify';
 import { ipRule } from '@/lib/validators';
 import { translateError } from '@/lib/error-map';
 import { apiErrorMessage } from '@/lib/api-error';
-import { formatLocalTimeNoMs } from '@/lib/format-time';
+import { formatLocalTime } from '@/lib/format-time';
 import { CONFIG_CATEGORIES, DEFAULT_EXPORT_KEYS } from '@/lib/config-categories';
 import SecurityCard from '@/components/SecurityCard';
 
@@ -478,7 +478,7 @@ export default function SettingsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '8px 12px', borderRadius: 8, background: 'var(--color-hover)', fontSize: 13 }}>
                 <ClockCircleOutlined style={{ color: 'var(--color-text-secondary)' }} />
                 <Text type="secondary">{t('exportedAt')}</Text>
-                <Text strong style={{ fontFamily: 'var(--font-mono)' }}>{formatLocalTimeNoMs(pendingImportData.exported_at)}</Text>
+                <Text strong style={{ fontFamily: 'var(--font-mono)' }}>{formatLocalTime(pendingImportData.exported_at)}</Text>
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>

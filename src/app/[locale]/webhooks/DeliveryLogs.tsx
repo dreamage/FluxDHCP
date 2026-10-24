@@ -7,6 +7,7 @@ import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNotify } from '@/hooks/useNotify';
 import { EVENT_COLORS, EVENT_OPTIONS } from '@/lib/webhook-constants';
+import { formatLocalTime } from '@/lib/format-time';
 
 const { Text } = Typography;
 
@@ -16,18 +17,6 @@ const DELIVERY_STATUS_COLORS: Record<string, string> = {
   error: 'red',
   pending: 'blue',
 };
-
-function formatTimeShort(v: string | null | undefined): string {
-  if (!v) return '-';
-  let d: Date;
-  if (v.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(v)) {
-    d = new Date(v);
-  } else {
-    d = new Date(v + 'Z');
-  }
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
 
 interface DeliveryLogsProps {
   webhooks: any[];
@@ -81,7 +70,7 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
   const logColumns: ColumnsType<any> = [
     {
       title: tLogs('time'), dataIndex: 'created_at', key: 'created_at', width: 150,
-      render: (v: string) => formatTimeShort(v),
+      render: (v: string) => formatLocalTime(v),
     },
     {
       title: tLogs('webhookName'), dataIndex: 'webhook_name', key: 'webhook_name', width: 100,

@@ -7,7 +7,7 @@ import { PlusOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { copyText } from '@/client/clipboard';
 import { apiErrorMessage } from '@/lib/api-error';
-import { formatLocalTimeNoMs } from '@/lib/format-time';
+import { formatLocalTime } from '@/lib/format-time';
 
 const { Text, Paragraph } = Typography;
 
@@ -195,11 +195,11 @@ export default function ApiKeysCard() {
     },
     {
       title: t('apiKeyLastUsed'), dataIndex: 'last_used_at', key: 'last_used_at', width: 170,
-      render: (v: string | null) => v ? formatLocalTimeNoMs(v) : <Text type="secondary">{t('apiKeyNeverUsed')}</Text>,
+      render: (v: string | null) => v ? formatLocalTime(v) : <Text type="secondary">{t('apiKeyNeverUsed')}</Text>,
     },
     {
       title: t('apiKeyCreated'), dataIndex: 'created_at', key: 'created_at', width: 170,
-      render: (v: string) => formatLocalTimeNoMs(v),
+      render: (v: string) => formatLocalTime(v),
     },
     {
       title: t('status'), dataIndex: 'enabled', key: 'enabled', width: 100, align: 'center' as const,
