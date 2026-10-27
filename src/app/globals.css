@@ -143,6 +143,23 @@ code, pre, .mono {
   display: none !important;
 }
 
+/* Chips have borders now, so a tab cut off at the edge looks like a rendering
+   glitch. Fade the side that has more tabs behind it instead. */
+.ant-tabs-nav-wrap-ping-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+
+.ant-tabs-nav-wrap-ping-left {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 28px);
+  mask-image: linear-gradient(to right, transparent, #000 28px);
+}
+
+.ant-tabs-nav-wrap-ping-left.ant-tabs-nav-wrap-ping-right {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+}
+
 /* Every tab is its own chip: full border box, full radius, real gap between
    neighbours. Before this the tabs were borderless text with a shared edge,
    which read as labels floating on the strip instead of buttons. */
