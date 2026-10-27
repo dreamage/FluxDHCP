@@ -17,14 +17,13 @@
   --color-sidebar-bg: rgba(255, 255, 255, 0.72);
   --color-sidebar-border: rgba(226, 232, 240, 0.6);
   --color-tab-bar-bg: #f8fafc;
+  /* The tab strip sits a shade below the page so the chips read as raised */
+  --color-tabbar-bg: #eef2f7;
   --color-tab-active-bg: #ffffff;
-  --color-tab-hover-bg: #f1f5f9;
   --color-hover: #f8fafc;
   --color-scrollbar: #cbd5e1;
   --color-scrollbar-hover: #94a3b8;
   --color-modal-overlay: rgba(0, 0, 0, 0.45);
-  --color-hamburger-bg: #ffffff;
-  --color-hamburger-shadow: rgba(0, 0, 0, 0.15);
   --color-mobile-overlay: rgba(0, 0, 0, 0.3);
   --color-button-glow: rgba(74, 144, 217, 0.35);
   --font-sans: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif;
@@ -57,14 +56,12 @@
   --color-sidebar-bg: rgba(13, 17, 23, 0.85);
   --color-sidebar-border: rgba(55, 65, 81, 0.5);
   --color-tab-bar-bg: #1f2937;
-  --color-tab-active-bg: #111827;
-  --color-tab-hover-bg: #283342;
+  --color-tabbar-bg: #171f2b;
+  --color-tab-active-bg: #2b3846;
   --color-hover: #1f2937;
   --color-scrollbar: #475569;
   --color-scrollbar-hover: #64748b;
   --color-modal-overlay: rgba(0, 0, 0, 0.7);
-  --color-hamburger-bg: #1f2937;
-  --color-hamburger-shadow: rgba(0, 0, 0, 0.4);
   --color-mobile-overlay: rgba(0, 0, 0, 0.6);
   --color-button-glow: rgba(106, 172, 232, 0.3);
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.15);
@@ -136,40 +133,52 @@ code, pre, .mono {
   50% { box-shadow: 0 0 0 4px rgba(106, 172, 232, 0.3); }
 }
 
-/* ========== Tabs — Chrome-style Tab Bar ========== */
+/* ========== Tabs — segmented tab strip ========== */
 .ant-tabs-nav {
   margin-bottom: 0 !important;
+  align-items: center;
 }
 /* Remove Ant Design's internal tab border — our outer container handles it */
 .ant-tabs-nav::before {
   display: none !important;
 }
 
+/* Every tab is its own chip: full border box, full radius, real gap between
+   neighbours. Before this the tabs were borderless text with a shared edge,
+   which read as labels floating on the strip instead of buttons. */
 .ant-tabs-tab {
-  border-radius: 8px 8px 0 0 !important;
-  border: none !important;
-  padding: 5px 8px 5px 12px !important;
-  margin: 0 1px 0 0 !important;
+  margin: 0 4px 0 0 !important;
+  padding: 0 8px 0 10px !important;
+  min-height: 30px;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--color-tab-bar-bg) !important;
+  color: var(--color-text-secondary) !important;
   font-size: 13px !important;
   font-weight: 500 !important;
-  color: var(--color-text-secondary) !important;
-  background: transparent !important;
-  transition: all var(--transition-fast) !important;
-  position: relative;
-  min-height: 32px;
-  line-height: 22px !important;
+  line-height: 28px !important;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast) !important;
+}
+
+/* Ant Design adds a left margin to every tab after the first — that would
+   break the rhythm set above. */
+.ant-tabs-tab + .ant-tabs-tab {
+  margin-left: 0 !important;
 }
 
 .ant-tabs-tab:hover {
-  color: var(--color-text) !important;
-  background: var(--color-tab-hover-bg) !important;
-}
-
-.ant-tabs-tab-active {
   background: var(--color-tab-active-bg) !important;
   color: var(--color-text) !important;
+}
+
+/* Selected page: tinted fill + tinted border, so "current" is obvious even
+   where the strip and the page share a background. */
+.ant-tabs-tab.ant-tabs-tab-active,
+.ant-tabs-tab.ant-tabs-tab-active:hover {
+  background: var(--color-primary-subtle) !important;
+  border-color: var(--color-primary-light) !important;
+  color: var(--color-primary) !important;
   font-weight: 600 !important;
-  box-shadow: 0 -1px 0 var(--color-border), 1px 0 0 var(--color-border), -1px 0 0 var(--color-border);
 }
 
 .ant-tabs-tab-btn {
@@ -183,16 +192,23 @@ code, pre, .mono {
 /* Editable-card tab close button */
 .ant-tabs-tab .ant-tabs-tab-remove {
   margin-inline-start: 4px !important;
-  margin-inline-end: 0 !important;
+  margin-inline-end: -2px !important;
   font-size: 11px !important;
-  width: 18px !important;
-  height: 18px !important;
+  width: 16px !important;
+  height: 16px !important;
   border-radius: 4px !important;
+  color: var(--color-text-muted) !important;
   transition: all var(--transition-fast) !important;
+}
+
+.ant-tabs-tab:hover .ant-tabs-tab-remove,
+.ant-tabs-tab-active .ant-tabs-tab-remove {
+  color: var(--color-text-secondary) !important;
 }
 
 .ant-tabs-tab .ant-tabs-tab-remove:hover {
   background: var(--color-hover) !important;
+  color: var(--color-text) !important;
 }
 
 /* Tab bar extra content alignment */
@@ -499,8 +515,14 @@ code, pre, .mono {
   .ant-modal { max-width: 95vw !important; margin: 8px auto; }
   .ant-modal-body { padding: 12px; }
   .ant-card-body { padding: 12px; }
-  .ant-tabs-tab { padding: 4px 6px 4px 10px !important; font-size: 12px !important; min-height: 28px; }
-  .ant-tabs-tab .ant-tabs-tab-remove { width: 16px !important; height: 16px !important; font-size: 10px !important; }
+  /* Narrower on phones, but the same 30px height as the desktop chips so the
+     menu button beside them lines up exactly. */
+  .ant-tabs-tab {
+    padding: 0 6px 0 8px !important;
+    font-size: 12px !important;
+    margin-right: 3px !important;
+  }
+  .ant-tabs-tab .ant-tabs-tab-remove { width: 14px !important; height: 14px !important; font-size: 10px !important; }
   .ant-descriptions-item-label,
   .ant-descriptions-item-content { padding: 8px 12px !important; }
   h3.ant-typography { font-size: 18px !important; margin-top: 0 !important; }
@@ -539,7 +561,7 @@ code, pre, .mono {
 
 @media (max-width: 480px) {
   .ant-table { font-size: 12px; }
-  .ant-tabs-tab { padding: 4px 6px !important; font-size: 11px !important; }
+  .ant-tabs-tab { padding: 0 5px 0 7px !important; font-size: 11px !important; }
   .stat-card .stat-value { font-size: 18px !important; }
 }
 

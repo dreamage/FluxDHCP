@@ -329,14 +329,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
       )}
 
       {/* Mobile drawer sidebar */}
-      {isMobile && !mobileDrawer && (
-        <div onClick={() => setMobileDrawer(true)}
-          style={{ position: 'fixed', top: 4, left: 8, zIndex: 1100, cursor: 'pointer', height: 32,
-            display: 'flex', alignItems: 'center',
-            background: 'var(--color-hamburger-bg)', borderRadius: 8, padding: '0 8px', boxShadow: `0 2px 8px var(--color-hamburger-shadow)` }}>
-          <MenuOutlined style={{ fontSize: 18, color: 'var(--color-text-secondary)' }} />
-        </div>
-      )}
       {isMobile && mobileDrawer && (
         <>
           <div onClick={() => setMobileDrawer(false)}
@@ -352,9 +344,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       <Layout style={{ marginLeft: isMobile ? 0 : sidebarWidth, transition: 'margin-left 0.2s' }}>
         {/* Tab bar */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 9, background: 'var(--color-tab-bar-bg)', borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', height: 40, paddingLeft: isMobile ? 48 : 12, paddingRight: 12 }}>
-            <div style={{ flex: 1, overflow: 'hidden' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 9, background: 'var(--color-tabbar-bg)', borderBottom: '1px solid var(--color-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44, paddingLeft: 12, paddingRight: 12 }}>
+            {/* Menu button sits in the strip on mobile so it shares the tab chips' baseline */}
+            {isMobile && (
+              <div onClick={() => setMobileDrawer(true)} role="button" tabIndex={0}
+                aria-label={t('menu')} aria-expanded={mobileDrawer}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMobileDrawer(true); } }}
+                style={{ flexShrink: 0, cursor: 'pointer', height: 30,
+                  display: 'flex', alignItems: 'center',
+                  background: 'var(--color-tab-bar-bg)', border: '1px solid var(--color-border)',
+                  borderRadius: 6, padding: '0 7px' }}>
+                <MenuOutlined style={{ fontSize: 16, color: 'var(--color-text-secondary)' }} />
+              </div>
+            )}
+            <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
               <Tabs type="editable-card" activeKey={pageKey} onChange={handleTabChange}
                 onEdit={handleTabEdit} hideAdd size="small"
                 items={tabs.map(tab => ({ key: tab.key, label: tab.label, closable: tabs.length > 1 }))}
