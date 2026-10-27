@@ -2,8 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, Card, Collapse, Form, Input, Modal, Popconfirm, Radio, Space, Spin, Switch, Table, Tag, Typography } from 'antd';
-import { PlusOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Card, Form, Input, Modal, Popconfirm, Radio, Space, Spin, Switch, Table, Tag, Typography } from 'antd';
+import { PlusOutlined, CopyOutlined, DeleteOutlined, ApiOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { copyText } from '@/client/clipboard';
 import { apiErrorMessage } from '@/lib/api-error';
@@ -42,6 +42,7 @@ export default function ApiKeysCard() {
   const [rows, setRows] = useState<ApiKeyRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [agentOpen, setAgentOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [createdKey, setCreatedKey] = useState<{ name: string; key: string } | null>(null);
   const [form] = Form.useForm();
@@ -218,40 +219,16 @@ export default function ApiKeysCard() {
     },
   ];
 
-  const usage = (
-    <div style={{ fontSize: 13 }}>
-      <Paragraph type="secondary" style={{ margin: '0 0 8px' }}>
-        {t('apiAgentHint')}
-      </Paragraph>
-
-      <pre style={codeStyle}>{agentPrompt('fdx_xxxxxxxxxxxxxxxx')}</pre>
-
-      <Button size="small" icon={<CopyOutlined />} onClick={() => copy(agentPrompt('fdx_xxxxxxxxxxxxxxxx'), t('apiAgentCopied'))}>
-        {t('apiAgentCopy')}
-      </Button>
-
-      <Paragraph type="secondary" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
-        {t('apiUsageKeyHint')}
-      </Paragraph>
-
-      <Space wrap style={{ marginTop: 14 }}>
-        <span style={{ fontSize: 12, opacity: 0.65 }}>{t('apiUsageSkillHint')}</span>
-        <Button size="small" onClick={loadSkill}>{t('apiUsageSkillView')}</Button>
-        <Button size="small" onClick={downloadSkill}>{t('apiUsageSkillDownload')}</Button>
-      </Space>
-    </div>
-  );
-
   return (
     <Card style={{ marginBottom: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-        <Paragraph type="secondary" style={{ fontSize: 13, margin: 0 }}>
-          {t('apiAccessDesc')}
-        </Paragraph>
-        <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => setModalOpen(true)} style={{ flexShrink: 0 }}>
+      <Space size={8} wrap style={{ marginBottom: 12 }}>
+        <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
           {t('apiKeyCreate')}
         </Button>
-      </div>
+        <Button size="small" icon={<ApiOutlined />} onClick={() => setAgentOpen(true)}>
+          {t('apiUsageTitle')}
+        </Button>
+      </Space>
       <Table
         columns={columns}
         dataSource={rows}
@@ -263,15 +240,22 @@ export default function ApiKeysCard() {
         locale={{ emptyText: t('apiKeyEmpty') }}
       />
 
-      <Collapse
-        ghost
-        style={{ marginTop: 4 }}
-        items={[{
-          key: 'usage',
-          label: <Text strong>{t('apiUsageTitle')}</Text>,
-          children: usage,
-        }]}
-      />
+      <Modal
+        title={t('apiUsageTitle')}
+        open={agentOpen}
+        onCancel={() => setAgentOpen(false)}
+        width={620}
+        footer={[
+          <Button key="view" onClick={loadSkill}>{t('apiUsageSkillView')}</Button>,
+          <Button key="download" onClick={downloadSkill}>{t('apiUsageSkillDownload')}</Button>,
+          <Button key="copy" type="primary" icon={<CopyOutlined />}
+            onClick={() => copy(agentPrompt('fdx_xxxxxxxxxxxxxxxx'), t('apiAgentCopied'))}>
+            {t('apiAgentCopy')}
+          </Button>,
+        ]}
+      >
+        <pre style={codeStyle}>{agentPrompt('fdx_xxxxxxxxxxxxxxxx')}</pre>
+      </Modal>
 
       <Modal
         title={t('apiKeyCreate')}
@@ -287,15 +271,12 @@ export default function ApiKeysCard() {
           <Form.Item name="name" label={t('apiKeyName')} rules={[{ required: true, message: tc('requiredField') }]}>
             <Input placeholder={t('apiKeyNamePlaceholder')} maxLength={64} />
           </Form.Item>
-          <Form.Item name="scope" label={t('apiKeyScope')}>
+          <Form.Item name="scope" label={t('apiKeyScope')} tooltip={t('apiKeyScopeHelp')}>
             <Radio.Group>
               <Radio.Button value="read">{t('scopeRead')}</Radio.Button>
               <Radio.Button value="write">{t('scopeWrite')}</Radio.Button>
             </Radio.Group>
           </Form.Item>
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {t('apiKeyScopeHelp')}
-          </Text>
         </Form>
       </Modal>
 
@@ -320,9 +301,6 @@ export default function ApiKeysCard() {
 
         <div style={{ marginTop: 16 }}>
           <Text strong style={{ fontSize: 13 }}>{t('apiKeyConfigTitle')}</Text>
-          <Paragraph type="secondary" style={{ fontSize: 12, margin: '4px 0 0' }}>
-            {t('apiKeyConfigHint')}
-          </Paragraph>
           <pre style={codeStyle}>{agentPrompt(createdKey?.key ?? '')}</pre>
           <Button size="small" icon={<CopyOutlined />} onClick={() => createdKey && copy(agentPrompt(createdKey.key), t('apiAgentCopied'))}>
             {t('apiAgentCopy')}

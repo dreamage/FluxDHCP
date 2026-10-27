@@ -217,8 +217,8 @@ export default function OptionsPage() {
           <Form.Item name="option_value" label={t('optionValue')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="note" label={t('note')}>
-            <Input placeholder={t('notePlaceholder')} maxLength={200} />
+          <Form.Item name="note" label={t('note')} tooltip={t('noteHelp')}>
+            <Input maxLength={200} />
           </Form.Item>
         </Form>
       </Modal>

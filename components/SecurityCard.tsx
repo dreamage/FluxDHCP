@@ -2,13 +2,13 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, Card, Form, Input, Popconfirm, Space, Table, Tag, Typography } from 'antd';
-import { LockOutlined, SafetyOutlined } from '@ant-design/icons';
+import { Button, Card, Form, Input, Popconfirm, Space, Table, Tag, Tooltip, Typography } from 'antd';
+import { LockOutlined, SafetyOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { apiErrorMessage } from '@/lib/api-error';
 import { formatLocalTime } from '@/lib/format-time';
 
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 interface SessionRow {
   id: number;
@@ -125,10 +125,6 @@ export default function SecurityCard() {
       title={<span><SafetyOutlined style={{ marginRight: 8 }} />{t('security')}</span>}
       style={{ marginBottom: 16 }}
     >
-      <Paragraph type="secondary" style={{ fontSize: 13, marginBottom: 16 }}>
-        {t('securityDesc')}
-      </Paragraph>
-
       <Form form={form} layout="vertical" style={{ maxWidth: 420, marginBottom: 8 }}>
         <Form.Item name="current_password" label={t('currentPassword')}
           rules={[{ required: true, message: tc('requiredField') }]}>
@@ -150,9 +146,14 @@ export default function SecurityCard() {
           ]}>
           <Input.Password prefix={<LockOutlined />} autoComplete="new-password" />
         </Form.Item>
-        <Button type="primary" size="small" loading={saving} onClick={handleChangePassword}>
-          {t('changePassword')}
-        </Button>
+        <Space size={6}>
+          <Button type="primary" size="small" loading={saving} onClick={handleChangePassword}>
+            {t('changePassword')}
+          </Button>
+          <Tooltip title={t('securityChangePwdTip')}>
+            <InfoCircleOutlined style={{ color: 'var(--color-text-secondary)', cursor: 'help' }} />
+          </Tooltip>
+        </Space>
       </Form>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, margin: '20px 0 8px' }}>

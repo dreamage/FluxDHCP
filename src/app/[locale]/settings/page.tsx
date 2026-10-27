@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Form, InputNumber, Input, Button, Popconfirm, Space, Card, Row, Col, Upload, Modal, Checkbox, Select, Switch } from 'antd';
+import { Typography, Form, InputNumber, Input, Button, Popconfirm, Space, Card, Row, Col, Upload, Modal, Checkbox, Select, Switch, Alert } from 'antd';
 import { CheckCircleFilled, CloseCircleFilled, SaveOutlined, PlayCircleOutlined, PauseCircleOutlined, ExportOutlined, ImportOutlined, AppstoreOutlined, EnvironmentOutlined, ControlOutlined, StopOutlined, FileTextOutlined, BellOutlined, ToolOutlined, FieldTimeOutlined, ProfileOutlined, ClockCircleOutlined, KeyOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { ipRule } from '@/lib/validators';
@@ -416,7 +416,6 @@ export default function SettingsPage() {
             beforeUpload={(file) => { handleImport(file); return false; }}>
             <Button icon={<ImportOutlined />} size="small">{t('importConfig')}</Button>
           </Upload>
-          <Text type="secondary" style={{ fontSize: 13 }}>{t('importExportHelp')}</Text>
         </div>
       </Card>
 
@@ -445,7 +444,6 @@ export default function SettingsPage() {
         cancelText={tc('cancel')}
         confirmLoading={exporting}
       >
-        <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>{t('exportDesc')}</Text>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
           <Space size="small">
             <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setExportCats(CONFIG_CATEGORIES.map(c => c.key))}>{t('selectAll')}</Button>
@@ -473,7 +471,7 @@ export default function SettingsPage() {
       >
         {pendingImportData && (
           <div>
-            <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>{t('importConfirmDesc')}</Text>
+            <Alert type="warning" showIcon message={t('importOverwriteWarning')} style={{ marginBottom: 12 }} />
             {pendingImportData.exported_at && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '8px 12px', borderRadius: 8, background: 'var(--color-hover)', fontSize: 13 }}>
                 <ClockCircleOutlined style={{ color: 'var(--color-text-secondary)' }} />

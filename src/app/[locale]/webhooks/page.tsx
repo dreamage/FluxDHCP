@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Select, Switch, Popconfirm, Space, Tag, Divider, Alert } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Modal, Form, Input, Select, Switch, Popconfirm, Space, Tag, Divider, Alert, Tooltip } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined, MinusCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { EVENT_COLORS, EVENT_OPTIONS } from '@/lib/webhook-constants';
 import DeliveryLogs from './DeliveryLogs';
@@ -208,9 +208,16 @@ export default function WebhooksPage() {
             </Select>
           </Form.Item>
 
-          <div style={{ marginBottom: 8 }}>
+          <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
             <strong>{method === 'GET' ? t('queryParams') : t('bodyFields')}</strong>
-            <span style={{ color: '#94a3b8', fontSize: 12, marginLeft: 8 }}>{t('templateHint')}: {TEMPLATE_HINTS.join(' ')}</span>
+            <Tooltip title={
+              <div style={{ fontSize: 12 }}>
+                <div style={{ marginBottom: 4 }}>{t('templateHint')}</div>
+                <div style={{ fontFamily: 'var(--font-mono), monospace' }}>{TEMPLATE_HINTS.join('  ')}</div>
+              </div>
+            }>
+              <InfoCircleOutlined style={{ color: '#94a3b8', cursor: 'help' }} />
+            </Tooltip>
           </div>
           <Form.List name="fields">
             {(fields, { add, remove }) => (
