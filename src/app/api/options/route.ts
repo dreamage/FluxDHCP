@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   try {
     const db = getDb();
     const body = await request.json();
-    const { mac_address, option_code, option_value, option_name, enabled } = body;
+    const { mac_address, option_code, option_value, note, enabled } = body;
 
     if (!mac_address || option_code === undefined || !option_value) {
       return apiError('MISSING_REQUIRED_FIELDS', 'Missing required fields', 400, {
@@ -97,9 +97,9 @@ export async function POST(request: Request) {
     }
 
     const result = db.prepare(`
-      INSERT INTO device_options (mac_address, option_code, option_value, option_name, enabled)
+      INSERT INTO device_options (mac_address, option_code, option_value, note, enabled)
       VALUES (?, ?, ?, ?, ?)
-    `).run(mac, code, valueStr, option_name || null, enabled !== undefined ? (enabled ? 1 : 0) : 1);
+    `).run(mac, code, valueStr, note || null, enabled !== undefined ? (enabled ? 1 : 0) : 1);
 
     const created = db.prepare('SELECT * FROM device_options WHERE id = ?').get(result.lastInsertRowid) as any;
     return NextResponse.json(serializeRow(created), { status: 201 });

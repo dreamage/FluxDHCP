@@ -13,7 +13,7 @@ import { useMacNotes } from '@/hooks/useMacNotes';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import FilterPanel from '@/components/FilterPanel';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 // 常用 DHCP 选项码
 const COMMON_OPTIONS = [
@@ -123,7 +123,6 @@ export default function OptionsPage() {
         try { label = tOpt(String(code)); } catch { /* no translation */ }
         return label && label !== String(code) ? `${code} - ${label}` : String(code);
       } },
-    { title: t('optionName'), dataIndex: 'option_name', key: 'option_name', width: 120 },
     { title: t('optionValue'), dataIndex: 'option_value', key: 'option_value' },
     {
       title: t('status'), dataIndex: 'enabled', key: 'enabled', width: 100, align: 'center' as const,
@@ -132,6 +131,8 @@ export default function OptionsPage() {
           checkedChildren={t('enabled')} unCheckedChildren={t('disabled')} />
       ),
     },
+    { title: t('note'), dataIndex: 'note', key: 'note', width: 200,
+      render: (note: string | null) => note || <Text type="secondary">-</Text> },
     {
       title: tc('actions'), key: 'actions', width: 100, fixed: 'right' as const,
       render: (_: any, r: any) => (
@@ -213,9 +214,11 @@ export default function OptionsPage() {
                 </>
               )} />
           </Form.Item>
-          <Form.Item name="option_name" label={t('optionName')}><Input /></Form.Item>
           <Form.Item name="option_value" label={t('optionValue')} rules={[{ required: true }]}>
             <Input />
+          </Form.Item>
+          <Form.Item name="note" label={t('note')}>
+            <Input placeholder={t('notePlaceholder')} maxLength={200} />
           </Form.Item>
         </Form>
       </Modal>

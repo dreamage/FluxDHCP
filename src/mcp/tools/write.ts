@@ -125,7 +125,7 @@ export function registerWriteTools(server: McpServer, client: FluxClient) {
       mac_address: mac,
       option_code: z.number().int().min(1).max(254),
       option_value: z.string(),
-      option_name: z.string().optional(),
+      note: z.string().optional().describe('Free-text label for your own reference (shown in the web UI and option_list). Never sent to the device.'),
       enabled: z.boolean().optional().describe(
         'Default true. Set false to stop sending this option to the device: the row is kept but the pool default applies again. Omit to leave an existing row unchanged.',
       ),

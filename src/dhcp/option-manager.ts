@@ -8,7 +8,8 @@ export interface DeviceOption {
   mac_address: string;
   option_code: number;
   option_value: string;
-  option_name: string | null;
+  /** 仅用于界面识别的备注，不会下发给设备 */
+  note: string | null;
   /** 0 表示该选项已停用：保留记录但不下发，设备回落到地址池默认值 */
   enabled: number;
 }

@@ -88,6 +88,9 @@ export function getDatabase(dbPath?: string): Database.Database {
   // Migration: add enabled column to device_options if missing (disabled options stay stored but are not sent)
   try { db.exec("ALTER TABLE device_options ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1"); } catch { /* column already exists */ }
 
+  // Migration: option_name held a free-text label, never sent to the device — rename it to note
+  try { db.exec("ALTER TABLE device_options RENAME COLUMN option_name TO note"); } catch { /* already renamed (or fresh schema) */ }
+
   // Migration: rename log_retention_days → dhcp_log_retention_days
   try { db.exec("UPDATE config SET key = 'dhcp_log_retention_days' WHERE key = 'log_retention_days'"); } catch { /* already migrated */ }
 
