@@ -189,10 +189,11 @@ code, pre, .mono {
   display: none !important;
 }
 
-/* Editable-card tab close button */
+/* Editable-card tab close button. A negative end margin pulls the × into the
+   chip's right padding, which on phones leaves it almost touching the border. */
 .ant-tabs-tab .ant-tabs-tab-remove {
   margin-inline-start: 4px !important;
-  margin-inline-end: -2px !important;
+  margin-inline-end: 0 !important;
   font-size: 11px !important;
   width: 16px !important;
   height: 16px !important;
@@ -518,7 +519,7 @@ code, pre, .mono {
   /* Narrower on phones, but the same 30px height as the desktop chips so the
      menu button beside them lines up exactly. */
   .ant-tabs-tab {
-    padding: 0 6px 0 8px !important;
+    padding: 0 8px !important;
     font-size: 12px !important;
     margin-right: 3px !important;
   }
@@ -561,7 +562,7 @@ code, pre, .mono {
 
 @media (max-width: 480px) {
   .ant-table { font-size: 12px; }
-  .ant-tabs-tab { padding: 0 5px 0 7px !important; font-size: 11px !important; }
+  .ant-tabs-tab { padding: 0 6px 0 7px !important; font-size: 11px !important; }
   .stat-card .stat-value { font-size: 18px !important; }
 }
 
