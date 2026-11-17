@@ -567,6 +567,7 @@
     "templateHint": "可用变量",
     "fieldName": "参数名",
     "fieldValue": "参数值",
+    "escapeHint": "参数值支持转义：\\n 换行、\\t 制表符、\\\\ 反斜杠",
     "addField": "添加参数"
   },
   "webhookLogs": {

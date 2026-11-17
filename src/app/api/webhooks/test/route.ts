@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db-instance';
 import { validateWebhookUrl } from '@/lib/url-validate';
 import { apiError } from '@/lib/api-response';
 import { authorize } from '@/lib/api-auth';
+import { unescapeWebhookValue } from '@/lib/webhook-escape';
 
 export async function POST(request: Request) {
   const denied = authorize(request, 'write');
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
     };
 
     function resolveValue(template: string): string {
-      return template.replace(/\{\{(\w+)\}\}/g, (_, key) => testVars[key] ?? '');
+      return unescapeWebhookValue(template).replace(/\{\{(\w+)\}\}/g, (_, key) => testVars[key] ?? '');
     }
 
     const resolvedFields: Record<string, string> = {};

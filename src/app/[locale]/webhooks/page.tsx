@@ -6,6 +6,8 @@ import { Typography, Table, Button, Modal, Form, Input, Select, Switch, Popconfi
 import { PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined, MinusCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { EVENT_COLORS, EVENT_OPTIONS } from '@/lib/webhook-constants';
+import { translateError } from '@/lib/error-map';
+import { apiErrorMessage } from '@/lib/api-error';
 import DeliveryLogs from './DeliveryLogs';
 
 const { Title } = Typography;
@@ -79,7 +81,7 @@ export default function WebhooksPage() {
         body: JSON.stringify({ ...values, fields, headers: parsedHeaders }),
       });
       const result = await res.json();
-      if (!res.ok) { notify.error(result.error); return; }
+      if (!res.ok) { notify.error(apiErrorMessage(result)); return; }
       notify.success(editingRecord ? tc('updateSuccess') : tc('createSuccess'));
       setModalOpen(false);
       fetchData();
@@ -93,7 +95,7 @@ export default function WebhooksPage() {
     const res = await fetch(`/api/webhooks/${id}`, { method: 'DELETE' });
     if (!res.ok) {
       const result = await res.json().catch(() => ({}));
-      notify.error(result.error);
+      notify.error(apiErrorMessage(result));
       return;
     }
     notify.success(tc('deleteSuccess'));
@@ -108,7 +110,7 @@ export default function WebhooksPage() {
       });
       if (!res.ok) {
         const result = await res.json().catch(() => ({}));
-        notify.error(result.error);
+        notify.error(apiErrorMessage(result));
         return;
       }
       fetchData();
@@ -124,11 +126,17 @@ export default function WebhooksPage() {
         body: JSON.stringify({ id }),
       });
       const result = await res.json();
-      const msg = `${t(result.success ? 'testSuccess' : 'testFail')}${result.message ? ': ' + result.message : ''}`;
-      if (result.success) notify.success(msg);
-      else notify.warn(msg);
+      if (result.success) {
+        // 不拼接后端英文提示，避免出现「测试发送成功: Test sent successfully」
+        notify.success(t('testSuccess'));
+        return;
+      }
+      const detail = result.status
+        ? `HTTP ${result.status}`
+        : translateError(result.message || '', tc) || tc('unknownError');
+      notify.warn(`${t('testFail')}: ${detail}`);
     } catch (err: any) {
-      notify.error(`${t('testFail')}: ${err?.message || tc('unknownError')}`);
+      notify.error(`${t('testFail')}: ${translateError(err?.message || '', tc) || tc('unknownError')}`);
     }
   };
 
@@ -239,6 +247,7 @@ export default function WebhooksPage() {
               </>
             )}
           </Form.List>
+          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{t('escapeHint')}</div>
 
           <Form.Item name="headers" label={t('headers')}>
             <Input.TextArea rows={2} placeholder={t('headersPlaceholder')} />

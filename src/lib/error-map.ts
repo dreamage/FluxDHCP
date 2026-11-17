@@ -100,7 +100,7 @@ const PREFIX_MAP: Array<[string, string]> = [
 // For network/transport errors that aren't fixed strings (fetch reject / 5xx / timeout)
 const REGEX_MAP: Array<[RegExp, string]> = [
   [/^Failed to fetch$/i, 'errNetwork'],
-  [/NetworkError|ECONNREFUSED|network error/i, 'errNetwork'],
+  [/fetch failed|ECONNREFUSED|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up|NetworkError|network error/i, 'errNetwork'],
   [/timeout|aborted|ETIMEDOUT/i, 'errTimeout'],
   [/^Internal Server Error$/i, 'errServer'],
   [/^5\d{2}\b/, 'errServer'],

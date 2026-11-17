@@ -567,6 +567,7 @@
     "templateHint": "Available vars",
     "fieldName": "Name",
     "fieldValue": "Value",
+    "escapeHint": "Escapes supported in values: \\n newline, \\t tab, \\\\ backslash",
     "addField": "Add field"
   },
   "webhookLogs": {

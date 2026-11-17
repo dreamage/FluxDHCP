@@ -1,6 +1,7 @@
 import { getDb } from './db-instance';
 import { validateWebhookUrl } from './url-validate';
 import { formatLocalTime } from './format-time';
+import { unescapeWebhookValue } from './webhook-escape';
 
 const EVENT_MAP: Record<number, string> = {
   1: 'dhcp_discover',
@@ -61,7 +62,8 @@ function buildTemplateVars(data: Record<string, any>, eventName: string): Record
 }
 
 function resolveValue(template: string, vars: Record<string, string>): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? '');
+  // 先还原模板里的 \n \r \t \\ 转义，再替换变量（变量值本身保持原样）
+  return unescapeWebhookValue(template).replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? '');
 }
 
 function logDelivery(
