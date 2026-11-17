@@ -8,7 +8,7 @@ import { useNotify } from '@/hooks/useNotify';
 import { ipRule } from '@/lib/validators';
 import { translateError } from '@/lib/error-map';
 import { apiErrorMessage } from '@/lib/api-error';
-import { formatLocalTime } from '@/lib/format-time';
+import { formatLocalDate, formatLocalTime } from '@/lib/format-time';
 import { CONFIG_CATEGORIES, DEFAULT_EXPORT_KEYS } from '@/lib/config-categories';
 import SecurityCard from '@/components/SecurityCard';
 
@@ -149,7 +149,7 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `fluxdhcp-config-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `fluxdhcp-config-${formatLocalDate()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       notify.success(t('exportSuccess'));

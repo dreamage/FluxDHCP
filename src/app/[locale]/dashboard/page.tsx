@@ -161,7 +161,9 @@ export default function DashboardPage() {
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const res = await fetch('/api/dashboard');
+      // 传入浏览器时区偏移，让趋势图按本地日/小时分桶
+      const offset = -new Date().getTimezoneOffset();
+      const res = await fetch(`/api/dashboard?offset=${offset}`);
       if (!res.ok) {
         setError(tRef.current('fetchError') || 'Failed to load');
         if (!hasNotified.current) { notifyRef.current.fatal(tRef.current('fetchError') || 'Failed to load'); hasNotified.current = true; }

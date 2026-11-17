@@ -1,4 +1,14 @@
 /**
+ * Format a Date to a local-time `YYYY-MM-DD` key.
+ * Used for file names and day buckets, where a UTC date would be off by one
+ * for users east of UTC during the evening hours.
+ */
+export function formatLocalDate(d: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/**
  * Format a datetime string from the database (UTC) to local time, to the second.
  * Supports both old format (YYYY-MM-DD HH:MM:SS) and new ISO format (YYYY-MM-DDTHH:MM:SS.sssZ).
  *

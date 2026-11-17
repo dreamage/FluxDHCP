@@ -121,6 +121,23 @@ export function getDatabase(dbPath?: string): Database.Database {
   // Migration: remove deprecated language config key
   try { db.exec("DELETE FROM config WHERE key = 'language'"); } catch { /* no-op */ }
 
+  // Migration: declined_ips 曾用 ISO(带 T/Z) 写入 expires_at，而查询侧用 datetime('now') 做字符串比较。
+  // 同一 UTC 日期内 'T' > ' '，导致已过期的 IP 仍被判为“封禁中”，最多多封禁一天。
+  try {
+    db.exec("UPDATE declined_ips SET expires_at = replace(substr(expires_at, 1, 19), 'T', ' ') WHERE expires_at LIKE '%T%'");
+    db.exec("UPDATE declined_ips SET declined_at = replace(substr(declined_at, 1, 19), 'T', ' ') WHERE declined_at LIKE '%T%'");
+  } catch (err) {
+    console.error('[FluxDHCP] Failed to normalize declined_ips timestamps:', err);
+  }
+
+  // Migration: dhcp_logs.timestamp 早期版本用 datetime('now')（空格分隔）写入，与现在的 ISO 8601 混存，
+  // 会让按字符串前缀分桶的趋势统计漏数据。统一成 ISO 8601（同一时刻，无损）。
+  try {
+    db.exec("UPDATE dhcp_logs SET timestamp = replace(substr(timestamp, 1, 19), ' ', 'T') || '.000Z' WHERE timestamp GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]*'");
+  } catch (err) {
+    console.error('[FluxDHCP] Failed to normalize dhcp_logs timestamps:', err);
+  }
+
   // 执行索引创建
   for (const indexSql of CREATE_INDEXES) {
     db.exec(indexSql);

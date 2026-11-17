@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db-instance';
 import { DEFAULT_EXPORT_KEYS, CATEGORY_TABLES } from '@/lib/config-categories';
 import { serverError } from '@/lib/api-response';
 import { authorize } from '@/lib/api-auth';
+import { formatLocalDate } from '@/lib/format-time';
 
 // 各类别对应的查询 SQL(部分表排除敏感字段)
 const QUERY_SQL: Record<string, string> = {
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
     return new NextResponse(JSON.stringify(data, null, 2), {
       headers: {
         'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="fluxdhcp-config-${new Date().toISOString().slice(0, 10)}.json"`,
+        'Content-Disposition': `attachment; filename="fluxdhcp-config-${formatLocalDate()}.json"`,
       },
     });
   } catch (error) {

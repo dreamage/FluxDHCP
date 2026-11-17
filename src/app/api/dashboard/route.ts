@@ -17,43 +17,65 @@ interface TrendPoint {
 }
 
 /**
- * 生成连续时间桶键 (UTC)。
- * dhcp_logs.timestamp 为 ISO 8601 (含 'T')，故按前 13/10 字符切分即可。
+ * 客户端时区偏移（分钟，东为正，如北京为 480）。
+ * SQLite 无法按 IANA 时区换算，故由前端传入固定偏移；缺省为 0（UTC）。
  */
-function buildBucketKeys(count: number, unit: TrendUnit): string[] {
+function normalizeOffset(raw: string | null): number {
+  const n = Number(raw);
+  if (raw === null || raw === '' || !Number.isFinite(n)) return 0;
+  return Math.max(-720, Math.min(840, Math.round(n)));
+}
+
+/**
+ * 生成连续时间桶键（本地墙钟）。
+ * dhcp_logs.timestamp 为 ISO 8601 (含 'T')，故按前 13/10 字符切分即可。
+ * offsetMin 不为 0 时，桶边界与键都按该时区的本地日/小时对齐。
+ */
+function buildBucketKeys(count: number, unit: TrendUnit, offsetMin: number): string[] {
   const keys: string[] = [];
-  const now = new Date();
+  // 先把“现在”平移到本地墙钟，再用 UTC setter 做减法，得到本地桶键
+  const now = new Date(Date.now() + offsetMin * 60_000);
   for (let i = count - 1; i >= 0; i--) {
     const d = new Date(now);
     if (unit === 'hour') {
       d.setUTCHours(d.getUTCHours() - i, 0, 0, 0);
-      keys.push(d.toISOString().slice(0, 13)); // YYYY-MM-DDTHH
+      keys.push(d.toISOString().slice(0, 13)); // YYYY-MM-DDTHH（本地墙钟）
     } else {
       d.setUTCDate(d.getUTCDate() - i);
-      keys.push(d.toISOString().slice(0, 10)); // YYYY-MM-DD
+      keys.push(d.toISOString().slice(0, 10)); // YYYY-MM-DD（本地墙钟）
     }
   }
   return keys;
 }
 
+/** 本地墙钟桶键 → 对应的真实 UTC 时刻 */
+function bucketKeyToUtc(key: string, unit: TrendUnit, offsetMin: number): string {
+  const localMs = unit === 'hour'
+    ? Date.parse(`${key}:00:00Z`)
+    : Date.parse(`${key}T00:00:00Z`);
+  return new Date(localMs - offsetMin * 60_000).toISOString();
+}
+
 /**
  * 查询事件趋势并按连续桶补零，保证折线图曲线连续、无断点。
  */
-function queryTrend(db: ReturnType<typeof getDb>, unit: TrendUnit, count: number): TrendPoint[] {
-  const sliceLen = unit === 'hour' ? 13 : 10;
-  const keys = buildBucketKeys(count, unit);
+function queryTrend(db: ReturnType<typeof getDb>, unit: TrendUnit, count: number, offsetMin: number): TrendPoint[] {
+  const keys = buildBucketKeys(count, unit, offsetMin);
 
   // 起始时间精确取第一个桶的起点，避免漏掉首桶前段数据
-  const firstKey = keys[0];
-  const since = unit === 'hour' ? `${firstKey}:00:00.000Z` : `${firstKey}T00:00:00.000Z`;
+  const since = bucketKeyToUtc(keys[0], unit, offsetMin);
 
-  // 一次查询按 桶 + 消息类型 分组，既得总数也能得各类型明细
+  // 一次查询按 桶 + 消息类型 分组，既得总数也能得各类型明细。
+  // 桶键按客户端偏移换算成本地墙钟后再切分，跨时区也能对齐本地日/小时。
+  const bucketExpr = unit === 'hour'
+    ? "strftime('%Y-%m-%dT%H', timestamp, ?)"
+    : "strftime('%Y-%m-%d', timestamp, ?)";
   const rows = db.prepare(
-    `SELECT substr(timestamp, 1, ${sliceLen}) AS bucket, message_type AS type, COUNT(*) AS count
+    `SELECT ${bucketExpr} AS bucket, message_type AS type, COUNT(*) AS count
      FROM dhcp_logs
      WHERE timestamp >= ?
      GROUP BY bucket, type`
-  ).all(since) as Array<{ bucket: string; type: number; count: number }>;
+  ).all(`${offsetMin} minutes`, since) as Array<{ bucket: string; type: number; count: number }>;
 
   const agg = new Map<string, { total: number; byType: Record<number, number> }>();
   for (const r of rows) {
@@ -69,7 +91,8 @@ function queryTrend(db: ReturnType<typeof getDb>, unit: TrendUnit, count: number
   return keys.map(k => {
     const entry = agg.get(k);
     return {
-      t: unit === 'hour' ? `${k}:00:00.000Z` : `${k}T00:00:00.000Z`,
+      // 返回真实 UTC 时刻，前端 new Date(t) 按本地时区显示即得本地桶标签
+      t: bucketKeyToUtc(k, unit, offsetMin),
       count: entry?.total || 0,
       byType: entry?.byType || {},
     };
@@ -82,6 +105,9 @@ export async function GET(request: Request) {
 
   try {
     const db = getDb();
+    const { searchParams } = new URL(request.url);
+    // 趋势桶按客户端本地时区对齐；未传时保持 UTC（MCP 等调用方）
+    const trendOffset = normalizeOffset(searchParams.get('offset'));
 
     // ===== 基础统计（保留原有字段，向后兼容）=====
     const activeLeases = db.prepare(
@@ -165,9 +191,9 @@ export async function GET(request: Request) {
 
     // ===== 新增：事件趋势（24h/7d/30d，一次返回）=====
     const trends = {
-      h24: queryTrend(db, 'hour', 24),
-      d7: queryTrend(db, 'day', 7),
-      d30: queryTrend(db, 'day', 30),
+      h24: queryTrend(db, 'hour', 24, trendOffset),
+      d7: queryTrend(db, 'day', 7, trendOffset),
+      d30: queryTrend(db, 'day', 30, trendOffset),
     };
 
     // ===== 新增：Webhook 投递健康度（近 24h）=====

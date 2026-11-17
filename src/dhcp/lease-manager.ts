@@ -338,11 +338,13 @@ export class LeaseManager {
       const row = this.db.prepare("SELECT value FROM config WHERE key = 'decline_blacklist_duration'").get() as { value: string } | undefined;
       const duration = row ? parseInt(row.value, 10) : 3600;
       if (duration > 0) {
-        const expiresAt = new Date(Date.now() + duration * 1000).toISOString();
+        // expires_at 必须与查询侧的 datetime('now') 同格式（UTC、空格分隔、无毫秒），
+        // 否则字符串比较会在同一 UTC 日期内始终判定为“未过期”，IP 会被多封禁最多一天。
         this.db.prepare(
-          'INSERT OR REPLACE INTO declined_ips (ip_address, mac_address, declined_at, expires_at) VALUES (?, ?, datetime(\'now\'), ?)'
-        ).run(ip, mac.toUpperCase(), expiresAt);
-        console.log(`[LeaseManager] Blacklisted IP ${ip} until ${expiresAt} (DECLINE from ${mac})`);
+          `INSERT OR REPLACE INTO declined_ips (ip_address, mac_address, declined_at, expires_at)
+           VALUES (?, ?, datetime('now'), datetime('now', ?))`
+        ).run(ip, mac.toUpperCase(), `+${duration} seconds`);
+        console.log(`[LeaseManager] Blacklisted IP ${ip} for ${duration}s (DECLINE from ${mac})`);
       }
     } catch (err) {
       console.error('[LeaseManager] Failed to blacklist declined IP:', err);
