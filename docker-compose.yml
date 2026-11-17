@@ -15,3 +15,4 @@ services:
     environment:
       - DB_PATH=/data/fluxdhcp.db
       - NEXT_TELEMETRY_DISABLED=1
+      - TZ=${TZ:-Asia/Shanghai}    # 容器时区，影响 Webhook 的 {{datetime}} 等服务端时间

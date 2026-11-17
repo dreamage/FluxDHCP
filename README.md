@@ -82,8 +82,9 @@ npm run dev
 | `WEB_PORT` | `3000` | Web UI port |
 | `ADMIN_PASSWORD` | — | Initializes the admin password on first boot, removing the first-visitor window. Ignored once a password exists |
 | `FLUXDHCP_INTERNAL_URL` | `http://127.0.0.1:$WEB_PORT` | Base URL the MCP HTTP endpoint uses to call its own API |
+| `TZ` | `Asia/Shanghai` (Docker image) | Process time zone (IANA name). Affects server-generated times such as the `{{datetime}}` webhook variable |
 
-All four are optional. With no environment variables set, the server listens on `:3000` and keeps its data in `./data/fluxdhcp.db`. The Docker image already sets `DB_PATH=/data/fluxdhcp.db`, so the volume survives container rebuilds without extra configuration.
+All five are optional. With no environment variables set, the server listens on `:3000` and keeps its data in `./data/fluxdhcp.db`. The Docker image already sets `DB_PATH=/data/fluxdhcp.db` and `TZ=Asia/Shanghai`, so the volume survives container rebuilds and times are rendered in Beijing time; override `TZ` (e.g. `docker compose` env `TZ=Europe/Berlin`) if you are in another zone.
 
 ## Pages
 
@@ -158,7 +159,7 @@ Notes:
 | `{{pool_name}}` | IP pool name |
 | `{{mac_note}}` | Custom note for the MAC address |
 | `{{timestamp}}` | ISO 8601 timestamp |
-| `{{datetime}}` | Local date-time (e.g. `2026-07-23 12:34:56`) |
+| `{{datetime}}` | Local date-time in the server time zone (`TZ`, e.g. `2026-07-23 12:34:56`) |
 
 ## Screenshots
 

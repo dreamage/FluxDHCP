@@ -82,8 +82,9 @@ npm run dev
 | `WEB_PORT` | `3000` | Web 管理界面端口 |
 | `ADMIN_PASSWORD` | — | 首次启动时初始化管理密码，消除“先访问者先设置”的窗口期；已设置密码后忽略 |
 | `FLUXDHCP_INTERNAL_URL` | `http://127.0.0.1:$WEB_PORT` | MCP HTTP 端点回调自身 API 使用的地址 |
+| `TZ` | `Asia/Shanghai`（Docker 镜像）| 进程时区（IANA 名称），影响 Webhook 中 `{{datetime}}` 等服务端生成的时间 |
 
-这四项都是可选的。不设置任何环境变量时，服务监听 `:3000`，数据保存在 `./data/fluxdhcp.db`。Docker 镜像已经把 `DB_PATH` 设为 `/data/fluxdhcp.db`，所以重建容器不会丢数据，无需额外配置。
+这五项都是可选的。不设置任何环境变量时，服务监听 `:3000`，数据保存在 `./data/fluxdhcp.db`。Docker 镜像已经把 `DB_PATH` 设为 `/data/fluxdhcp.db`、`TZ` 设为 `Asia/Shanghai`，所以重建容器不会丢数据，时间也按北京时间输出；不在该时区时覆盖 `TZ` 即可（如 `TZ=Europe/Berlin`）。
 
 ## 页面说明
 
@@ -158,7 +159,7 @@ FluxDHCP 把 API 暴露成 MCP 工具，通过 Streamable HTTP 挂在 `POST /api
 | `{{pool_name}}` | IP 地址池名称 |
 | `{{mac_note}}` | MAC 地址的自定义备注 |
 | `{{timestamp}}` | ISO 8601 时间戳 |
-| `{{datetime}}` | 本地日期时间（如 `2026-07-23 12:34:56`）|
+| `{{datetime}}` | 服务端时区（`TZ`）下的日期时间（如 `2026-07-23 12:34:56`）|
 
 ## 界面截图
 

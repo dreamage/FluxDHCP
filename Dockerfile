@@ -22,6 +22,8 @@ ENV NODE_ENV=production
 ENV DB_PATH=/data/fluxdhcp.db
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV WEB_PORT=3000
+# 时区：Node 自带 ICU 时区数据，设 TZ 即可让服务端时间（如 Webhook 的 {{datetime}}）按本地时区计算
+ENV TZ=Asia/Shanghai
 
 # 安装 libcap 仅用于 setcap，同一层内清理不增加体积
 RUN apt-get update && \

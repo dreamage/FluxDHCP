@@ -57,6 +57,7 @@ function buildTemplateVars(data: Record<string, any>, eventName: string): Record
     pool_name: poolName,
     mac_note: macNote,
     timestamp: new Date().toISOString(),
+    // 依赖容器/进程时区（Dockerfile 与 docker-compose 已设置 TZ）
     datetime: formatLocalTime(new Date().toISOString()),
   };
 }

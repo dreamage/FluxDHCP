@@ -4,6 +4,7 @@ import { validateWebhookUrl } from '@/lib/url-validate';
 import { apiError } from '@/lib/api-response';
 import { authorize } from '@/lib/api-auth';
 import { unescapeWebhookValue } from '@/lib/webhook-escape';
+import { formatLocalTime } from '@/lib/format-time';
 
 export async function POST(request: Request) {
   const denied = authorize(request, 'write');
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
     let customHeaders: Record<string, string> = {};
     try { customHeaders = JSON.parse(webhook.headers || '{}'); } catch { /* ignore */ }
 
+    const now = new Date().toISOString();
     const testVars: Record<string, string> = {
       mac_address: 'AA:BB:CC:DD:EE:FF',
       ip_address: '192.168.1.100',
@@ -42,7 +44,8 @@ export async function POST(request: Request) {
       message_type: 'dhcp_ack',
       pool_name: 'test-pool',
       mac_note: 'test-note',
-      timestamp: new Date().toISOString(),
+      timestamp: now,
+      datetime: formatLocalTime(now),
     };
 
     function resolveValue(template: string): string {
