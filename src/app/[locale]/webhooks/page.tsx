@@ -134,7 +134,7 @@ export default function WebhooksPage() {
 
   const webhookColumns = [
     { title: t('name'), dataIndex: 'name', key: 'name', width: 120 },
-    { title: t('url'), dataIndex: 'url', key: 'url', ellipsis: true, render: (v: string) => <span style={{ fontSize: 12 }}>{v}</span> },
+    { title: t('url'), dataIndex: 'url', key: 'url', ellipsis: true, className: 'mono-cell', render: (v: string) => <span style={{ fontSize: 12 }}>{v}</span> },
     { title: t('method'), dataIndex: 'method', key: 'method', width: 70, render: (v: string) => <Tag color={v === 'POST' ? 'blue' : 'green'}>{v}</Tag> },
     { title: t('events'), dataIndex: 'events', key: 'events', width: 180,
       render: (v: any) => {
@@ -188,7 +188,7 @@ export default function WebhooksPage() {
         onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={640}>
         <Form form={form} layout="vertical">
           <Form.Item name="name" label={t('name')} rules={[{ required: true }]}><Input placeholder={t('namePlaceholder')} /></Form.Item>
-          <Form.Item name="url" label={t('url')} rules={[{ required: true }]}><Input placeholder={t('urlPlaceholder')} /></Form.Item>
+          <Form.Item name="url" label={t('url')} rules={[{ required: true }]}><Input className="mono-input" placeholder={t('urlPlaceholder')} /></Form.Item>
           <Space style={{ width: '100%' }} align="start">
             <Form.Item name="method" label={t('method')} rules={[{ required: true }]} style={{ width: 120 }}>
               <Select><Select.Option value="POST">POST</Select.Option><Select.Option value="GET">GET</Select.Option></Select>

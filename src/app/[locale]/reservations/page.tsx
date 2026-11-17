@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, Switch, Popconfirm, Select, Space, Alert } from 'antd';
+import { Typography, Table, Button, Modal, Form, Input, Switch, Popconfirm, Select, Space, Alert, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
@@ -160,10 +160,13 @@ export default function ReservationsPage() {
   };
 
   const columns = [
-    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200,
+    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200, className: 'mono-cell',
       render: (mac: string) => <MacAddress mac={mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} /> },
-    { title: t('ipAddress'), dataIndex: 'ip_address', key: 'ip_address', width: 130 },
-    { title: t('hostname'), dataIndex: 'hostname', key: 'hostname', width: 120 },
+    { title: t('ipAddress'), dataIndex: 'ip_address', key: 'ip_address', width: 130, className: 'mono-cell' },
+    {
+      title: t('hostname'), dataIndex: 'hostname', key: 'hostname', width: 160, className: 'mono-cell', ellipsis: { showTitle: false },
+      render: (v: string) => v ? <Tooltip title={v} placement="topLeft"><span>{v}</span></Tooltip> : null,
+    },
     { title: t('pool'), dataIndex: 'pool_name', key: 'pool_name', width: 100 },
     { title: t('description'), dataIndex: 'description', key: 'description', ellipsis: true },
     {
@@ -225,15 +228,15 @@ export default function ReservationsPage() {
             </Form.Item>
           <Form.Item name="ipStart" label={t('ipRange')} dependencies={['ipEnd']}
             rules={ruleSet.start}>
-            <Input size="small" placeholder={t('ipStartPlaceholder')} style={{ width: 150 }} />
+            <Input size="small" className="mono-input" placeholder={t('ipStartPlaceholder')} style={{ width: 150 }} />
           </Form.Item>
           <span style={{ alignSelf: 'center', color: 'var(--color-text-secondary)' }}>~</span>
           <Form.Item name="ipEnd" dependencies={['ipStart']}
             rules={ruleSet.end}>
-            <Input size="small" placeholder={t('ipEndPlaceholder')} style={{ width: 150 }} />
+            <Input size="small" className="mono-input" placeholder={t('ipEndPlaceholder')} style={{ width: 150 }} />
           </Form.Item>
             <Form.Item name="mac" label={t('macAddress')}>
-              <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+              <Input size="small" className="mono-input" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
             </Form.Item>
             <Form.Item name="hostname" label={t('hostname')}>
               <Input size="small" placeholder={t('hostnamePlaceholder')} style={{ width: 150 }} allowClear />

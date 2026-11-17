@@ -118,8 +118,8 @@ export default function MacNotesPage() {
 
   const columns = [
     {
-      title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 220,
-      render: (mac: string) => <span style={{ fontFamily: "var(--font-jetbrains-mono), monospace", fontSize: 13 }}>{mac}</span>,
+      title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200, className: 'mono-cell',
+      render: (mac: string) => <span>{mac}</span>,
       sorter: (a: MacNoteRow, b: MacNoteRow) => a.mac_address.localeCompare(b.mac_address),
     },
     {
@@ -128,11 +128,11 @@ export default function MacNotesPage() {
       render: (note: string) => <Text>{note}</Text>,
     },
     {
-      title: t('updatedAt'), dataIndex: 'updated_at', key: 'updated_at', width: 170,
+      title: t('updatedAt'), dataIndex: 'updated_at', key: 'updated_at', width: 180, className: 'mono-cell',
       sorter: (a: MacNoteRow, b: MacNoteRow) => (a.updated_at || '').localeCompare(b.updated_at || ''),
       render: (v: string) => v ? formatLocalTime(v) : '',
     },
-    { title: t('createdAt'), dataIndex: 'created_at', key: 'created_at', width: 170,
+    { title: t('createdAt'), dataIndex: 'created_at', key: 'created_at', width: 180, className: 'mono-cell',
       render: (v: string) => v ? formatLocalTime(v) : '',
     },
     {
@@ -171,7 +171,7 @@ export default function MacNotesPage() {
         onReset={handleReset}
       >
         <Form.Item name="mac" label={t('macAddress')}>
-          <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+          <Input size="small" className="mono-input" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
         </Form.Item>
         <Form.Item name="note" label={t('note')}>
           <Input size="small" placeholder={t('placeholder')} style={{ width: 200 }} allowClear />

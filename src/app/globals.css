@@ -104,6 +104,25 @@ code, pre, .mono {
   font-family: var(--font-mono) !important;
 }
 
+/* Data columns — times, MACs, IPs, URLs, status codes — all use the mono face.
+   Equal-width glyphs keep values aligned down the column, and nowrap stops a
+   date from breaking into two lines when the column is a little tight.
+   The size is relative so the mobile table font-size still cascades through. */
+.mono-cell {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* MAC / IP / URL inputs: the value being typed is digits and ASCII letters,
+   so the mono face keeps it readable and easy to compare against the table. */
+.mono-input,
+.mono-input input,
+input.mono-input {
+  font-family: var(--font-mono);
+}
+
 /* ========== Page Transition ========== */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }

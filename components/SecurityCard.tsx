@@ -3,12 +3,25 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button, Card, Form, Input, Popconfirm, Space, Table, Tag, Tooltip, Typography } from 'antd';
-import { LockOutlined, SafetyOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { LockOutlined, SafetyOutlined, InfoCircleOutlined, ReloadOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useNotify } from '@/hooks/useNotify';
 import { apiErrorMessage } from '@/lib/api-error';
 import { formatLocalTime } from '@/lib/format-time';
 
 const { Text } = Typography;
+
+/**
+ * 本卡片内的所有按钮共用一套紧凑尺寸。
+ * 系统主题把 controlHeight 调到了 36，默认字号偏大，工具栏按钮和表格行内按钮
+ * 会呈现出不同高度；这里显式锁定，保证二者高度、字号、圆角完全一致。
+ */
+const COMPACT_BTN: React.CSSProperties = {
+  height: 26,
+  minHeight: 26,
+  paddingInline: 10,
+  fontSize: 12,
+  borderRadius: 6,
+};
 
 interface SessionRow {
   id: number;
@@ -93,30 +106,37 @@ export default function SecurityCard() {
 
   const columns = [
     {
-      title: t('sessionCreated'), dataIndex: 'created_at', key: 'created_at', width: 170,
+      title: t('sessionCreated'), dataIndex: 'created_at', key: 'created_at', width: 180, className: 'mono-cell',
       render: (v: string) => formatLocalTime(v),
     },
     {
-      title: t('sessionLastSeen'), dataIndex: 'last_seen_at', key: 'last_seen_at', width: 170,
+      title: t('sessionLastSeen'), dataIndex: 'last_seen_at', key: 'last_seen_at', width: 180, className: 'mono-cell',
       render: (v: string | null) => v ? formatLocalTime(v) : '-',
     },
     {
-      title: t('sessionExpires'), dataIndex: 'expires_at', key: 'expires_at', width: 170,
+      title: t('sessionExpires'), dataIndex: 'expires_at', key: 'expires_at', width: 180, className: 'mono-cell',
       render: (v: string) => formatLocalTime(v),
     },
     {
-      title: t('sessionAgent'), dataIndex: 'user_agent', key: 'user_agent', ellipsis: true,
+      title: t('sessionAgent'), dataIndex: 'user_agent', key: 'user_agent', ellipsis: true, className: 'mono-cell',
       render: (v: string | null) => <Text type="secondary" style={{ fontSize: 12 }}>{v || '-'}</Text>,
     },
     {
-      title: tc('actions'), key: 'actions', width: 90, align: 'right' as const,
-      render: (_: unknown, row: SessionRow) => row.current
-        ? <Tag color="green">{t('sessionCurrent')}</Tag>
-        : (
-          <Popconfirm title={t('sessionRevokeConfirm')} onConfirm={() => handleRevoke(row.id)}>
-            <Button size="small" danger>{t('sessionRevoke')}</Button>
-          </Popconfirm>
-        ),
+      title: tc('actions'), key: 'actions', width: 92, align: 'right' as const,
+      render: (_: unknown, row: SessionRow) => (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          {row.current ? (
+            <Tag color="green" style={{ marginInlineEnd: 0 }}>{t('sessionCurrent')}</Tag>
+          ) : (
+            <Popconfirm title={t('sessionRevokeConfirm')} onConfirm={() => handleRevoke(row.id)}>
+              {/* 行内动作改成文字按钮：表格里不再是一排描边小方框，与工具栏按钮拉开层级 */}
+              <Button type="link" size="small" danger style={{ ...COMPACT_BTN, paddingInline: 2 }}>
+                {t('sessionRevoke')}
+              </Button>
+            </Popconfirm>
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -146,8 +166,8 @@ export default function SecurityCard() {
           ]}>
           <Input.Password prefix={<LockOutlined />} autoComplete="new-password" />
         </Form.Item>
-        <Space size={6}>
-          <Button type="primary" size="small" loading={saving} onClick={handleChangePassword}>
+        <Space size={8}>
+          <Button type="primary" size="small" loading={saving} style={COMPACT_BTN} onClick={handleChangePassword}>
             {t('changePassword')}
           </Button>
           <Tooltip title={t('securityChangePwdTip')}>
@@ -158,10 +178,14 @@ export default function SecurityCard() {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, margin: '20px 0 8px' }}>
         <Text strong>{t('sessionsTitle')}</Text>
-        <Space>
-          <Button size="small" onClick={fetchSessions} loading={loading}>{t('sessionRefresh')}</Button>
+        <Space size={8} wrap>
+          <Button size="small" icon={<ReloadOutlined />} style={COMPACT_BTN} onClick={fetchSessions} loading={loading}>
+            {t('sessionRefresh')}
+          </Button>
           <Popconfirm title={t('sessionsRevokeOthersConfirm')} onConfirm={handleRevokeOthers}>
-            <Button size="small" danger>{t('sessionsRevokeOthers')}</Button>
+            <Button size="small" danger icon={<LogoutOutlined />} style={COMPACT_BTN}>
+              {t('sessionsRevokeOthers')}
+            </Button>
           </Popconfirm>
         </Space>
       </div>
@@ -172,7 +196,7 @@ export default function SecurityCard() {
         rowKey="id"
         size="small"
         pagination={false}
-        scroll={{ x: 'max-content' }}
+        scroll={{ x: 820 }}
         locale={{ emptyText: tc('noData') }}
       />
     </Card>

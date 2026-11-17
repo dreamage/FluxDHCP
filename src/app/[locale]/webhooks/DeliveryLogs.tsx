@@ -69,7 +69,7 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
 
   const logColumns: ColumnsType<any> = [
     {
-      title: tLogs('time'), dataIndex: 'created_at', key: 'created_at', width: 150,
+      title: tLogs('time'), dataIndex: 'created_at', key: 'created_at', width: 180, className: 'mono-cell',
       render: (v: string) => formatLocalTime(v),
     },
     {
@@ -89,22 +89,24 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
       render: (status: string) => <Tag color={DELIVERY_STATUS_COLORS[status] || 'default'}>{tLogs(status) || status}</Tag>,
     },
     {
-      title: tLogs('httpStatus'), dataIndex: 'http_status', key: 'http_status', width: 60,
+      title: tLogs('httpStatus'), dataIndex: 'http_status', key: 'http_status', width: 60, className: 'mono-cell',
       render: (code: number | null) => code ? <Text code style={{ fontSize: 12 }}>{code}</Text> : <Text type="secondary">-</Text>,
     },
     {
-      title: tLogs('attempt'), key: 'attempt', width: 60,
+      title: tLogs('attempt'), key: 'attempt', width: 100,
       render: (_: any, r: any) => {
-        if (r.status === 'success' && r.attempt === 1) return <Tag color="green" style={{ fontSize: 11 }}>{tLogs('firstAttempt')}</Tag>;
-        return <Text type="secondary" style={{ fontSize: 12 }}>{r.attempt}/{r.max_attempts}</Text>;
+        if (r.status === 'success' && r.attempt === 1) {
+          return <Tag color="green" style={{ fontSize: 11, marginInlineEnd: 0, whiteSpace: 'nowrap' }}>{tLogs('firstAttempt')}</Tag>;
+        }
+        return <Text type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{r.attempt}/{r.max_attempts}</Text>;
       },
     },
     {
-      title: tLogs('method'), dataIndex: 'method', key: 'method', width: 55,
-      render: (m: string) => <Tag color={m === 'POST' ? 'blue' : 'green'}>{m}</Tag>,
+      title: tLogs('method'), dataIndex: 'method', key: 'method', width: 80,
+      render: (m: string) => <Tag color={m === 'POST' ? 'blue' : 'green'} style={{ marginInlineEnd: 0 }}>{m}</Tag>,
     },
     {
-      title: tLogs('url'), dataIndex: 'url', key: 'url', ellipsis: true,
+      title: tLogs('url'), dataIndex: 'url', key: 'url', ellipsis: true, className: 'mono-cell',
       render: (url: string) => <Text style={{ fontSize: 12 }} ellipsis>{url}</Text>,
     },
     {
@@ -146,7 +148,7 @@ export default function DeliveryLogs({ webhooks }: DeliveryLogsProps) {
 
       <Table columns={logColumns} dataSource={logs} rowKey="id" loading={logsLoading} size="small"
         locale={{ emptyText: tc('noData') }}
-        scroll={{ x: 900 }}
+        scroll={{ x: 1000 }}
         pagination={{ current: logsPage, pageSize: logsPageSize, total: logsTotal, showSizeChanger: true, pageSizeOptions: [20, 50, 100], onChange: (p, ps) => { setLogsPage(p); setLogsPageSize(ps); } }} />
     </>
   );

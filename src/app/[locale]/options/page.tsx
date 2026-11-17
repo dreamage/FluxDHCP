@@ -115,15 +115,15 @@ export default function OptionsPage() {
   };
 
   const columns = [
-    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200,
+    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200, className: 'mono-cell',
       render: (mac: string) => <MacAddress mac={mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} /> },
-    { title: t('optionCode'), dataIndex: 'option_code', key: 'option_code', width: 140,
+    { title: t('optionCode'), dataIndex: 'option_code', key: 'option_code', width: 140, className: 'mono-cell',
       render: (code: number) => {
         let label = '';
         try { label = tOpt(String(code)); } catch { /* no translation */ }
         return label && label !== String(code) ? `${code} - ${label}` : String(code);
       } },
-    { title: t('optionValue'), dataIndex: 'option_value', key: 'option_value' },
+    { title: t('optionValue'), dataIndex: 'option_value', key: 'option_value', className: 'mono-cell' },
     {
       title: t('status'), dataIndex: 'enabled', key: 'enabled', width: 100, align: 'center' as const,
       render: (enabled: number, r: any) => (
@@ -169,7 +169,7 @@ export default function OptionsPage() {
         onReset={handleReset}
       >
         <Form.Item name="mac" label={t('macAddress')}>
-          <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+          <Input size="small" className="mono-input" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
         </Form.Item>
         <Form.Item name="option_code" label={t('optionCode')}>
           <InputNumber size="small" min={1} max={254} placeholder={t('customCode')} style={{ width: 140 }} />

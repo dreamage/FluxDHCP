@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Select, Space, Row, Col, Spin, Segmented, Alert } from 'antd';
+import { Typography, Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Select, Space, Row, Col, Spin, Segmented, Alert, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ColumnHeightOutlined, ExpandOutlined, ShrinkOutlined, AppstoreOutlined, UnorderedListOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import { isValidIPv4, ipToNum, isIPInSubnet } from '@/lib/ip-utils';
 import { ipRule } from '@/lib/validators';
@@ -264,7 +264,7 @@ export default function PoolsPage() {
             locale={{ emptyText: tc('noData') }}
             scroll={{ y: 400 }}
             columns={[
-              { title: t('listIp'), dataIndex: 'ip', key: 'ip', width: 130, fixed: 'left' as const },
+              { title: t('listIp'), dataIndex: 'ip', key: 'ip', width: 130, fixed: 'left' as const, className: 'mono-cell' },
               {
                 title: t('listStatus'), key: 'status', width: 150,
                 render: (_: any, item: any) => {
@@ -288,8 +288,11 @@ export default function PoolsPage() {
                   return <Tag style={{ background: bg, color: textColor, border: 'none', borderBottom: isRA ? '2px solid var(--color-ip-reserved)' : undefined }}>{text}</Tag>;
                 },
               },
-              { title: t('listMac'), dataIndex: 'mac', key: 'mac', width: 160, render: (v: string) => v || '-' },
-              { title: t('listHostname'), dataIndex: 'hostname', key: 'hostname', width: 150, render: (v: string) => v || '-' },
+              { title: t('listMac'), dataIndex: 'mac', key: 'mac', width: 160, render: (v: string) => v || '-', className: 'mono-cell' },
+              {
+                title: t('listHostname'), dataIndex: 'hostname', key: 'hostname', width: 150, className: 'mono-cell', ellipsis: { showTitle: false },
+                render: (v: string) => v ? <Tooltip title={v} placement="topLeft"><span>{v}</span></Tooltip> : <span>-</span>,
+              },
               { title: t('listReservationNote'), dataIndex: 'reservationNote', key: 'reservationNote', width: 160, render: (v: string) => v || '-' },
               { title: t('listMacNote'), dataIndex: 'note', key: 'note', render: (v: string) => v || '-' },
             ]}
@@ -301,10 +304,10 @@ export default function PoolsPage() {
 
   const columns = [
     { title: t('name'), dataIndex: 'name', key: 'name', width: 120 },
-    { title: t('subnet'), dataIndex: 'subnet', key: 'subnet', width: 140 },
-    { title: t('range'), key: 'range', width: 240, render: (_: any, r: any) => `${r.start_ip} - ${r.end_ip}` },
-    { title: t('gateway'), dataIndex: 'gateway', key: 'gateway', width: 140 },
-    { title: t('leaseTime'), dataIndex: 'lease_time', key: 'lease_time', width: 140, render: (v: number) => formatLeaseTime(v, t) },
+    { title: t('subnet'), dataIndex: 'subnet', key: 'subnet', width: 140, className: 'mono-cell' },
+    { title: t('range'), key: 'range', width: 240, className: 'mono-cell', render: (_: any, r: any) => `${r.start_ip} - ${r.end_ip}` },
+    { title: t('gateway'), dataIndex: 'gateway', key: 'gateway', width: 140, className: 'mono-cell' },
+    { title: t('leaseTime'), dataIndex: 'lease_time', key: 'lease_time', width: 140, className: 'mono-cell', render: (v: number) => formatLeaseTime(v, t) },
     {
       title: t('status'), key: 'status', width: 100,
       render: (_: any, r: any) => (
@@ -376,14 +379,14 @@ export default function PoolsPage() {
             <Input placeholder={t('namePlaceholder')} />
           </Form.Item>
           <Row gutter={16}>
-            <Col span={12}><Form.Item name="subnet" label={t('subnet')} rules={[{ required: true }, ipRule(tc)]}><Input placeholder={t('subnetPlaceholder')} /></Form.Item></Col>
-            <Col span={12}><Form.Item name="netmask" label={t('netmask')} rules={[{ required: true }, ipRule(tc)]}><Input placeholder={t('netmaskPlaceholder')} /></Form.Item></Col>
+            <Col span={12}><Form.Item name="subnet" label={t('subnet')} rules={[{ required: true }, ipRule(tc)]}><Input className="mono-input" placeholder={t('subnetPlaceholder')} /></Form.Item></Col>
+            <Col span={12}><Form.Item name="netmask" label={t('netmask')} rules={[{ required: true }, ipRule(tc)]}><Input className="mono-input" placeholder={t('netmaskPlaceholder')} /></Form.Item></Col>
           </Row>
           <Row gutter={16}>
-            <Col span={12}><Form.Item name="start_ip" label={t('startIp')} dependencies={['end_ip', 'subnet', 'netmask']} rules={[{ required: true }, ipRule(tc), subnetRule, ({ getFieldValue }) => ({ validator(_: any, value: string) { const end = getFieldValue('end_ip'); if (value && end && isValidIPv4(value) && isValidIPv4(end) && ipToNum(value) > ipToNum(end)) return Promise.reject(tc('errStartIpGreaterThanEnd')); return Promise.resolve(); } })]}><Input placeholder={t('startIpPlaceholder')} /></Form.Item></Col>
-            <Col span={12}><Form.Item name="end_ip" label={t('endIp')} dependencies={['start_ip', 'subnet', 'netmask']} rules={[{ required: true }, ipRule(tc), subnetRule, ({ getFieldValue }) => ({ validator(_: any, value: string) { const start = getFieldValue('start_ip'); if (value && start && isValidIPv4(value) && isValidIPv4(start) && ipToNum(value) < ipToNum(start)) return Promise.reject(tc('errStartIpGreaterThanEnd')); return Promise.resolve(); } })]}><Input placeholder={t('endIpPlaceholder')} /></Form.Item></Col>
+            <Col span={12}><Form.Item name="start_ip" label={t('startIp')} dependencies={['end_ip', 'subnet', 'netmask']} rules={[{ required: true }, ipRule(tc), subnetRule, ({ getFieldValue }) => ({ validator(_: any, value: string) { const end = getFieldValue('end_ip'); if (value && end && isValidIPv4(value) && isValidIPv4(end) && ipToNum(value) > ipToNum(end)) return Promise.reject(tc('errStartIpGreaterThanEnd')); return Promise.resolve(); } })]}><Input className="mono-input" placeholder={t('startIpPlaceholder')} /></Form.Item></Col>
+            <Col span={12}><Form.Item name="end_ip" label={t('endIp')} dependencies={['start_ip', 'subnet', 'netmask']} rules={[{ required: true }, ipRule(tc), subnetRule, ({ getFieldValue }) => ({ validator(_: any, value: string) { const start = getFieldValue('start_ip'); if (value && start && isValidIPv4(value) && isValidIPv4(start) && ipToNum(value) < ipToNum(start)) return Promise.reject(tc('errStartIpGreaterThanEnd')); return Promise.resolve(); } })]}><Input className="mono-input" placeholder={t('endIpPlaceholder')} /></Form.Item></Col>
           </Row>
-          <Form.Item name="gateway" label={t('gateway')} dependencies={['subnet', 'netmask']} rules={[ipRule(tc), subnetRule]}><Input placeholder={t('gatewayPlaceholder')} /></Form.Item>
+          <Form.Item name="gateway" label={t('gateway')} dependencies={['subnet', 'netmask']} rules={[ipRule(tc), subnetRule]}><Input className="mono-input" placeholder={t('gatewayPlaceholder')} /></Form.Item>
           <Form.Item name="dns_servers" label={t('dns')} rules={[{ validator: (_: any, value: string[]) => { if (!value || value.length === 0) return Promise.resolve(); for (const v of value) { if (!isValidIPv4(v)) return Promise.reject(tc('invalidIpv4')); } return Promise.resolve(); } }]}>
             <Select mode="tags" placeholder={t('dnsPlaceholder')} />
           </Form.Item>

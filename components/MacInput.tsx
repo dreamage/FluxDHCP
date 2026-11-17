@@ -73,6 +73,7 @@ const MacInput = forwardRef<any, MacInputProps>(({ value, onChange, onSelect, pl
         (option?.value as string)?.toUpperCase().includes(inputValue.toUpperCase()) ||
         (macNotes[option?.value as string] || '').toLowerCase().includes(inputValue.toLowerCase())
       }
+      className="mono-input"
       style={{ width: '100%' }}
     />
   );

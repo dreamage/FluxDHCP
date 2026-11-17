@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Tag, Select, Popconfirm, Button, Modal, Form, Input, Space, Alert } from 'antd';
+import { Typography, Table, Tag, Select, Popconfirm, Button, Modal, Form, Input, Space, Alert, Tooltip } from 'antd';
 import { DeleteOutlined, UndoOutlined, PlusOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import MacInput from '@/components/MacInput';
@@ -149,17 +149,20 @@ export default function LeasesPage() {
   };
 
   const columns = [
-    { title: t('ipAddress'), dataIndex: 'ip_address', key: 'ip_address', width: 130, sorter: true },
-    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200, sorter: true,
+    { title: t('ipAddress'), dataIndex: 'ip_address', key: 'ip_address', width: 130, sorter: true, className: 'mono-cell' },
+    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200, sorter: true, className: 'mono-cell',
       render: (mac: string) => <MacAddress mac={mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} /> },
-    { title: t('hostname'), dataIndex: 'hostname', key: 'hostname', width: 120, sorter: true },
+    {
+      title: t('hostname'), dataIndex: 'hostname', key: 'hostname', width: 160, sorter: true, className: 'mono-cell', ellipsis: { showTitle: false },
+      render: (v: string) => v ? <Tooltip title={v} placement="topLeft"><span>{v}</span></Tooltip> : null,
+    },
     {
       title: t('state'), dataIndex: 'state', key: 'state', width: 100, sorter: true,
       render: (state: string) => <Tag color={STATE_COLORS[state] || 'default'}>{t(state.toLowerCase())}</Tag>,
     },
-    { title: t('startTime'), dataIndex: 'lease_start', key: 'lease_start', width: 170, sorter: true,
+    { title: t('startTime'), dataIndex: 'lease_start', key: 'lease_start', width: 180, sorter: true, className: 'mono-cell',
       render: (v: string) => formatLocalTime(v) },
-    { title: t('endTime'), dataIndex: 'lease_end', key: 'lease_end', width: 170, sorter: true,
+    { title: t('endTime'), dataIndex: 'lease_end', key: 'lease_end', width: 180, sorter: true, className: 'mono-cell',
       render: (v: string) => formatLocalTime(v) },
     { title: t('pool'), dataIndex: 'pool_name', key: 'pool_name', width: 100, sorter: true },
     {
@@ -241,15 +244,15 @@ export default function LeasesPage() {
           </Form.Item>
           <Form.Item name="ipStart" label={t('ipRange')} dependencies={['ipEnd']}
             rules={ruleSet.start}>
-            <Input size="small" placeholder={t('ipStartPlaceholder')} style={{ width: 150 }} />
+            <Input size="small" className="mono-input" placeholder={t('ipStartPlaceholder')} style={{ width: 150 }} />
           </Form.Item>
           <span style={{ alignSelf: 'center', color: 'var(--color-text-secondary)' }}>~</span>
           <Form.Item name="ipEnd" dependencies={['ipStart']}
             rules={ruleSet.end}>
-            <Input size="small" placeholder={t('ipEndPlaceholder')} style={{ width: 150 }} />
+            <Input size="small" className="mono-input" placeholder={t('ipEndPlaceholder')} style={{ width: 150 }} />
           </Form.Item>
           <Form.Item name="mac" label={t('macAddress')}>
-            <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+            <Input size="small" className="mono-input" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
           </Form.Item>
           <Form.Item name="hostname" label={t('hostname')}>
             <Input size="small" placeholder={t('hostnamePlaceholder')} style={{ width: 150 }} allowClear />

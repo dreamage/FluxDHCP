@@ -544,7 +544,7 @@ export default function DashboardPage() {
                             <MacAddress mac={event.client_mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} />
                             {event.hostname && <Text type="secondary" style={{ fontSize: 12 }}>({event.hostname})</Text>}
                           </Space>
-                          <Text className="tl-time" type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{formatLocalTime(event.timestamp)}</Text>
+                          <Text className="tl-time" type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)' }}>{formatLocalTime(event.timestamp)}</Text>
                         </div>
                         {event.server_response ? (
                           <Tooltip title={translateServerResponse(event.server_response, tSr)}>

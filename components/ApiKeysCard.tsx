@@ -183,7 +183,7 @@ export default function ApiKeysCard() {
   const columns = [
     { title: t('apiKeyName'), dataIndex: 'name', key: 'name' },
     {
-      title: t('apiKeyPrefix'), dataIndex: 'key_prefix', key: 'key_prefix', width: 160,
+      title: t('apiKeyPrefix'), dataIndex: 'key_prefix', key: 'key_prefix', width: 160, className: 'mono-cell',
       render: (prefix: string) => <Text code>{prefix}…</Text>,
     },
     {
@@ -195,11 +195,11 @@ export default function ApiKeysCard() {
       ),
     },
     {
-      title: t('apiKeyLastUsed'), dataIndex: 'last_used_at', key: 'last_used_at', width: 170,
+      title: t('apiKeyLastUsed'), dataIndex: 'last_used_at', key: 'last_used_at', width: 180, className: 'mono-cell',
       render: (v: string | null) => v ? formatLocalTime(v) : <Text type="secondary">{t('apiKeyNeverUsed')}</Text>,
     },
     {
-      title: t('apiKeyCreated'), dataIndex: 'created_at', key: 'created_at', width: 170,
+      title: t('apiKeyCreated'), dataIndex: 'created_at', key: 'created_at', width: 180, className: 'mono-cell',
       render: (v: string) => formatLocalTime(v),
     },
     {

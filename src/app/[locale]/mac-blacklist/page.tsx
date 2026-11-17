@@ -139,7 +139,7 @@ export default function MacBlacklistPage() {
 
   const columns = [
     {
-      title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 280,
+      title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 280, className: 'mono-cell',
       render: (mac: string) => <MacAddress mac={mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} />,
       sorter: (a: MacBlacklistRow, b: MacBlacklistRow) => a.mac_address.localeCompare(b.mac_address),
     },
@@ -192,7 +192,7 @@ export default function MacBlacklistPage() {
         onReset={handleReset}
       >
         <Form.Item name="mac" label={t('macAddress')}>
-          <Input size="small" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
+          <Input size="small" className="mono-input" placeholder={tc('macFilterPlaceholder')} style={{ width: 180 }} allowClear />
         </Form.Item>
         <Form.Item name="reason" label={t('reason')}>
           <Input size="small" placeholder={t('reasonPlaceholder')} style={{ width: 160 }} allowClear />

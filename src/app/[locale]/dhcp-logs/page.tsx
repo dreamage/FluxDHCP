@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Typography, Table, Tag, Select, AutoComplete, Switch, Space, Button, Dropdown, Checkbox, Popconfirm } from 'antd';
+import { Typography, Table, Tag, Select, AutoComplete, Switch, Space, Button, Dropdown, Checkbox, Popconfirm, Tooltip } from 'antd';
 import { SearchOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined } from '@ant-design/icons';
 import MacAddress from '@/components/MacAddress';
 import { formatLocalTime } from '@/lib/format-time';
@@ -142,7 +142,7 @@ export default function LogsPage() {
 
   const allColumns: ColumnsType<any> = useMemo(() => [
     {
-      title: t('timestamp'), dataIndex: 'timestamp', key: 'timestamp', width: 170,
+      title: t('timestamp'), dataIndex: 'timestamp', key: 'timestamp', width: 180, className: 'mono-cell',
       render: (v: string) => formatLocalTime(v),
     },
     {
@@ -155,12 +155,17 @@ export default function LogsPage() {
       title: t('messageType'), dataIndex: 'message_type', key: 'message_type', width: 110,
       render: (type: number) => <Tag color={MSG_TYPE_COLORS[type] || 'default'}>{tMsg(String(type))}</Tag>,
     },
-    { title: t('clientMac'), dataIndex: 'client_mac', key: 'client_mac', width: 200,
+    { title: t('clientMac'), dataIndex: 'client_mac', key: 'client_mac', width: 200, className: 'mono-cell',
       render: (mac: string) => <MacAddress mac={mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} /> },
-    { title: t('yiaddr'), dataIndex: 'yiaddr', key: 'yiaddr', width: 130 },
-    { title: t('siaddr'), dataIndex: 'siaddr', key: 'siaddr', width: 130 },
-    { title: t('giaddr'), dataIndex: 'giaddr', key: 'giaddr', width: 130 },
-    { title: t('hostname'), dataIndex: 'hostname', key: 'hostname', width: 120 },
+    { title: t('yiaddr'), dataIndex: 'yiaddr', key: 'yiaddr', width: 130, className: 'mono-cell' },
+    { title: t('siaddr'), dataIndex: 'siaddr', key: 'siaddr', width: 130, className: 'mono-cell' },
+    { title: t('giaddr'), dataIndex: 'giaddr', key: 'giaddr', width: 130, className: 'mono-cell' },
+    {
+      // Hostnames can be long; clamping to one line keeps every log row the same
+      // height, and the tooltip is where the full value lives.
+      title: t('hostname'), dataIndex: 'hostname', key: 'hostname', width: 160, className: 'mono-cell', ellipsis: { showTitle: false },
+      render: (v: string) => v ? <Tooltip title={v} placement="topLeft"><span>{v}</span></Tooltip> : null,
+    },
   ], [t, macNotes, fetchMacNotes]);
 
   const columnOptions = allColumns.map(c => ({ value: c.key as string, label: c.title as string }));
@@ -223,6 +228,7 @@ export default function LogsPage() {
         <AutoComplete
           value={mac} onChange={v => setMac(v || '')}
           placeholder={t('clientMac')} allowClear
+          className="mono-input"
           style={{ width: 280 }} size="small"
           options={knownMacs.map(m => ({
             value: m,
@@ -234,6 +240,7 @@ export default function LogsPage() {
         <AutoComplete
           value={ip} onChange={v => setIp(v || '')}
           placeholder={t('clientIp')} allowClear
+          className="mono-input"
           style={{ width: 150 }} size="small"
           options={knownIps.map(addr => ({ value: addr }))}
           filterOption={(input, option) => (option?.value as string)?.includes(input)}
