@@ -155,7 +155,7 @@ export default function LogsPage() {
       title: t('messageType'), dataIndex: 'message_type', key: 'message_type', width: 110,
       render: (type: number) => <Tag color={MSG_TYPE_COLORS[type] || 'default'}>{tMsg(String(type))}</Tag>,
     },
-    { title: t('clientMac'), dataIndex: 'client_mac', key: 'client_mac', width: 200, className: 'mono-cell',
+    { title: t('clientMac'), dataIndex: 'client_mac', key: 'client_mac', width: 280, className: 'mono-cell',
       render: (mac: string) => <MacAddress mac={mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} /> },
     { title: t('yiaddr'), dataIndex: 'yiaddr', key: 'yiaddr', width: 130, className: 'mono-cell' },
     { title: t('siaddr'), dataIndex: 'siaddr', key: 'siaddr', width: 130, className: 'mono-cell' },

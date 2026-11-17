@@ -150,7 +150,7 @@ export default function LeasesPage() {
 
   const columns = [
     { title: t('ipAddress'), dataIndex: 'ip_address', key: 'ip_address', width: 130, sorter: true, className: 'mono-cell' },
-    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200, sorter: true, className: 'mono-cell',
+    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 260, sorter: true, className: 'mono-cell',
       render: (mac: string) => <MacAddress mac={mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} /> },
     {
       title: t('hostname'), dataIndex: 'hostname', key: 'hostname', width: 160, sorter: true, className: 'mono-cell', ellipsis: { showTitle: false },

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Popover, Input, Button, Space, Popconfirm } from 'antd';
+import { Popover, Input, Button, Space, Popconfirm, Tooltip } from 'antd';
 import { EditOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslations } from 'next-intl';
 import { useNotify } from '@/hooks/useNotify';
@@ -91,12 +91,17 @@ export default function MacAddress({ mac, macNotes, onNoteUpdate }: MacAddressPr
   );
 
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', minWidth: 0, maxWidth: '100%' }}>
-      <span style={{ whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)' }}>{mac}</span>
+    // One line, always: the MAC never shrinks, the note absorbs the remaining
+    // width and truncates, and the edit button stays pinned to the end — if any
+    // of them wrapped, every row in the table would grow a second line.
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'nowrap', minWidth: 0, maxWidth: '100%' }}>
+      <span style={{ whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{mac}</span>
       {note && (
-        <span style={{ color: '#1890ff', fontSize: 12, whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          ({note})
-        </span>
+        <Tooltip title={note} placement="topLeft">
+          <span style={{ color: '#1890ff', fontSize: 12, whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            ({note})
+          </span>
+        </Tooltip>
       )}
       <Popover
         content={popoverContent}
@@ -109,7 +114,7 @@ export default function MacAddress({ mac, macNotes, onNoteUpdate }: MacAddressPr
           type="text"
           size="small"
           icon={note ? <EditOutlined /> : <PlusOutlined />}
-          style={{ padding: '0 2px', minWidth: 'auto', height: 18, fontSize: 12 }}
+          style={{ padding: '0 2px', minWidth: 'auto', height: 18, fontSize: 12, flexShrink: 0 }}
           title={note ? t('editNote') : t('addNote')}
         />
       </Popover>

@@ -115,7 +115,7 @@ export default function OptionsPage() {
   };
 
   const columns = [
-    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200, className: 'mono-cell',
+    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 260, className: 'mono-cell',
       render: (mac: string) => <MacAddress mac={mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} /> },
     { title: t('optionCode'), dataIndex: 'option_code', key: 'option_code', width: 140, className: 'mono-cell',
       render: (code: number) => {

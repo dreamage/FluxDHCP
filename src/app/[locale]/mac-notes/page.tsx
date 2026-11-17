@@ -118,7 +118,7 @@ export default function MacNotesPage() {
 
   const columns = [
     {
-      title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200, className: 'mono-cell',
+      title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 260, className: 'mono-cell',
       render: (mac: string) => <span>{mac}</span>,
       sorter: (a: MacNoteRow, b: MacNoteRow) => a.mac_address.localeCompare(b.mac_address),
     },

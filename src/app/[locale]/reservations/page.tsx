@@ -160,7 +160,7 @@ export default function ReservationsPage() {
   };
 
   const columns = [
-    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 200, className: 'mono-cell',
+    { title: t('macAddress'), dataIndex: 'mac_address', key: 'mac_address', width: 260, className: 'mono-cell',
       render: (mac: string) => <MacAddress mac={mac} macNotes={macNotes} onNoteUpdate={fetchMacNotes} /> },
     { title: t('ipAddress'), dataIndex: 'ip_address', key: 'ip_address', width: 130, className: 'mono-cell' },
     {
